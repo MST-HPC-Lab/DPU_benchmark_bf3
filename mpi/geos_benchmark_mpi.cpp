@@ -1,14 +1,27 @@
+// This program performs various geospatial operations using 
+// the two given geospatial datasets and outputs the elapsed time. 
+// This program uses the MPI library. The first file should be partitioned 
+// and the directory name of the data should be given as the first parameter.
+//
+// USAGE
+// -----
+// mpic++ geos_benchmark.cpp
+// mpirun -np <# of processes>  ./a.out <directorypath1> <filepath2> <# of repetition of operations>
+
+
 #include <iostream>
 #include <stdarg.h>
 #include <stdlib.h>
-#include <fstream>
 
 #include <geos_c.h>
 #include <cstring>
-#include <vector>
+//#include <vector>
 #include <sys/time.h>
 
 #include <mpi.h>
+
+#define MAX_LINE_LENGTH 30000
+#define MAX_GEOM_NUMBER 500000
 
 using namespace std;
 
@@ -27,24 +40,14 @@ int create_tree(const char *filename, const char *filename2)
 
     GEOSSTRtree *tree = GEOSSTRtree_create(10);
 
-    // FILE *input;
-    // input = fopen(filename, "r");
-    // char line[MAX_LINE_LENGTH];
-    // while (fgets(line, MAX_LINE_LENGTH, input))
-    // {
-    //     if (strlen(line) > 5 && string(line).find("("))
-    //     {
-    //         GEOSGeometry *geom = GEOSGeomFromWKT(line);
-    //         GEOSSTRtree_insert(tree, geom, GEOSEnvelope(geom));
-    //     }
-    // }
-
-    std::ifstream input(filename);
-    for (std::string line; getline(input, line);)
+    FILE *input;
+    input = fopen(filename, "r");
+    char line[MAX_LINE_LENGTH];
+    while (fgets(line, MAX_LINE_LENGTH, input))
     {
-        if (line.length() > 5 && line.find("("))
+        if (strlen(line) > 5 && string(line).find("("))
         {
-            GEOSGeometry *geom = GEOSGeomFromWKT(line.c_str());
+            GEOSGeometry *geom = GEOSGeomFromWKT(line);
             GEOSSTRtree_insert(tree, geom, GEOSEnvelope(geom));
         }
     }
@@ -73,15 +76,22 @@ int iterate_tree(const char *filename, const char *filename2)
 {
     initGEOS(geos_message_handler, geos_message_handler);
 
+    GEOSGeometry *geoms[MAX_GEOM_NUMBER];
+
     GEOSSTRtree *tree = GEOSSTRtree_create(10);
 
-    std::ifstream input(filename);
-    for (std::string line; getline(input, line);)
+    FILE *input;
+    input = fopen(filename, "r");
+    char line[MAX_LINE_LENGTH];
+    int index = 0;
+    while (fgets(line, MAX_LINE_LENGTH, input))
     {
-        if (line.length() > 5 && line.find("("))
+        if (strlen(line) > 5 && string(line).find("("))
         {
-            GEOSGeometry *geom = GEOSGeomFromWKT(line.c_str());
+            GEOSGeometry *geom = GEOSGeomFromWKT(line);
+            geoms[index] = geom;
             GEOSSTRtree_insert(tree, geom, GEOSEnvelope(geom));
+            index++;
         }
     }
 
@@ -89,7 +99,10 @@ int iterate_tree(const char *filename, const char *filename2)
     cout << "# of Geometries: " << element_count << endl;
 
     GEOSSTRtree_destroy(tree);
-
+    for (size_t i = 0; i < index; i++)
+    {
+        GEOSGeom_destroy(geoms[i]);
+    }
     finishGEOS();
 
     return 0;
@@ -110,44 +123,81 @@ int query(const char *filename, const char *filename2)
 {
     initGEOS(geos_message_handler, geos_message_handler);
 
+    GEOSGeometry *geoms[MAX_GEOM_NUMBER];
+
     GEOSSTRtree *tree = GEOSSTRtree_create(10);
 
-    std::ifstream input(filename);
-    for (std::string line; getline(input, line);)
+    FILE *input;
+    input = fopen(filename, "r");
+    char line[MAX_LINE_LENGTH];
+    int index = 0;
+    while (fgets(line, MAX_LINE_LENGTH, input))
     {
-        if (line.length() > 5 && line.find("("))
+        if (strlen(line) > 5 && string(line).find("("))
         {
-            GEOSGeometry *geom = GEOSGeomFromWKT(line.c_str());
+            GEOSGeometry *geom = GEOSGeomFromWKT(line);
+            geoms[index] = geom;
             GEOSSTRtree_insert(tree, geom, GEOSEnvelope(geom));
+            index++;
         }
     }
 
-    vector<GEOSGeometry *> geoms2;
-    std::ifstream input2(filename2);
-    for (std::string line2; getline(input2, line2);)
+    GEOSGeometry *geoms2[MAX_GEOM_NUMBER];
+    FILE *input2;
+    input2 = fopen(filename2, "r");
+    char line2[MAX_LINE_LENGTH];
+    int index2 = 0;
+    while (fgets(line2, MAX_LINE_LENGTH, input2))
     {
-        if (line2.length() > 5 && line2.find("("))
+        if (strlen(line2) > 5)
         {
-            GEOSGeometry *geom2 = GEOSGeomFromWKT(line2.c_str());
-            geoms2.push_back(geom2);
+            GEOSGeometry *geom2 = GEOSGeomFromWKT(line2);
+            geoms2[index2] = geom2;
+            index2++;
         }
     }
 
-    GEOSGeometry *geoms2_cur;
-    for (auto cur = geoms2.begin(); cur != geoms2.end(); ++cur)
+    for (int i = 0; i < index2; i++)
     {
-        geoms2_cur = *cur;
-        GEOSSTRtree_query(tree, geoms2_cur, query_callback, geoms2_cur);
+        GEOSSTRtree_query(tree, geoms2[i], query_callback, geoms2[i]);
     }
 
-    for (auto cur = geoms2.begin(); cur != geoms2.end(); ++cur)
+    for (size_t i = 0; i < index2; i++)
     {
-        geoms2_cur = *cur;
-        GEOSGeom_destroy(geoms2_cur);
+        GEOSGeom_destroy(geoms2[i]);
     }
+
+    // vector<GEOSGeometry *> geoms2;
+    // FILE *input2;
+    // input2 = fopen(filename2, "r");
+    // char line2[MAX_LINE_LENGTH];
+    // while (fgets(line2, MAX_LINE_LENGTH, input2))
+    // {
+    //     if (strlen(line2) > 5)
+    //     {
+    //         GEOSGeometry *geom2 = GEOSGeomFromWKT(line2);
+    //         geoms2.push_back(geom2);
+    //     }
+    // }
+
+    // GEOSGeometry *geoms2_cur;
+    // for (auto cur = geoms2.begin(); cur != geoms2.end(); ++cur)
+    // {
+    //     geoms2_cur = *cur;
+    //     GEOSSTRtree_query(tree, geoms2_cur, query_callback, geoms2_cur);
+    // }
+
+    // for (auto cur = geoms2.begin(); cur != geoms2.end(); ++cur)
+    // {
+    //     geoms2_cur = *cur;
+    //     GEOSGeom_destroy(geoms2_cur);
+    // }
 
     GEOSSTRtree_destroy(tree);
-
+    for (size_t i = 0; i < index; i++)
+    {
+        GEOSGeom_destroy(geoms[i]);
+    }
     finishGEOS();
 
     return 0;
@@ -171,44 +221,55 @@ int intersect(const char *filename, const char *filename2)
 {
     initGEOS(geos_message_handler, geos_message_handler);
 
+    GEOSGeometry *geoms[MAX_GEOM_NUMBER];
+
     GEOSSTRtree *tree = GEOSSTRtree_create(10);
 
-    std::ifstream input(filename);
-    for (std::string line; getline(input, line);)
+    FILE *input;
+    input = fopen(filename, "r");
+    char line[MAX_LINE_LENGTH];
+    int index = 0;
+    while (fgets(line, MAX_LINE_LENGTH, input))
     {
-        if (line.length() > 5 && line.find("("))
+        if (strlen(line) > 5 && string(line).find("("))
         {
-            GEOSGeometry *geom = GEOSGeomFromWKT(line.c_str());
+            GEOSGeometry *geom = GEOSGeomFromWKT(line);
+            geoms[index] = geom;
             GEOSSTRtree_insert(tree, geom, GEOSEnvelope(geom));
+            index++;
         }
     }
 
-    vector<GEOSGeometry *> geoms2;
-    std::ifstream input2(filename2);
-    for (std::string line2; getline(input2, line2);)
+    GEOSGeometry *geoms2[MAX_GEOM_NUMBER];
+    FILE *input2;
+    input2 = fopen(filename2, "r");
+    char line2[MAX_LINE_LENGTH];
+    int index2 = 0;
+    while (fgets(line2, MAX_LINE_LENGTH, input2))
     {
-        if (line2.length() > 5 && line2.find("("))
+        if (strlen(line2) > 5)
         {
-            GEOSGeometry *geom2 = GEOSGeomFromWKT(line2.c_str());
-            geoms2.push_back(geom2);
+            GEOSGeometry *geom2 = GEOSGeomFromWKT(line2);
+            geoms2[index2] = geom2;
+            index2++;
         }
     }
 
-    GEOSGeometry *geoms2_cur;
-    for (auto cur = geoms2.begin(); cur != geoms2.end(); ++cur)
+    for (int i = 0; i < index2; i++)
     {
-        geoms2_cur = *cur;
-        GEOSSTRtree_query(tree, geoms2_cur, intersect_callback, geoms2_cur);
+        GEOSSTRtree_query(tree, geoms2[i], intersect_callback, geoms2[i]);
     }
 
-    for (auto cur = geoms2.begin(); cur != geoms2.end(); ++cur)
+    for (size_t i = 0; i < index2; i++)
     {
-        geoms2_cur = *cur;
-        GEOSGeom_destroy(geoms2_cur);
+        GEOSGeom_destroy(geoms2[i]);
     }
 
     GEOSSTRtree_destroy(tree);
-
+    for (size_t i = 0; i < index; i++)
+    {
+        GEOSGeom_destroy(geoms[i]);
+    }
     finishGEOS();
 
     return 0;
@@ -232,44 +293,55 @@ int overlap(const char *filename, const char *filename2)
 {
     initGEOS(geos_message_handler, geos_message_handler);
 
+    GEOSGeometry *geoms[MAX_GEOM_NUMBER];
+
     GEOSSTRtree *tree = GEOSSTRtree_create(10);
 
-    std::ifstream input(filename);
-    for (std::string line; getline(input, line);)
+    FILE *input;
+    input = fopen(filename, "r");
+    char line[MAX_LINE_LENGTH];
+    int index = 0;
+    while (fgets(line, MAX_LINE_LENGTH, input))
     {
-        if (line.length() > 5 && line.find("("))
+        if (strlen(line) > 5 && string(line).find("("))
         {
-            GEOSGeometry *geom = GEOSGeomFromWKT(line.c_str());
+            GEOSGeometry *geom = GEOSGeomFromWKT(line);
+            geoms[index] = geom;
             GEOSSTRtree_insert(tree, geom, GEOSEnvelope(geom));
+            index++;
         }
     }
 
-    vector<GEOSGeometry *> geoms2;
-    std::ifstream input2(filename2);
-    for (std::string line2; getline(input2, line2);)
+    GEOSGeometry *geoms2[MAX_GEOM_NUMBER];
+    FILE *input2;
+    input2 = fopen(filename2, "r");
+    char line2[MAX_LINE_LENGTH];
+    int index2 = 0;
+    while (fgets(line2, MAX_LINE_LENGTH, input2))
     {
-        if (line2.length() > 5 && line2.find("("))
+        if (strlen(line2) > 5)
         {
-            GEOSGeometry *geom2 = GEOSGeomFromWKT(line2.c_str());
-            geoms2.push_back(geom2);
+            GEOSGeometry *geom2 = GEOSGeomFromWKT(line2);
+            geoms2[index2] = geom2;
+            index2++;
         }
     }
 
-    GEOSGeometry *geoms2_cur;
-    for (auto cur = geoms2.begin(); cur != geoms2.end(); ++cur)
+    for (int i = 0; i < index2; i++)
     {
-        geoms2_cur = *cur;
-        GEOSSTRtree_query(tree, geoms2_cur, overlap_callback, geoms2_cur);
+        GEOSSTRtree_query(tree, geoms2[i], overlap_callback, geoms2[i]);
     }
 
-    for (auto cur = geoms2.begin(); cur != geoms2.end(); ++cur)
+    for (size_t i = 0; i < index2; i++)
     {
-        geoms2_cur = *cur;
-        GEOSGeom_destroy(geoms2_cur);
+        GEOSGeom_destroy(geoms2[i]);
     }
 
     GEOSSTRtree_destroy(tree);
-
+    for (size_t i = 0; i < index; i++)
+    {
+        GEOSGeom_destroy(geoms[i]);
+    }
     finishGEOS();
 
     return 0;
@@ -293,44 +365,55 @@ int touch(const char *filename, const char *filename2)
 {
     initGEOS(geos_message_handler, geos_message_handler);
 
+    GEOSGeometry *geoms[MAX_GEOM_NUMBER];
+
     GEOSSTRtree *tree = GEOSSTRtree_create(10);
 
-    std::ifstream input(filename);
-    for (std::string line; getline(input, line);)
+    FILE *input;
+    input = fopen(filename, "r");
+    char line[MAX_LINE_LENGTH];
+    int index = 0;
+    while (fgets(line, MAX_LINE_LENGTH, input))
     {
-        if (line.length() > 5 && line.find("("))
+        if (strlen(line) > 5 && string(line).find("("))
         {
-            GEOSGeometry *geom = GEOSGeomFromWKT(line.c_str());
+            GEOSGeometry *geom = GEOSGeomFromWKT(line);
+            geoms[index] = geom;
             GEOSSTRtree_insert(tree, geom, GEOSEnvelope(geom));
+            index++;
         }
     }
 
-    vector<GEOSGeometry *> geoms2;
-    std::ifstream input2(filename2);
-    for (std::string line2; getline(input2, line2);)
+    GEOSGeometry *geoms2[MAX_GEOM_NUMBER];
+    FILE *input2;
+    input2 = fopen(filename2, "r");
+    char line2[MAX_LINE_LENGTH];
+    int index2 = 0;
+    while (fgets(line2, MAX_LINE_LENGTH, input2))
     {
-        if (line2.length() > 5 && line2.find("("))
+        if (strlen(line2) > 5)
         {
-            GEOSGeometry *geom2 = GEOSGeomFromWKT(line2.c_str());
-            geoms2.push_back(geom2);
+            GEOSGeometry *geom2 = GEOSGeomFromWKT(line2);
+            geoms2[index2] = geom2;
+            index2++;
         }
     }
 
-    GEOSGeometry *geoms2_cur;
-    for (auto cur = geoms2.begin(); cur != geoms2.end(); ++cur)
+    for (int i = 0; i < index2; i++)
     {
-        geoms2_cur = *cur;
-        GEOSSTRtree_query(tree, geoms2_cur, touch_callback, geoms2_cur);
+        GEOSSTRtree_query(tree, geoms2[i], touch_callback, geoms2[i]);
     }
 
-    for (auto cur = geoms2.begin(); cur != geoms2.end(); ++cur)
+    for (size_t i = 0; i < index2; i++)
     {
-        geoms2_cur = *cur;
-        GEOSGeom_destroy(geoms2_cur);
+        GEOSGeom_destroy(geoms2[i]);
     }
 
     GEOSSTRtree_destroy(tree);
-
+    for (size_t i = 0; i < index; i++)
+    {
+        GEOSGeom_destroy(geoms[i]);
+    }
     finishGEOS();
 
     return 0;
@@ -354,44 +437,55 @@ int cross(const char *filename, const char *filename2)
 {
     initGEOS(geos_message_handler, geos_message_handler);
 
+    GEOSGeometry *geoms[MAX_GEOM_NUMBER];
+
     GEOSSTRtree *tree = GEOSSTRtree_create(10);
 
-    std::ifstream input(filename);
-    for (std::string line; getline(input, line);)
+    FILE *input;
+    input = fopen(filename, "r");
+    char line[MAX_LINE_LENGTH];
+    int index = 0;
+    while (fgets(line, MAX_LINE_LENGTH, input))
     {
-        if (line.length() > 5 && line.find("("))
+        if (strlen(line) > 5 && string(line).find("("))
         {
-            GEOSGeometry *geom = GEOSGeomFromWKT(line.c_str());
+            GEOSGeometry *geom = GEOSGeomFromWKT(line);
+            geoms[index] = geom;
             GEOSSTRtree_insert(tree, geom, GEOSEnvelope(geom));
+            index++;
         }
     }
 
-    vector<GEOSGeometry *> geoms2;
-    std::ifstream input2(filename2);
-    for (std::string line2; getline(input2, line2);)
+    GEOSGeometry *geoms2[MAX_GEOM_NUMBER];
+    FILE *input2;
+    input2 = fopen(filename2, "r");
+    char line2[MAX_LINE_LENGTH];
+    int index2 = 0;
+    while (fgets(line2, MAX_LINE_LENGTH, input2))
     {
-        if (line2.length() > 5 && line2.find("("))
+        if (strlen(line2) > 5)
         {
-            GEOSGeometry *geom2 = GEOSGeomFromWKT(line2.c_str());
-            geoms2.push_back(geom2);
+            GEOSGeometry *geom2 = GEOSGeomFromWKT(line2);
+            geoms2[index2] = geom2;
+            index2++;
         }
     }
 
-    GEOSGeometry *geoms2_cur;
-    for (auto cur = geoms2.begin(); cur != geoms2.end(); ++cur)
+    for (int i = 0; i < index2; i++)
     {
-        geoms2_cur = *cur;
-        GEOSSTRtree_query(tree, geoms2_cur, cross_callback, geoms2_cur);
+        GEOSSTRtree_query(tree, geoms2[i], cross_callback, geoms2[i]);
     }
 
-    for (auto cur = geoms2.begin(); cur != geoms2.end(); ++cur)
+    for (size_t i = 0; i < index2; i++)
     {
-        geoms2_cur = *cur;
-        GEOSGeom_destroy(geoms2_cur);
+        GEOSGeom_destroy(geoms2[i]);
     }
 
     GEOSSTRtree_destroy(tree);
-
+    for (size_t i = 0; i < index; i++)
+    {
+        GEOSGeom_destroy(geoms[i]);
+    }
     finishGEOS();
 
     return 0;
@@ -415,44 +509,55 @@ int contain(const char *filename, const char *filename2)
 {
     initGEOS(geos_message_handler, geos_message_handler);
 
+    GEOSGeometry *geoms[MAX_GEOM_NUMBER];
+
     GEOSSTRtree *tree = GEOSSTRtree_create(10);
 
-    std::ifstream input(filename);
-    for (std::string line; getline(input, line);)
+    FILE *input;
+    input = fopen(filename, "r");
+    char line[MAX_LINE_LENGTH];
+    int index = 0;
+    while (fgets(line, MAX_LINE_LENGTH, input))
     {
-        if (line.length() > 5 && line.find("("))
+        if (strlen(line) > 5 && string(line).find("("))
         {
-            GEOSGeometry *geom = GEOSGeomFromWKT(line.c_str());
+            GEOSGeometry *geom = GEOSGeomFromWKT(line);
+            geoms[index] = geom;
             GEOSSTRtree_insert(tree, geom, GEOSEnvelope(geom));
+            index++;
         }
     }
 
-    vector<GEOSGeometry *> geoms2;
-    std::ifstream input2(filename2);
-    for (std::string line2; getline(input2, line2);)
+    GEOSGeometry *geoms2[MAX_GEOM_NUMBER];
+    FILE *input2;
+    input2 = fopen(filename2, "r");
+    char line2[MAX_LINE_LENGTH];
+    int index2 = 0;
+    while (fgets(line2, MAX_LINE_LENGTH, input2))
     {
-        if (line2.length() > 5 && line2.find("("))
+        if (strlen(line2) > 5)
         {
-            GEOSGeometry *geom2 = GEOSGeomFromWKT(line2.c_str());
-            geoms2.push_back(geom2);
+            GEOSGeometry *geom2 = GEOSGeomFromWKT(line2);
+            geoms2[index2] = geom2;
+            index2++;
         }
     }
 
-    GEOSGeometry *geoms2_cur;
-    for (auto cur = geoms2.begin(); cur != geoms2.end(); ++cur)
+    for (int i = 0; i < index2; i++)
     {
-        geoms2_cur = *cur;
-        GEOSSTRtree_query(tree, geoms2_cur, contain_callback, geoms2_cur);
+        GEOSSTRtree_query(tree, geoms2[i], contain_callback, geoms2[i]);
     }
 
-    for (auto cur = geoms2.begin(); cur != geoms2.end(); ++cur)
+    for (size_t i = 0; i < index2; i++)
     {
-        geoms2_cur = *cur;
-        GEOSGeom_destroy(geoms2_cur);
+        GEOSGeom_destroy(geoms2[i]);
     }
 
     GEOSSTRtree_destroy(tree);
-
+    for (size_t i = 0; i < index; i++)
+    {
+        GEOSGeom_destroy(geoms[i]);
+    }
     finishGEOS();
 
     return 0;
@@ -476,44 +581,55 @@ int equal(const char *filename, const char *filename2)
 {
     initGEOS(geos_message_handler, geos_message_handler);
 
+    GEOSGeometry *geoms[MAX_GEOM_NUMBER];
+
     GEOSSTRtree *tree = GEOSSTRtree_create(10);
 
-    std::ifstream input(filename);
-    for (std::string line; getline(input, line);)
+    FILE *input;
+    input = fopen(filename, "r");
+    char line[MAX_LINE_LENGTH];
+    int index = 0;
+    while (fgets(line, MAX_LINE_LENGTH, input))
     {
-        if (line.length() > 5 && line.find("("))
+        if (strlen(line) > 5 && string(line).find("("))
         {
-            GEOSGeometry *geom = GEOSGeomFromWKT(line.c_str());
+            GEOSGeometry *geom = GEOSGeomFromWKT(line);
+            geoms[index] = geom;
             GEOSSTRtree_insert(tree, geom, GEOSEnvelope(geom));
+            index++;
         }
     }
 
-    vector<GEOSGeometry *> geoms2;
-    std::ifstream input2(filename2);
-    for (std::string line2; getline(input2, line2);)
+    GEOSGeometry *geoms2[MAX_GEOM_NUMBER];
+    FILE *input2;
+    input2 = fopen(filename2, "r");
+    char line2[MAX_LINE_LENGTH];
+    int index2 = 0;
+    while (fgets(line2, MAX_LINE_LENGTH, input2))
     {
-        if (line2.length() > 5 && line2.find("("))
+        if (strlen(line2) > 5)
         {
-            GEOSGeometry *geom2 = GEOSGeomFromWKT(line2.c_str());
-            geoms2.push_back(geom2);
+            GEOSGeometry *geom2 = GEOSGeomFromWKT(line2);
+            geoms2[index2] = geom2;
+            index2++;
         }
     }
 
-    GEOSGeometry *geoms2_cur;
-    for (auto cur = geoms2.begin(); cur != geoms2.end(); ++cur)
+    for (int i = 0; i < index2; i++)
     {
-        geoms2_cur = *cur;
-        GEOSSTRtree_query(tree, geoms2_cur, equal_callback, geoms2_cur);
+        GEOSSTRtree_query(tree, geoms2[i], equal_callback, geoms2[i]);
     }
 
-    for (auto cur = geoms2.begin(); cur != geoms2.end(); ++cur)
+    for (size_t i = 0; i < index2; i++)
     {
-        geoms2_cur = *cur;
-        GEOSGeom_destroy(geoms2_cur);
+        GEOSGeom_destroy(geoms2[i]);
     }
 
     GEOSSTRtree_destroy(tree);
-
+    for (size_t i = 0; i < index; i++)
+    {
+        GEOSGeom_destroy(geoms[i]);
+    }
     finishGEOS();
 
     return 0;
@@ -537,44 +653,55 @@ int equal_exact(const char *filename, const char *filename2)
 {
     initGEOS(geos_message_handler, geos_message_handler);
 
+    GEOSGeometry *geoms[MAX_GEOM_NUMBER];
+
     GEOSSTRtree *tree = GEOSSTRtree_create(10);
 
-    std::ifstream input(filename);
-    for (std::string line; getline(input, line);)
+    FILE *input;
+    input = fopen(filename, "r");
+    char line[MAX_LINE_LENGTH];
+    int index = 0;
+    while (fgets(line, MAX_LINE_LENGTH, input))
     {
-        if (line.length() > 5 && line.find("("))
+        if (strlen(line) > 5 && string(line).find("("))
         {
-            GEOSGeometry *geom = GEOSGeomFromWKT(line.c_str());
+            GEOSGeometry *geom = GEOSGeomFromWKT(line);
+            geoms[index] = geom;
             GEOSSTRtree_insert(tree, geom, GEOSEnvelope(geom));
+            index++;
         }
     }
 
-    vector<GEOSGeometry *> geoms2;
-    std::ifstream input2(filename2);
-    for (std::string line2; getline(input2, line2);)
+    GEOSGeometry *geoms2[MAX_GEOM_NUMBER];
+    FILE *input2;
+    input2 = fopen(filename2, "r");
+    char line2[MAX_LINE_LENGTH];
+    int index2 = 0;
+    while (fgets(line2, MAX_LINE_LENGTH, input2))
     {
-        if (line2.length() > 5 && line2.find("("))
+        if (strlen(line2) > 5)
         {
-            GEOSGeometry *geom2 = GEOSGeomFromWKT(line2.c_str());
-            geoms2.push_back(geom2);
+            GEOSGeometry *geom2 = GEOSGeomFromWKT(line2);
+            geoms2[index2] = geom2;
+            index2++;
         }
     }
 
-    GEOSGeometry *geoms2_cur;
-    for (auto cur = geoms2.begin(); cur != geoms2.end(); ++cur)
+    for (int i = 0; i < index2; i++)
     {
-        geoms2_cur = *cur;
-        GEOSSTRtree_query(tree, geoms2_cur, equal_exact_callback, geoms2_cur);
+        GEOSSTRtree_query(tree, geoms2[i], equal_exact_callback, geoms2[i]);
     }
 
-    for (auto cur = geoms2.begin(); cur != geoms2.end(); ++cur)
+    for (size_t i = 0; i < index2; i++)
     {
-        geoms2_cur = *cur;
-        GEOSGeom_destroy(geoms2_cur);
+        GEOSGeom_destroy(geoms2[i]);
     }
 
     GEOSSTRtree_destroy(tree);
-
+    for (size_t i = 0; i < index; i++)
+    {
+        GEOSGeom_destroy(geoms[i]);
+    }
     finishGEOS();
 
     return 0;
@@ -598,44 +725,55 @@ int cover(const char *filename, const char *filename2)
 {
     initGEOS(geos_message_handler, geos_message_handler);
 
+    GEOSGeometry *geoms[MAX_GEOM_NUMBER];
+
     GEOSSTRtree *tree = GEOSSTRtree_create(10);
 
-    std::ifstream input(filename);
-    for (std::string line; getline(input, line);)
+    FILE *input;
+    input = fopen(filename, "r");
+    char line[MAX_LINE_LENGTH];
+    int index = 0;
+    while (fgets(line, MAX_LINE_LENGTH, input))
     {
-        if (line.length() > 5 && line.find("("))
+        if (strlen(line) > 5 && string(line).find("("))
         {
-            GEOSGeometry *geom = GEOSGeomFromWKT(line.c_str());
+            GEOSGeometry *geom = GEOSGeomFromWKT(line);
+            geoms[index] = geom;
             GEOSSTRtree_insert(tree, geom, GEOSEnvelope(geom));
+            index++;
         }
     }
 
-    vector<GEOSGeometry *> geoms2;
-    std::ifstream input2(filename2);
-    for (std::string line2; getline(input2, line2);)
+    GEOSGeometry *geoms2[MAX_GEOM_NUMBER];
+    FILE *input2;
+    input2 = fopen(filename2, "r");
+    char line2[MAX_LINE_LENGTH];
+    int index2 = 0;
+    while (fgets(line2, MAX_LINE_LENGTH, input2))
     {
-        if (line2.length() > 5 && line2.find("("))
+        if (strlen(line2) > 5)
         {
-            GEOSGeometry *geom2 = GEOSGeomFromWKT(line2.c_str());
-            geoms2.push_back(geom2);
+            GEOSGeometry *geom2 = GEOSGeomFromWKT(line2);
+            geoms2[index2] = geom2;
+            index2++;
         }
     }
 
-    GEOSGeometry *geoms2_cur;
-    for (auto cur = geoms2.begin(); cur != geoms2.end(); ++cur)
+    for (int i = 0; i < index2; i++)
     {
-        geoms2_cur = *cur;
-        GEOSSTRtree_query(tree, geoms2_cur, cover_callback, geoms2_cur);
+        GEOSSTRtree_query(tree, geoms2[i], cover_callback, geoms2[i]);
     }
 
-    for (auto cur = geoms2.begin(); cur != geoms2.end(); ++cur)
+    for (size_t i = 0; i < index2; i++)
     {
-        geoms2_cur = *cur;
-        GEOSGeom_destroy(geoms2_cur);
+        GEOSGeom_destroy(geoms2[i]);
     }
 
     GEOSSTRtree_destroy(tree);
-
+    for (size_t i = 0; i < index; i++)
+    {
+        GEOSGeom_destroy(geoms[i]);
+    }
     finishGEOS();
 
     return 0;
@@ -659,44 +797,55 @@ int covered_by(const char *filename, const char *filename2)
 {
     initGEOS(geos_message_handler, geos_message_handler);
 
+    GEOSGeometry *geoms[MAX_GEOM_NUMBER];
+
     GEOSSTRtree *tree = GEOSSTRtree_create(10);
 
-    std::ifstream input(filename);
-    for (std::string line; getline(input, line);)
+    FILE *input;
+    input = fopen(filename, "r");
+    char line[MAX_LINE_LENGTH];
+    int index = 0;
+    while (fgets(line, MAX_LINE_LENGTH, input))
     {
-        if (line.length() > 5 && line.find("("))
+        if (strlen(line) > 5 && string(line).find("("))
         {
-            GEOSGeometry *geom = GEOSGeomFromWKT(line.c_str());
+            GEOSGeometry *geom = GEOSGeomFromWKT(line);
+            geoms[index] = geom;
             GEOSSTRtree_insert(tree, geom, GEOSEnvelope(geom));
+            index++;
         }
     }
 
-    vector<GEOSGeometry *> geoms2;
-    std::ifstream input2(filename2);
-    for (std::string line2; getline(input2, line2);)
+    GEOSGeometry *geoms2[MAX_GEOM_NUMBER];
+    FILE *input2;
+    input2 = fopen(filename2, "r");
+    char line2[MAX_LINE_LENGTH];
+    int index2 = 0;
+    while (fgets(line2, MAX_LINE_LENGTH, input2))
     {
-        if (line2.length() > 5 && line2.find("("))
+        if (strlen(line2) > 5)
         {
-            GEOSGeometry *geom2 = GEOSGeomFromWKT(line2.c_str());
-            geoms2.push_back(geom2);
+            GEOSGeometry *geom2 = GEOSGeomFromWKT(line2);
+            geoms2[index2] = geom2;
+            index2++;
         }
     }
 
-    GEOSGeometry *geoms2_cur;
-    for (auto cur = geoms2.begin(); cur != geoms2.end(); ++cur)
+    for (int i = 0; i < index2; i++)
     {
-        geoms2_cur = *cur;
-        GEOSSTRtree_query(tree, geoms2_cur, covered_by_callback, geoms2_cur);
+        GEOSSTRtree_query(tree, geoms2[i], covered_by_callback, geoms2[i]);
     }
 
-    for (auto cur = geoms2.begin(); cur != geoms2.end(); ++cur)
+    for (size_t i = 0; i < index2; i++)
     {
-        geoms2_cur = *cur;
-        GEOSGeom_destroy(geoms2_cur);
+        GEOSGeom_destroy(geoms2[i]);
     }
 
     GEOSSTRtree_destroy(tree);
-
+    for (size_t i = 0; i < index; i++)
+    {
+        GEOSGeom_destroy(geoms[i]);
+    }
     finishGEOS();
 
     return 0;
@@ -882,40 +1031,14 @@ int main(int argc, char **argv)
         n = atoi(argv[3]);
     if (!n)
         n = 1;
-
     // const char *filename = (string(argv[1]) + "/x" + to_string(rank)).c_str();
-    // char filenameTemp[200];
-    // strcpy(filenameTemp, argv[1]);
-    // strcat(filenameTemp, to_string(rank).c_str());
-
-    char *filenameTemp;
-    if (numProcs > 1)
-    {
-        string line;
-        int line_count = 0;
-        ifstream file(argv[1]);
-        while (getline(file, line))
-            line_count++;
-
-        if (rank == 0)
-        {
-            int line_count_per_file = (line_count / numProcs) + 1;
-            system((string("split -l ") + to_string(line_count_per_file) + " " + argv[1] + string(" -d --suffix-length=3 file_part_")).c_str());
-        }
-        MPI_Barrier(MPI_COMM_WORLD);
-
-        string filenameTempSuffix = rank < 10 ? "00" : rank < 100 ? "0"
-                                                                  : "";
-        filenameTemp = (char *)(string("file_part_") + filenameTempSuffix + to_string(rank)).c_str();
-    }
-    else
-    {
-        filenameTemp = argv[1];
-    }
-
+    // const char *filename = argv[1];
+    char filenameTemp[200];
+    strcpy(filenameTemp, argv[1]);
+    strcat(filenameTemp, to_string(rank).c_str());
     const char *filename = filenameTemp;
-    const char *filename2 = argv[2];
     cout << "File: " << filename << endl;
+    const char *filename2 = argv[2];
 
     double create_time = select_test("Create", &create_tree, filename, filename2, n);
     double iterate_time = select_test("Iterate", &iterate_tree, filename, filename2, n);
@@ -963,10 +1086,6 @@ int main(int argc, char **argv)
 
     if (rank == 0)
     {
-        if (numProcs > 1)
-        {
-            system("rm ./file_part_*");
-        }
         cout << endl
              << endl
              << "------------------------------------------------------------------" << endl
@@ -991,20 +1110,20 @@ int main(int argc, char **argv)
              << endl
              << endl
              << "------------------------------------------------------------------" << endl
-             << "-------------------- BENCHMARK RESULT (AVG) --------------------" << endl
+             << "-------------------- BENCHMARK RESULT (TOTAL) --------------------" << endl
              << "------------------------------------------------------------------" << endl
-             << "Average Create Time: " << test_time_arr_sum[0] / numProcs << endl
-             << "Average Iterate Time: " << test_time_arr_sum[1] / numProcs << endl
-             << "Average Query Time: " << test_time_arr_sum[2] / numProcs << endl
-             << "Average Intersect Time: " << test_time_arr_sum[3] / numProcs << endl
-             << "Average Overlap Time: " << test_time_arr_sum[4] / numProcs << endl
-             << "Average Touch Time: " << test_time_arr_sum[5] / numProcs << endl
-             << "Average Cross Time: " << test_time_arr_sum[6] / numProcs << endl
-             << "Average Contain Time: " << test_time_arr_sum[7] / numProcs << endl
-             << "Average Equal Time: " << test_time_arr_sum[8] / numProcs << endl
-             << "Average Equal Exact (0.3) Time: " << test_time_arr_sum[9] / numProcs << endl
-             << "Average Cover Time: " << test_time_arr_sum[10] / numProcs << endl
-             << "Average Covered By Time: " << test_time_arr_sum[11] / numProcs << endl
+             << "Total Create Time: " << test_time_arr_sum[0] << endl
+             << "Total Iterate Time: " << test_time_arr_sum[1] << endl
+             << "Total Query Time: " << test_time_arr_sum[2] << endl
+             << "Total Intersect Time: " << test_time_arr_sum[3] << endl
+             << "Total Overlap Time: " << test_time_arr_sum[4] << endl
+             << "Total Touch Time: " << test_time_arr_sum[5] << endl
+             << "Total Cross Time: " << test_time_arr_sum[6] << endl
+             << "Total Contain Time: " << test_time_arr_sum[7] << endl
+             << "Total Equal Time: " << test_time_arr_sum[8] << endl
+             << "Total Equal Exact (0.3) Time: " << test_time_arr_sum[9] << endl
+             << "Total Cover Time: " << test_time_arr_sum[10] << endl
+             << "Total Covered By Time: " << test_time_arr_sum[11] << endl
              << "------------------------------------------------------------------" << endl
              << "------------------------------------------------------------------" << endl
              << endl

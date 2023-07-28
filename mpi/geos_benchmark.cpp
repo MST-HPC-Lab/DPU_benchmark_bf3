@@ -1,3 +1,13 @@
+// This program performs various geospatial operations using 
+// the two given geospatial datasets and outputs the elapsed time. 
+// This program does not include the MPI library, it runs as a single process.
+//
+// USAGE
+// -----
+// g++ geos_benchmark.cpp
+// ./a.out <filepath1> <filepath2> <# of repetition of operations>
+
+
 #include <iostream>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -962,18 +972,6 @@ int main(int argc, char **argv)
         n = 1;
     const char *filename = argv[1];
     const char *filename2 = argv[2];
-
-    /*
-    create_tree(filename);
-    iterate_tree(filename);
-    query(filename);
-    overlap(filename);
-    touch(filename);
-    */
-
-    /*GEOSContextHandle_t ctx = GEOS_init_r();
-    vector<GEOSGeometry *> g = *read_wkt(filename,ctx);
-    GEOS_finish_r(ctx);*/
 
     double create_time = select_test("Create", &create_tree, filename, filename2, n);
     double iterate_time = select_test("Iterate", &iterate_tree, filename, filename2, n);

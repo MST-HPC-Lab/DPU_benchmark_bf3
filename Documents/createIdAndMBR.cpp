@@ -1,3 +1,13 @@
+// This code outputs two files containing polygons with ids and minimum bounding rectangles with the same ids, 
+// corresponding to geospatial data in wkt format given as input
+
+// USAGE
+// -----
+// g++ createIdAndMBR.cpp -o createIdAndMBR
+// ./createIdAndMBR <input_file_path>
+
+
+
 #include <iostream>
 #include <stdarg.h>
 #include <stdlib.h>

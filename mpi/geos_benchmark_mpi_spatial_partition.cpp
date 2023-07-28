@@ -1,3 +1,14 @@
+// This program performs various geospatial operations using 
+// the two given geospatial datasets and outputs the elapsed time. 
+// This program uses the MPI library. Both files should be spatially partitioned 
+// and the directory names of the data should be given as the first two arquments.
+// You have to specifiy the number of partitions as the third argument.
+//
+// USAGE
+// -----
+// mpic++ geos_benchmark.cpp
+// mpirun -np <# of processes>  ./a.out <directorypath1> <directorypath2> <# of partitions> <# of repetition of operations>
+
 #include <iostream>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -559,86 +570,53 @@ int main(int argc, char **argv)
     double equal_exact_time = 0;
     double cover_time = 0;
     double covered_by_time = 0;
-
-    char *filenameTemp;
-    if (numProcs > 1)
+    for (int i = 0; i < numberOfPartitions; i += numProcs)
     {
-
-        if (rank == 0)
+        // const char *filename = (string(argv[1]) + "/" + to_string(rank + i)).c_str();
+        // const char *filename2 = (string(argv[2]) + "/" + to_string(rank + i)).c_str();
+        // cout << "File: " << (string(argv[1]) + "/" + to_string(rank + i)).c_str() << endl;
+        // cout << "File2: " << (string(argv[2]) + "/" + to_string(rank + i)).c_str() << endl;
+        try
         {
-            string line;
-            int line_count = 0;
-            ifstream file(argv[1]);
-            while (getline(file, line))
-                line_count++;
+            vector<GEOSGeometry *> *geoms = get_polygons((string(argv[1]) + "/" + to_string(rank + i)).c_str());
+            // vector<GEOSGeometry *> *geoms2 = get_polygons((string(argv[2]) + "/" + to_string(rank + i)).c_str());
+            if (geoms->size() > 0)
+            {
+            vector<GEOSGeometry *> *geoms2 = get_polygons((string(argv[2]) + "/" + to_string(rank + i)).c_str());
+                //create_time += select_test("Create", &create_tree, geoms, geoms2, n);
+                //iterate_time += select_test("Iterate", &iterate_tree, geoms, geoms2, n);
+                //query_time += select_test("Query", &query, geoms, geoms2, n);
+                intersect_time += select_test("Intersect", &intersect, geoms, geoms2, n);
+                // overlap_time += select_test("Overlap", &overlap, geoms, geoms2, n);
+                // touch_time += select_test("Touch", &touch, geoms, geoms2, n);
+                // cross_time += select_test("Cross", &cross, geoms, geoms2, n);
+                // contain_time += select_test("Contain", &contain, geoms, geoms2, n);
+                // equal_time += select_test("Equal", &equal, geoms, geoms2, n);
+                // equal_exact_time += select_test("Equal Exact (0.3)", &equal_exact, geoms, geoms2, n);
+                // cover_time += select_test("Cover", &cover, geoms, geoms2, n);
+                // covered_by_time += select_test("Covered By", &covered_by, geoms, geoms2, n);
 
-            int line_count_per_file = (line_count / numProcs) + 1;
-            system((string("split -l ") + to_string(line_count_per_file) + " " + argv[1] + string(" -d --suffix-length=3 ") + argv[1] + string("_") + to_string(numProcs) +  string("_")).c_str());
+                GEOSGeometry *geom;
+                for (auto cur = geoms->begin(); cur != geoms->end(); ++cur)
+                {
+                    geom = *cur;
+                    GEOSGeom_destroy(geom);
+                }
+                for (auto cur = geoms2->begin(); cur != geoms2->end(); ++cur)
+                {
+                    geom = *cur;
+                    GEOSGeom_destroy(geom);
+                }
+                delete geoms2;
+            }
+            delete geoms;
         }
-        MPI_Barrier(MPI_COMM_WORLD);
-
-        string filenameTempSuffix = rank < 10 ? "00" : rank < 100 ? "0"
-                                                                  : "";
-        // filenameTemp = (char *)(string("file_part_") + filenameTempSuffix + to_string(rank)).c_str();
-        filenameTemp = (char *)(argv[1] + string("_") + to_string(numProcs) + string("_") + filenameTempSuffix + to_string(rank)).c_str();
-    }
-    else
-    {
-        filenameTemp = argv[1];
-    }
-
-    const char *filename = filenameTemp;
-    const char *filename2 = argv[2];
-
-    // for (int i = 0; i < numberOfPartitions; i += numProcs)
-    //{
-    //  const char *filename = (string(argv[1]) + "/" + to_string(rank + i)).c_str();
-    //  const char *filename2 = (string(argv[2]) + "/" + to_string(rank + i)).c_str();
-    //  cout << "File: " << (string(argv[1]) + "/" + to_string(rank + i)).c_str() << endl;
-    //  cout << "File2: " << (string(argv[2]) + "/" + to_string(rank + i)).c_str() << endl;
-    try
-    {
-        // vector<GEOSGeometry *> *geoms = get_polygons((string(argv[1]) + "/" + to_string(rank + i)).c_str());
-        string filenameTempSuffix = rank < 10 ? "00" : rank < 100 ? "0"
-                                                                  : "";
-        vector<GEOSGeometry *> *geoms = get_polygons((argv[1] + string("_") + to_string(numProcs) + string("_") + filenameTempSuffix + to_string(rank)).c_str());
-        // vector<GEOSGeometry *> *geoms2 = get_polygons((string(argv[2]) + "/" + to_string(rank + i)).c_str());
-        if (geoms->size() > 0)
+        catch (...)
         {
-            vector<GEOSGeometry *> *geoms2 = get_polygons(argv[2]);
-            // create_time += select_test("Create", &create_tree, geoms, geoms2, n);
-            // iterate_time += select_test("Iterate", &iterate_tree, geoms, geoms2, n);
-            // query_time += select_test("Query", &query, geoms, geoms2, n);
-            intersect_time += select_test("Intersect", &intersect, geoms, geoms2, n);
-            // overlap_time += select_test("Overlap", &overlap, geoms, geoms2, n);
-            // touch_time += select_test("Touch", &touch, geoms, geoms2, n);
-            // cross_time += select_test("Cross", &cross, geoms, geoms2, n);
-            // contain_time += select_test("Contain", &contain, geoms, geoms2, n);
-            // equal_time += select_test("Equal", &equal, geoms, geoms2, n);
-            // equal_exact_time += select_test("Equal Exact (0.3)", &equal_exact, geoms, geoms2, n);
-            // cover_time += select_test("Cover", &cover, geoms, geoms2, n);
-            // covered_by_time += select_test("Covered By", &covered_by, geoms, geoms2, n);
-
-            GEOSGeometry *geom;
-            for (auto cur = geoms->begin(); cur != geoms->end(); ++cur)
-            {
-                geom = *cur;
-                GEOSGeom_destroy(geom);
-            }
-            for (auto cur = geoms2->begin(); cur != geoms2->end(); ++cur)
-            {
-                geom = *cur;
-                GEOSGeom_destroy(geom);
-            }
+            cout << "No file named " << rank + i << endl;
+            continue;
         }
     }
-    catch (...)
-    {
-        // cout << "No file named " << rank + i << endl;
-        cout << "No file" << endl;
-        // continue;
-    }
-    //}
 
     // cout << endl
     //      << endl
@@ -675,11 +653,10 @@ int main(int argc, char **argv)
 
     if (rank == 0)
     {
-        if (numProcs > 1)
-        {
-            //system("rm ./file_part_*");
-            system((string("rm ") + argv[1] + string("_") + to_string(numProcs) + string("_*")).c_str());
-        }
+        // if (numProcs > 1)
+        // {
+        //     system("rm ./file_part_*");
+        // }
         cout << endl
              << endl
              << "------------------------------------------------------------------" << endl
@@ -689,7 +666,7 @@ int main(int argc, char **argv)
              //  << "Max Create Time: " << test_time_arr_max[0] << endl
              //  << "Max Iterate Time: " << test_time_arr_max[1] << endl
              //  << "Max Query Time: " << test_time_arr_max[2] << endl
-             << "Max Intersect Time: " << test_time_arr_max[3] << endl
+               << "Max Intersect Time: " << test_time_arr_max[3] << endl
              //  << "Max Overlap Time: " << test_time_arr_max[4] << endl
              //  << "Max Touch Time: " << test_time_arr_max[5] << endl
              //  << "Max Cross Time: " << test_time_arr_max[6] << endl

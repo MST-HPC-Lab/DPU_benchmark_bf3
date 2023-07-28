@@ -1,3 +1,15 @@
+// This program performs various geospatial operations using 
+// the two given geospatial datasets and outputs the elapsed time. 
+// This program uses the MPI library. You have to specifiy the number of 
+// partitions as the third argument. The input file will be partitioned 
+// by the program automatically.
+//
+// USAGE
+// -----
+// mpic++ geos_benchmark.cpp
+// mpirun -np <# of processes> ./a.out <filepath1> <filepath2> <# of partitions> <# of repetition of operations>
+
+
 #include <iostream>
 #include <stdarg.h>
 #include <stdlib.h>
@@ -11,6 +23,8 @@
 #include <mpi.h>
 
 using namespace std;
+
+int processRank = -1;
 
 static void
 geos_message_handler(const char *fmt, ...)
@@ -38,7 +52,6 @@ vector<GEOSGeometry *> *get_polygons(const char *filename)
 
 int create_tree(vector<GEOSGeometry *> *geoms, vector<GEOSGeometry *> *geoms2)
 {
-    
 
     GEOSSTRtree *tree = GEOSSTRtree_create(10);
 
@@ -60,8 +73,6 @@ int create_tree(vector<GEOSGeometry *> *geoms, vector<GEOSGeometry *> *geoms2)
 
     GEOSSTRtree_destroy(tree);
 
-    
-
     return 0;
 }
 
@@ -80,7 +91,6 @@ void iterate_tree_callback(void *geom, void *userdata)
 
 int iterate_tree(vector<GEOSGeometry *> *geoms, vector<GEOSGeometry *> *geoms2)
 {
-    
 
     GEOSSTRtree *tree = GEOSSTRtree_create(10);
 
@@ -91,11 +101,9 @@ int iterate_tree(vector<GEOSGeometry *> *geoms, vector<GEOSGeometry *> *geoms2)
     }
 
     GEOSSTRtree_iterate(tree, iterate_tree_callback, 0);
-    cout << "# of Geometries: " << element_count << endl;
+    // cout << "Rank " << processRank << ": File 1 # of Geometries: " << element_count << endl;
 
     GEOSSTRtree_destroy(tree);
-
-    
 
     return 0;
 }
@@ -113,7 +121,6 @@ void query_callback(void *geom, void *base_geom)
 
 int query(vector<GEOSGeometry *> *geoms, vector<GEOSGeometry *> *geoms2)
 {
-    
 
     GEOSSTRtree *tree = GEOSSTRtree_create(10);
 
@@ -149,8 +156,6 @@ int query(vector<GEOSGeometry *> *geoms, vector<GEOSGeometry *> *geoms2)
 
     GEOSSTRtree_destroy(tree);
 
-    
-
     return 0;
 }
 
@@ -170,7 +175,6 @@ void intersect_callback(void *geom, void *base_geom)
 
 int intersect(vector<GEOSGeometry *> *geoms, vector<GEOSGeometry *> *geoms2)
 {
-    
 
     GEOSSTRtree *tree = GEOSSTRtree_create(10);
 
@@ -188,8 +192,6 @@ int intersect(vector<GEOSGeometry *> *geoms, vector<GEOSGeometry *> *geoms2)
     }
 
     GEOSSTRtree_destroy(tree);
-
-    
 
     return 0;
 }
@@ -210,7 +212,6 @@ void overlap_callback(void *geom, void *base_geom)
 
 int overlap(vector<GEOSGeometry *> *geoms, vector<GEOSGeometry *> *geoms2)
 {
-    
 
     GEOSSTRtree *tree = GEOSSTRtree_create(10);
 
@@ -228,8 +229,6 @@ int overlap(vector<GEOSGeometry *> *geoms, vector<GEOSGeometry *> *geoms2)
     }
 
     GEOSSTRtree_destroy(tree);
-
-    
 
     return 0;
 }
@@ -250,7 +249,6 @@ void touch_callback(void *geom, void *base_geom)
 
 int touch(vector<GEOSGeometry *> *geoms, vector<GEOSGeometry *> *geoms2)
 {
-    
 
     GEOSSTRtree *tree = GEOSSTRtree_create(10);
 
@@ -268,8 +266,6 @@ int touch(vector<GEOSGeometry *> *geoms, vector<GEOSGeometry *> *geoms2)
     }
 
     GEOSSTRtree_destroy(tree);
-
-    
 
     return 0;
 }
@@ -290,7 +286,6 @@ void cross_callback(void *geom, void *base_geom)
 
 int cross(vector<GEOSGeometry *> *geoms, vector<GEOSGeometry *> *geoms2)
 {
-    
 
     GEOSSTRtree *tree = GEOSSTRtree_create(10);
 
@@ -308,8 +303,6 @@ int cross(vector<GEOSGeometry *> *geoms, vector<GEOSGeometry *> *geoms2)
     }
 
     GEOSSTRtree_destroy(tree);
-
-    
 
     return 0;
 }
@@ -330,7 +323,6 @@ void contain_callback(void *geom, void *base_geom)
 
 int contain(vector<GEOSGeometry *> *geoms, vector<GEOSGeometry *> *geoms2)
 {
-    
 
     GEOSSTRtree *tree = GEOSSTRtree_create(10);
 
@@ -348,8 +340,6 @@ int contain(vector<GEOSGeometry *> *geoms, vector<GEOSGeometry *> *geoms2)
     }
 
     GEOSSTRtree_destroy(tree);
-
-    
 
     return 0;
 }
@@ -370,7 +360,6 @@ void equal_callback(void *geom, void *base_geom)
 
 int equal(vector<GEOSGeometry *> *geoms, vector<GEOSGeometry *> *geoms2)
 {
-    
 
     GEOSSTRtree *tree = GEOSSTRtree_create(10);
 
@@ -388,8 +377,6 @@ int equal(vector<GEOSGeometry *> *geoms, vector<GEOSGeometry *> *geoms2)
     }
 
     GEOSSTRtree_destroy(tree);
-
-    
 
     return 0;
 }
@@ -410,7 +397,6 @@ void equal_exact_callback(void *geom, void *base_geom)
 
 int equal_exact(vector<GEOSGeometry *> *geoms, vector<GEOSGeometry *> *geoms2)
 {
-    
 
     GEOSSTRtree *tree = GEOSSTRtree_create(10);
 
@@ -428,8 +414,6 @@ int equal_exact(vector<GEOSGeometry *> *geoms, vector<GEOSGeometry *> *geoms2)
     }
 
     GEOSSTRtree_destroy(tree);
-
-    
 
     return 0;
 }
@@ -450,7 +434,6 @@ void cover_callback(void *geom, void *base_geom)
 
 int cover(vector<GEOSGeometry *> *geoms, vector<GEOSGeometry *> *geoms2)
 {
-    
 
     GEOSSTRtree *tree = GEOSSTRtree_create(10);
 
@@ -468,8 +451,6 @@ int cover(vector<GEOSGeometry *> *geoms, vector<GEOSGeometry *> *geoms2)
     }
 
     GEOSSTRtree_destroy(tree);
-
-    
 
     return 0;
 }
@@ -490,7 +471,6 @@ void covered_by_callback(void *geom, void *base_geom)
 
 int covered_by(vector<GEOSGeometry *> *geoms, vector<GEOSGeometry *> *geoms2)
 {
-    
 
     GEOSSTRtree *tree = GEOSSTRtree_create(10);
 
@@ -509,12 +489,10 @@ int covered_by(vector<GEOSGeometry *> *geoms, vector<GEOSGeometry *> *geoms2)
 
     GEOSSTRtree_destroy(tree);
 
-    
-
     return 0;
 }
 
-double select_test(const char *name, int (*test_function)(vector<GEOSGeometry *>*, vector<GEOSGeometry *>*), vector<GEOSGeometry *> *geoms, vector<GEOSGeometry *> *geoms2, int n)
+double select_test(const char *name, int (*test_function)(vector<GEOSGeometry *> *, vector<GEOSGeometry *> *), vector<GEOSGeometry *> *geoms, vector<GEOSGeometry *> *geoms2, int n)
 {
     double time_arr[n];
     for (int i = 0; i < n; i++)
@@ -536,13 +514,13 @@ double select_test(const char *name, int (*test_function)(vector<GEOSGeometry *>
         // time_arr[i] = time_taken;
     }
 
-    cout << "------------------- " << name << " -------------------" << endl;
-    for (int i = 0; i < n; i++)
-    {
-        cout << "The program " << i << " took " << time_arr[i] << " seconds to execute" << endl;
-    }
-    cout << "---------------------------------------------" << endl
-         << endl;
+    // cout << "------------------- " << name << " -------------------" << endl;
+    // for (int i = 0; i < n; i++)
+    // {
+    //     cout << "The program " << i << " took " << time_arr[i] << " seconds to execute" << endl;
+    // }
+    // cout << "---------------------------------------------" << endl
+    //      << endl;
 
     if (n == 1)
     {
@@ -568,27 +546,36 @@ int main(int argc, char **argv)
     MPI_Init(&argc, &argv);
 
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+    processRank = rank;
 
     MPI_Comm_size(MPI_COMM_WORLD, &numProcs);
 
     initGEOS(geos_message_handler, geos_message_handler);
 
+    int numberOfPartitions = atoi(argv[3]);
     int n = 1;
-    if (argc > 3)
-        n = atoi(argv[3]);
+    if (argc > 4)
+        n = atoi(argv[4]);
     if (!n)
         n = 1;
 
-    // const char *filename = (string(argv[1]) + "/x" + to_string(rank)).c_str();
-    // char filenameTemp[200];
-    // strcpy(filenameTemp, argv[1]);
-    // strcat(filenameTemp, to_string(rank).c_str());
-
-    
+    double create_time = 0;
+    double iterate_time = 0;
+    double query_time = 0;
+    double intersect_time = 0;
+    double overlap_time = 0;
+    double touch_time = 0;
+    double cross_time = 0;
+    double contain_time = 0;
+    double equal_time = 0;
+    double equal_exact_time = 0;
+    double cover_time = 0;
+    double covered_by_time = 0;
 
     char *filenameTemp;
     if (numProcs > 1)
     {
+
         if (rank == 0)
         {
             string line;
@@ -598,13 +585,14 @@ int main(int argc, char **argv)
                 line_count++;
 
             int line_count_per_file = (line_count / numProcs) + 1;
-            system((string("split -l ") + to_string(line_count_per_file) + " " + argv[1] + string(" -d --suffix-length=3 file_part_")).c_str());
+            system((string("split -l ") + to_string(line_count_per_file) + " " + argv[1] + string(" -d --suffix-length=3 ") + argv[1] + string("_") + to_string(numProcs) +  string("_")).c_str());
         }
         MPI_Barrier(MPI_COMM_WORLD);
 
         string filenameTempSuffix = rank < 10 ? "00" : rank < 100 ? "0"
                                                                   : "";
-        filenameTemp = (char *)(string("file_part_") + filenameTempSuffix + to_string(rank)).c_str();
+        // filenameTemp = (char *)(string("file_part_") + filenameTempSuffix + to_string(rank)).c_str();
+        filenameTemp = (char *)(argv[1] + string("_") + to_string(numProcs) + string("_") + filenameTempSuffix + to_string(rank)).c_str();
     }
     else
     {
@@ -613,132 +601,143 @@ int main(int argc, char **argv)
 
     const char *filename = filenameTemp;
     const char *filename2 = argv[2];
-    cout << "File: " << filename << endl;
 
-    vector<GEOSGeometry *> *geoms = get_polygons(filename);
-    vector<GEOSGeometry *> *geoms2 = get_polygons(filename2);
+    // for (int i = 0; i < numberOfPartitions; i += numProcs)
+    //{
+    //  const char *filename = (string(argv[1]) + "/" + to_string(rank + i)).c_str();
+    //  const char *filename2 = (string(argv[2]) + "/" + to_string(rank + i)).c_str();
+    //  cout << "File: " << (string(argv[1]) + "/" + to_string(rank + i)).c_str() << endl;
+    //  cout << "File2: " << (string(argv[2]) + "/" + to_string(rank + i)).c_str() << endl;
+    try
+    {
+        // vector<GEOSGeometry *> *geoms = get_polygons((string(argv[1]) + "/" + to_string(rank + i)).c_str());
+        string filenameTempSuffix = rank < 10 ? "00" : rank < 100 ? "0"
+                                                                  : "";
+        vector<GEOSGeometry *> *geoms = get_polygons((argv[1] + string("_") + to_string(numProcs) + string("_") + filenameTempSuffix + to_string(rank)).c_str());
+        // vector<GEOSGeometry *> *geoms2 = get_polygons((string(argv[2]) + "/" + to_string(rank + i)).c_str());
+        if (geoms->size() > 0)
+        {
+            vector<GEOSGeometry *> *geoms2 = get_polygons(argv[2]);
+            // create_time += select_test("Create", &create_tree, geoms, geoms2, n);
+            // iterate_time += select_test("Iterate", &iterate_tree, geoms, geoms2, n);
+            // query_time += select_test("Query", &query, geoms, geoms2, n);
+            intersect_time += select_test("Intersect", &intersect, geoms, geoms2, n);
+            // overlap_time += select_test("Overlap", &overlap, geoms, geoms2, n);
+            // touch_time += select_test("Touch", &touch, geoms, geoms2, n);
+            // cross_time += select_test("Cross", &cross, geoms, geoms2, n);
+            // contain_time += select_test("Contain", &contain, geoms, geoms2, n);
+            // equal_time += select_test("Equal", &equal, geoms, geoms2, n);
+            // equal_exact_time += select_test("Equal Exact (0.3)", &equal_exact, geoms, geoms2, n);
+            // cover_time += select_test("Cover", &cover, geoms, geoms2, n);
+            // covered_by_time += select_test("Covered By", &covered_by, geoms, geoms2, n);
 
-    //vector<GEOSGeometry *> *geoms = get_polygons("uniform-10k.wkt");
-    // for (auto cur = geoms->begin(); cur != geoms->end(); ++cur)
-    // {
-    //     GEOSGeometry *geom = *cur;
-    //     GEOSWKTWriter *writer = GEOSWKTWriter_create();
-    //     GEOSWKTWriter_setTrim(writer, 1);
-    //     GEOSWKTWriter_setRoundingPrecision(writer, 3);
-    //     char *wkt_geom = GEOSWKTWriter_write(writer, static_cast<const GEOSGeometry *>(geom));
+            GEOSGeometry *geom;
+            for (auto cur = geoms->begin(); cur != geoms->end(); ++cur)
+            {
+                geom = *cur;
+                GEOSGeom_destroy(geom);
+            }
+            for (auto cur = geoms2->begin(); cur != geoms2->end(); ++cur)
+            {
+                geom = *cur;
+                GEOSGeom_destroy(geom);
+            }
+        }
+    }
+    catch (...)
+    {
+        // cout << "No file named " << rank + i << endl;
+        cout << "No file" << endl;
+        // continue;
+    }
+    //}
 
-    //     GEOSWKTWriter_destroy(writer);
-    //     cout << wkt_geom << endl;
-    //     GEOSSTRtree_insert(tree, geom, GEOSEnvelope(geom));
-    // }
+    // cout << endl
+    //      << endl
+    //      << "------------------------------------------------------------------" << endl
+    //      << "--------------- BENCHMARK RESULT (Process rank:" << rank << ") ---------------" << endl
+    //      << "------------------------------------------------------------------" << endl
+    //      << "Average Create Time: " << create_time << endl
+    //      << "Average Iterate Time: " << iterate_time << endl
+    //      << "Average Query Time: " << query_time << endl
+    //      << "Average Intersect Time: " << intersect_time << endl
+    //      << "Average Overlap Time: " << overlap_time << endl
+    //      << "Average Touch Time: " << touch_time << endl
+    //      << "Average Cross Time: " << cross_time << endl
+    //      << "Average Contain Time: " << contain_time << endl
+    //      << "Average Equal Time: " << equal_time << endl
+    //      << "Average Equal Exact (0.3) Time: " << equal_exact_time << endl
+    //      << "Average Cover Time: " << cover_time << endl
+    //      << "Average Covered By Time: " << covered_by_time << endl
+    //      << "Average TOTAL: " << create_time + iterate_time + query_time + intersect_time + overlap_time + touch_time + cross_time + contain_time + equal_time + equal_exact_time + cover_time + covered_by_time << endl
+    //      << "------------------------------------------------------------------" << endl
+    //      << "------------------------------------------------------------------" << endl
+    //      << endl
+    //      << endl;
 
-    
-    //create_tree(geoms,geoms2);
+    double test_time_arr_max[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    double test_time_arr_sum[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-    //double create_time = 0;
-    // double iterate_time = 0;
-    // double query_time = 0;
-    // double intersect_time = 0;
-    // double overlap_time = 0;
-    // double touch_time = 0;
-    // double cross_time = 0;
-    // double contain_time = 0;
-    // double equal_time = 0;
-    // double equal_exact_time = 0;
-    // double cover_time = 0;
-    // double covered_by_time = 0;
-    double create_time = select_test("Create", &create_tree, geoms, geoms2, n);
-    double iterate_time = select_test("Iterate", &iterate_tree, geoms, geoms2, n);
-    double query_time = select_test("Query", &query, geoms, geoms2, n);
-    double intersect_time = select_test("Intersect", &intersect, geoms, geoms2, n);
-    double overlap_time = select_test("Overlap", &overlap, geoms, geoms2, n);
-    double touch_time = select_test("Touch", &touch, geoms, geoms2, n);
-    double cross_time = select_test("Cross", &cross, geoms, geoms2, n);
-    double contain_time = select_test("Contain", &contain, geoms, geoms2, n);
-    double equal_time = select_test("Equal", &equal, geoms, geoms2, n);
-    double equal_exact_time = select_test("Equal Exact (0.3)", &equal_exact, geoms, geoms2, n);
-    double cover_time = select_test("Cover", &cover, geoms, geoms2, n);
-    double covered_by_time = select_test("Covered By", &covered_by, geoms, geoms2, n);
+    double test_time_arr[13] = {create_time, iterate_time, query_time, intersect_time, overlap_time, touch_time,
+                                cross_time, contain_time, equal_time, equal_exact_time, cover_time, covered_by_time,
+                                create_time + iterate_time + query_time + intersect_time + overlap_time + touch_time + cross_time + contain_time + equal_time + equal_exact_time + cover_time + covered_by_time};
 
-    cout << endl
-         << endl
-         << "------------------------------------------------------------------" << endl
-         << "--------------- BENCHMARK RESULT (Process rank:" << rank << ") ---------------" << endl
-         << "------------------------------------------------------------------" << endl
-         << "Average Create Time: " << create_time << endl
-         << "Average Iterate Time: " << iterate_time << endl
-         << "Average Query Time: " << query_time << endl
-         << "Average Intersect Time: " << intersect_time << endl
-         << "Average Overlap Time: " << overlap_time << endl
-         << "Average Touch Time: " << touch_time << endl
-         << "Average Cross Time: " << cross_time << endl
-         << "Average Contain Time: " << contain_time << endl
-         << "Average Equal Time: " << equal_time << endl
-         << "Average Equal Exact (0.3) Time: " << equal_exact_time << endl
-         << "Average Cover Time: " << cover_time << endl
-         << "Average Covered By Time: " << covered_by_time << endl
-         << "------------------------------------------------------------------" << endl
-         << "------------------------------------------------------------------" << endl
-         << endl
-         << endl;
-
-    double test_time_arr_max[12] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    double test_time_arr_sum[12] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-
-    double test_time_arr[12] = {create_time, iterate_time, query_time, intersect_time, overlap_time, touch_time,
-                                cross_time, contain_time, equal_time, equal_exact_time, cover_time, covered_by_time};
-
-    MPI_Reduce(test_time_arr, test_time_arr_max, 12, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
-    MPI_Reduce(test_time_arr, test_time_arr_sum, 12, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Reduce(test_time_arr, test_time_arr_max, 13, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+    MPI_Reduce(test_time_arr, test_time_arr_sum, 13, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
 
     if (rank == 0)
     {
         if (numProcs > 1)
         {
-            system("rm ./file_part_*");
+            //system("rm ./file_part_*");
+            system((string("rm ") + argv[1] + string("_") + to_string(numProcs) + string("_*")).c_str());
         }
         cout << endl
              << endl
              << "------------------------------------------------------------------" << endl
              << "-------------------- BENCHMARK RESULT (MAX) --------------------" << endl
              << "------------------------------------------------------------------" << endl
-             << "Max Create Time: " << test_time_arr_max[0] << endl
-             << "Max Iterate Time: " << test_time_arr_max[1] << endl
-             << "Max Query Time: " << test_time_arr_max[2] << endl
+             << argv[1] << " - " << argv[2] << " - " << numProcs << endl
+             //  << "Max Create Time: " << test_time_arr_max[0] << endl
+             //  << "Max Iterate Time: " << test_time_arr_max[1] << endl
+             //  << "Max Query Time: " << test_time_arr_max[2] << endl
              << "Max Intersect Time: " << test_time_arr_max[3] << endl
-             << "Max Overlap Time: " << test_time_arr_max[4] << endl
-             << "Max Touch Time: " << test_time_arr_max[5] << endl
-             << "Max Cross Time: " << test_time_arr_max[6] << endl
-             << "Max Contain Time: " << test_time_arr_max[7] << endl
-             << "Max Equal Time: " << test_time_arr_max[8] << endl
-             << "Max Equal Exact (0.3) Time: " << test_time_arr_max[9] << endl
-             << "Max Cover Time: " << test_time_arr_max[10] << endl
-             << "Max Covered By Time: " << test_time_arr_max[11] << endl
+             //  << "Max Overlap Time: " << test_time_arr_max[4] << endl
+             //  << "Max Touch Time: " << test_time_arr_max[5] << endl
+             //  << "Max Cross Time: " << test_time_arr_max[6] << endl
+             //  << "Max Contain Time: " << test_time_arr_max[7] << endl
+             //  << "Max Equal Time: " << test_time_arr_max[8] << endl
+             //  << "Max Equal Exact (0.3) Time: " << test_time_arr_max[9] << endl
+             //  << "Max Cover Time: " << test_time_arr_max[10] << endl
+             //  << "Max Covered By Time: " << test_time_arr_max[11] << endl
+             << "Max TOTAL: " << test_time_arr_max[12] << endl
              << "------------------------------------------------------------------" << endl
              << "------------------------------------------------------------------" << endl
-             << endl
-             << endl
-             << endl
-             << endl
-             << "------------------------------------------------------------------" << endl
-             << "-------------------- BENCHMARK RESULT (AVG) --------------------" << endl
-             << "------------------------------------------------------------------" << endl
-             << "Average Create Time: " << test_time_arr_sum[0] / numProcs << endl
-             << "Average Iterate Time: " << test_time_arr_sum[1] / numProcs << endl
-             << "Average Query Time: " << test_time_arr_sum[2] / numProcs << endl
-             << "Average Intersect Time: " << test_time_arr_sum[3] / numProcs << endl
-             << "Average Overlap Time: " << test_time_arr_sum[4] / numProcs << endl
-             << "Average Touch Time: " << test_time_arr_sum[5] / numProcs << endl
-             << "Average Cross Time: " << test_time_arr_sum[6] / numProcs << endl
-             << "Average Contain Time: " << test_time_arr_sum[7] / numProcs << endl
-             << "Average Equal Time: " << test_time_arr_sum[8] / numProcs << endl
-             << "Average Equal Exact (0.3) Time: " << test_time_arr_sum[9] / numProcs << endl
-             << "Average Cover Time: " << test_time_arr_sum[10] / numProcs << endl
-             << "Average Covered By Time: " << test_time_arr_sum[11] / numProcs << endl
-             << "------------------------------------------------------------------" << endl
-             << "------------------------------------------------------------------" << endl
-             << endl
-             << endl;
+            //  << endl
+            //  << endl
+            //  << endl
+            //  << endl
+            //  << "------------------------------------------------------------------" << endl
+            //  << "-------------------- BENCHMARK RESULT (AVG) --------------------" << endl
+            //  << "------------------------------------------------------------------" << endl
+            //  << "Average Create Time: " << test_time_arr_sum[0] / numProcs << endl
+            //  << "Average Iterate Time: " << test_time_arr_sum[1] / numProcs << endl
+            //  << "Average Query Time: " << test_time_arr_sum[2] / numProcs << endl
+            //  << "Average Intersect Time: " << test_time_arr_sum[3] / numProcs << endl
+            //  << "Average Overlap Time: " << test_time_arr_sum[4] / numProcs << endl
+            //  << "Average Touch Time: " << test_time_arr_sum[5] / numProcs << endl
+            //  << "Average Cross Time: " << test_time_arr_sum[6] / numProcs << endl
+            //  << "Average Contain Time: " << test_time_arr_sum[7] / numProcs << endl
+            //  << "Average Equal Time: " << test_time_arr_sum[8] / numProcs << endl
+            //  << "Average Equal Exact (0.3) Time: " << test_time_arr_sum[9] / numProcs << endl
+            //  << "Average Cover Time: " << test_time_arr_sum[10] / numProcs << endl
+            //  << "Average Covered By Time: " << test_time_arr_sum[11] / numProcs << endl
+            //  << "Average TOTAL: " << test_time_arr_sum[12] / numProcs << endl
+            //  << "------------------------------------------------------------------" << endl
+            //  << "------------------------------------------------------------------" << endl
+            //  << endl
+            //  << endl
+            ;
     }
 
     finishGEOS();
