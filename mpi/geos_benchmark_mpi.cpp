@@ -38,10 +38,10 @@ int create_tree(const char *filename, const char *filename2)
 {
     int pid;
     MPI_Comm_rank(MPI_COMM_WORLD, &pid);
-    printf("Entering initGEOS %d\n", pid);
+    // printf("Entering initGEOS %d\n", pid);
     initGEOS(geos_message_handler, geos_message_handler);
 
-    printf("Entering GEOSSTRtree_create %d\n", pid);
+    // printf("Entering GEOSSTRtree_create %d\n", pid);
     GEOSSTRtree *tree = GEOSSTRtree_create(10);
 
     FILE *input;
@@ -51,15 +51,17 @@ int create_tree(const char *filename, const char *filename2)
     {
         if (strlen(line) > 5 && string(line).find("("))
         {
+            printf("Entering GEOSGeomFromWKT %d: %s\n", pid, line);
             GEOSGeometry *geom = GEOSGeomFromWKT(line);
+            printf("Entering GEOSSTRtree_insert %d\n", pid);
             GEOSSTRtree_insert(tree, geom, GEOSEnvelope(geom));
         }
     }
 
-    printf("Entering GEOSSTRtree_destroy %d\n", pid);
+    // printf("Entering GEOSSTRtree_destroy %d\n", pid);
     GEOSSTRtree_destroy(tree);
 
-    printf("Entering finishGEOS %d\n", pid);
+    // printf("Entering finishGEOS %d\n", pid);
     finishGEOS();
 
     return 0;
