@@ -46,6 +46,7 @@ int create_tree(const char *filename, const char *filename2)
     GEOSSTRtree *tree = GEOSSTRtree_create(10);
 
     try {
+        printf("FILE NAME: %s\n", filename)
         FILE *input;
         input = fopen(filename, "r");
         char line[MAX_LINE_LENGTH];
