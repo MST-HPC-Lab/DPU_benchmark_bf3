@@ -965,6 +965,12 @@ double select_test(char *name, int (*test_function)(const char *, const char *),
 
 int main(int argc, char **argv)
 {
+    /* PROGRAM ARGUMENTS:
+        - name of base wkt file
+        - name of query wkt file
+        - (int) number of processes
+    */
+
     int n = 1;
     if (argc > 3)
         n = atoi(argv[3]);
