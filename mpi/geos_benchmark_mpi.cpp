@@ -12,6 +12,7 @@
 #include <iostream>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <stdexcept>
 
 #include <geos_c.h>
 #include <cstring>
@@ -58,8 +59,8 @@ int create_tree(const char *filename, const char *filename2)
                 GEOSSTRtree_insert(tree, geom, GEOSEnvelope(geom));
             }
         }
-    } catch(Exception ex) {
-        cout << ex << endl;
+    } catch (const exception& e) {
+        cout << e.what() << endl;
         MPI_Flush(stdout);
         exit(1);
     }
