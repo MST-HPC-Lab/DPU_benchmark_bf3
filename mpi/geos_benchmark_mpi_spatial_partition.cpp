@@ -539,12 +539,6 @@ double select_test(const char *name, int (*test_function)(vector<GEOSGeometry *>
 
 int main(int argc, char **argv)
 {
-    /* PROGRAM ARGUMENTS:
-        - name of base wkt file
-        - name of query wkt file
-        - (int) number of processes
-    */
-
     int rank;
     int numProcs;
 

@@ -33,7 +33,6 @@ geos_message_handler(const char *fmt, ...)
 
 int create_tree(const char *filename, const char *filename2)
 {
-    printf("FILE NAME: %s\n", filename);
     initGEOS(geos_message_handler, geos_message_handler);
 
     GEOSSTRtree *tree = GEOSSTRtree_create(10);
@@ -966,13 +965,6 @@ double select_test(char *name, int (*test_function)(const char *, const char *),
 
 int main(int argc, char **argv)
 {
-    /* PROGRAM ARGUMENTS:
-        - name of base wkt file
-        - name of query wkt file
-        - (int) number of processes
-    */
-
-    printf("PROCESSING ARGS");
     int n = 1;
     if (argc > 3)
         n = atoi(argv[3]);
@@ -981,7 +973,6 @@ int main(int argc, char **argv)
     const char *filename = argv[1];
     const char *filename2 = argv[2];
 
-    printf("STARTING TESTS");
     double create_time = select_test("Create", &create_tree, filename, filename2, n);
     double iterate_time = select_test("Iterate", &iterate_tree, filename, filename2, n);
     double query_time = select_test("Query", &query, filename, filename2, n);

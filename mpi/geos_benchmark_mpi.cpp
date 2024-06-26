@@ -37,16 +37,14 @@ geos_message_handler(const char *fmt, ...)
 
 int create_tree(const char *filename, const char *filename2)
 {
-    int pid;
-    MPI_Comm_rank(MPI_COMM_WORLD, &pid);
+    // int pid;
+    // MPI_Comm_rank(MPI_COMM_WORLD, &pid);
     // printf("Entering initGEOS %d\n", pid);
     initGEOS(geos_message_handler, geos_message_handler);
 
-    // printf("Entering GEOSSTRtree_create %d\n", pid);
     GEOSSTRtree *tree = GEOSSTRtree_create(10);
 
-    try {
-        printf("FILE NAME: %s\n", filename);
+    // try {
         FILE *input;
         input = fopen(filename, "r");
         char line[MAX_LINE_LENGTH];
@@ -54,21 +52,17 @@ int create_tree(const char *filename, const char *filename2)
         {
             if (strlen(line) > 5 && string(line).find("("))
             {
-                printf("Entering GEOSGeomFromWKT %d: %s\n", pid, line);
                 GEOSGeometry *geom = GEOSGeomFromWKT(line);
-                printf("Entering GEOSSTRtree_insert %d\n", pid);
                 GEOSSTRtree_insert(tree, geom, GEOSEnvelope(geom));
             }
         }
-    } catch (const exception& e) {
-        cout << e.what() << endl;
-        fflush(stdout);
-        exit(1);
-    }
-    // printf("Entering GEOSSTRtree_destroy %d\n", pid);
+    // } catch (const exception& e) {
+    //     cout << e.what() << endl;
+    //     fflush(stdout);
+    //     exit(1);
+    // }
     GEOSSTRtree_destroy(tree);
 
-    // printf("Entering finishGEOS %d\n", pid);
     finishGEOS();
 
     return 0;
@@ -1025,12 +1019,6 @@ double select_test(const char *name, int (*test_function)(const char *, const ch
 
 int main(int argc, char **argv)
 {
-    /* PROGRAM ARGUMENTS:
-        - name of base wkt file
-        - name of query wkt file
-        - (int) number of processes
-    */
-
     int rank;
     int numProcs;
 
