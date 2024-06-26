@@ -44,20 +44,25 @@ int create_tree(const char *filename, const char *filename2)
     // printf("Entering GEOSSTRtree_create %d\n", pid);
     GEOSSTRtree *tree = GEOSSTRtree_create(10);
 
-    FILE *input;
-    input = fopen(filename, "r");
-    char line[MAX_LINE_LENGTH];
-    while (fgets(line, MAX_LINE_LENGTH, input))
-    {
-        if (strlen(line) > 5 && string(line).find("("))
+    try {
+        FILE *input;
+        input = fopen(filename, "r");
+        char line[MAX_LINE_LENGTH];
+        while (fgets(line, MAX_LINE_LENGTH, input))
         {
-            printf("Entering GEOSGeomFromWKT %d: %s\n", pid, line);
-            GEOSGeometry *geom = GEOSGeomFromWKT(line);
-            printf("Entering GEOSSTRtree_insert %d\n", pid);
-            GEOSSTRtree_insert(tree, geom, GEOSEnvelope(geom));
+            if (strlen(line) > 5 && string(line).find("("))
+            {
+                printf("Entering GEOSGeomFromWKT %d: %s\n", pid, line);
+                GEOSGeometry *geom = GEOSGeomFromWKT(line);
+                printf("Entering GEOSSTRtree_insert %d\n", pid);
+                GEOSSTRtree_insert(tree, geom, GEOSEnvelope(geom));
+            }
         }
+    } catch(Exception ex) {
+        cout << ex << endl;
+        MPI_Flush(stdout);
+        exit(1);
     }
-
     // printf("Entering GEOSSTRtree_destroy %d\n", pid);
     GEOSSTRtree_destroy(tree);
 
