@@ -61,7 +61,7 @@ int create_tree(const char *filename, const char *filename2)
         }
     } catch (const exception& e) {
         cout << e.what() << endl;
-        MPI_Flush(stdout);
+        fflush(stdout);
         exit(1);
     }
     // printf("Entering GEOSSTRtree_destroy %d\n", pid);
