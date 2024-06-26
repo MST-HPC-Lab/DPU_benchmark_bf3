@@ -5,7 +5,7 @@ from sys import argv
 
 if __name__ == "__main__":
     with open(argv[1], 'r') as f:
-        lines = f.readlines()
+        lines = f.readlines() # TODO: change so that we only read and write a line (or so many lines) at a time, in case of files too large to fit in memory at once.
 
     with open(argv[1].split('.')[0] + ".wkt", 'a+') as o:
         for l in lines:

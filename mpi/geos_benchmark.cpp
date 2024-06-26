@@ -71,6 +71,7 @@ void iterate_tree_callback(void *geom, void *userdata)
 
 int iterate_tree(const char *filename, const char *filename2)
 {
+    printf("FILE NAME: %s", filename)
     initGEOS(geos_message_handler, geos_message_handler);
 
     GEOSGeometry *geoms[MAX_GEOM_NUMBER];
