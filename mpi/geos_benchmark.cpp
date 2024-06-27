@@ -17,7 +17,7 @@
 #include <vector>
 #include <sys/time.h>
 
-#define MAX_LINE_LENGTH 30000
+#define MAX_LINE_LENGTH 500000 // 30000
 #define MAX_GEOM_NUMBER 500000
 
 using namespace std;
@@ -33,10 +33,9 @@ geos_message_handler(const char *fmt, ...)
 
 int create_tree(const char *filename, const char *filename2)
 {
-    printf("Entering initGEOS");
+    // printf("Entering initGEOS\n");
     initGEOS(geos_message_handler, geos_message_handler);
 
-    printf("Entering GEOSSTRtree_create");
     GEOSSTRtree *tree = GEOSSTRtree_create(10);
 
     FILE *input;
@@ -46,20 +45,15 @@ int create_tree(const char *filename, const char *filename2)
     {
         if (strlen(line) > 5 && string(line).find("("))
         {
-            printf("Entering GEOSGeomFromWKT");
             GEOSGeometry *geom = GEOSGeomFromWKT(line);
-            printf("Entering GEOSEnvelope");
             GEOSSTRtree_insert(tree, geom, GEOSEnvelope(geom));
         }
     }
 
-    printf("Entering GEOSSTRtree_destroy");
     GEOSSTRtree_destroy(tree);
 
-    printf("Entering finishGEOS");
     finishGEOS();
 
-    printf("Exiting create_tree");
     return 0;
 }
 
