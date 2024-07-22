@@ -169,9 +169,11 @@ target_link_libraries(bf_grpc_proto
   ${_GRPC_GRPCPP}
   ${_PROTOBUF_LIBPROTOBUF})
 
-# Targets greeter_[async_](client|server)
+# ATTENTION: Here's where you need to list the files you want compiled!
+# Targets files
 foreach(_target
-  experiments/*)
+  "experiments/*"
+  )
   add_executable(${_target} "${_target}.cc")
   target_link_libraries(${_target}
     bf_grpc_proto
