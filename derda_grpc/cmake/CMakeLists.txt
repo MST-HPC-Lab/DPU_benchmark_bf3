@@ -172,7 +172,10 @@ target_link_libraries(bf_grpc_proto
 # ATTENTION: Here's where you need to list the files you want compiled!
 # Targets files
 foreach(_target
-  "experiments/*"
+  experiments/exp1_blocking_rtree
+  experiments/exp1_non_blocking_rtree
+  experiments/greeter_client
+  experiments/greeter_server
   )
   add_executable(${_target} "${_target}.cc")
   target_link_libraries(${_target}
