@@ -3,12 +3,5 @@ grpc_full/*
 */build/*
 !*/build/
 
-*/cmake/CMakeCache.txt
-*/cmake/cmake_install.cmake
-*/cmake/CMakeFiles/
-*/cmake/Makefile
-
-*/CMakeCache.txt
-*/cmake_install.cmake
-*/CMakeFiles/
-*/Makefile
+*/bin/*
+# */lib/*

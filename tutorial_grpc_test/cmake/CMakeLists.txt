@@ -1,3 +1,5 @@
+# FILE MODIFIED BY Nathan Tibbetts, July 2024
+
 # Copyright 2018 gRPC authors.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,13 +23,19 @@ cmake_minimum_required(VERSION 3.5.1)
 
 project(HelloWorld C CXX)
 
-include(common.cmake) 
+include("common.cmake") 
+
+# Set Make's output directory
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../bin")
+# set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../lib") # Uncomment if building a library?
+# set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../lib")
 
 # Proto file
-get_filename_component(hw_proto "helloworld.proto" ABSOLUTE)
+get_filename_component(hw_proto "../protos/helloworld.proto" ABSOLUTE) # Tells it to resolve this file to an absolute path
 get_filename_component(hw_proto_path "${hw_proto}" PATH)
 
 # Generated sources
+# message(STATUS "CURRENT DIR: ${CMAKE_CURRENT_BINARY_DIR}")
 set(hw_proto_srcs "${CMAKE_CURRENT_BINARY_DIR}/helloworld.pb.cc")
 set(hw_proto_hdrs "${CMAKE_CURRENT_BINARY_DIR}/helloworld.pb.h")
 set(hw_grpc_srcs "${CMAKE_CURRENT_BINARY_DIR}/helloworld.grpc.pb.cc")
@@ -61,7 +69,7 @@ foreach(_target
   greeter_client greeter_server )
   # greeter_callback_client greeter_callback_server 
   # greeter_async_client greeter_async_client2 greeter_async_server)
-  add_executable(${_target} "${_target}.cc")
+  add_executable(${_target} "../experiments/${_target}.cc")
   target_link_libraries(${_target}
     hw_grpc_proto
     ${_REFLECTION}

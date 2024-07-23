@@ -1,6 +1,7 @@
 # MODIFIED BY Nathan Tibbetts, July 2024
-# NOTE: To add files to the project, you may need to add them to the foreach target list at the bottom of this file.
-
+# NOTE: To add files to the project, you will need to add them to the foreach
+#   target list at the bottom of this file.
+################################################################################
 
 # ORIGINAL LICENSE NOTICE:
 
@@ -22,6 +23,8 @@
 # Assumes protobuf and gRPC have been installed using cmake.
 # See cmake_externalproject/CMakeLists.txt for all-in-one cmake build
 # that automatically builds all the dependencies before building helloworld.
+
+
 
 cmake_minimum_required(VERSION 3.5.1)
 
@@ -139,15 +142,20 @@ find_package(Threads REQUIRED)
 # END OF common.cmake CONTENTS ------------------------------------------------------------
 
 
+# Set Make's output directory
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../bin")
+# set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../lib") # Uncomment if building a library?
+# set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/../lib")
+
 # Proto file
-get_filename_component(bf_proto "protos/bluefield_grpc.proto" ABSOLUTE)
+get_filename_component(bf_proto "../protos/bluefield_grpc.proto" ABSOLUTE)
 get_filename_component(bf_proto_path "${bf_proto}" PATH)
 
 # Generated sources
-set(bf_proto_srcs "${CMAKE_CURRENT_BINARY_DIR}/build/bluefield_grpc.pb.cc")
-set(bf_proto_hdrs "${CMAKE_CURRENT_BINARY_DIR}/build/bluefield_grpc.pb.h")
-set(bf_grpc_srcs "${CMAKE_CURRENT_BINARY_DIR}/build/bluefield_grpc.grpc.pb.cc")
-set(bf_grpc_hdrs "${CMAKE_CURRENT_BINARY_DIR}/build/bluefield_grpc.grpc.pb.h")
+set(bf_proto_srcs "${CMAKE_CURRENT_BINARY_DIR}/bluefield_grpc.pb.cc")
+set(bf_proto_hdrs "${CMAKE_CURRENT_BINARY_DIR}/bluefield_grpc.pb.h")
+set(bf_grpc_srcs  "${CMAKE_CURRENT_BINARY_DIR}/bluefield_grpc.grpc.pb.cc")
+set(bf_grpc_hdrs  "${CMAKE_CURRENT_BINARY_DIR}/bluefield_grpc.grpc.pb.h")
 add_custom_command(
       OUTPUT "${bf_proto_srcs}" "${bf_proto_hdrs}" "${bf_grpc_srcs}" "${bf_grpc_hdrs}"
       COMMAND ${_PROTOBUF_PROTOC}
@@ -172,17 +180,16 @@ target_link_libraries(bf_grpc_proto
   ${_GRPC_GRPCPP}
   ${_PROTOBUF_LIBPROTOBUF})
 
-  
+
 # ATTENTION: Here's where you need to list the files you want compiled!
 # Targets files
 foreach(_target
-  # experiments/*
-  # experiments/exp1_blocking_rtree
-  # experiments/exp1_non_blocking_rtree
-  experiments/greeter_client
-  experiments/greeter_server
+  # exp1_blocking_rtree
+  # exp1_non_blocking_rtree
+  greeter_client
+  greeter_server
   )
-  add_executable(${_target} "${_target}.cc")
+  add_executable(${_target} "../experiments/${_target}.cc")
   target_link_libraries(${_target}
     bf_grpc_proto
     ${_REFLECTION}
