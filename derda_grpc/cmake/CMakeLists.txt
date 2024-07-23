@@ -1,4 +1,7 @@
 # MODIFIED BY Nathan Tibbetts, July 2024
+# NOTE: To add files to the project, you may need to add them to the foreach target list at the bottom of this file.
+
+
 # ORIGINAL LICENSE NOTICE:
 
 # Copyright 2018 gRPC authors.
@@ -169,11 +172,13 @@ target_link_libraries(bf_grpc_proto
   ${_GRPC_GRPCPP}
   ${_PROTOBUF_LIBPROTOBUF})
 
+  
 # ATTENTION: Here's where you need to list the files you want compiled!
 # Targets files
 foreach(_target
-  experiments/exp1_blocking_rtree
-  experiments/exp1_non_blocking_rtree
+  # experiments/*
+  # experiments/exp1_blocking_rtree
+  # experiments/exp1_non_blocking_rtree
   experiments/greeter_client
   experiments/greeter_server
   )
