@@ -140,6 +140,7 @@ find_package(Threads REQUIRED)
 # endif()
 
 # END OF common.cmake CONTENTS ------------------------------------------------------------
+# CONTINUING ORIGINAL FILE, with modifications
 
 
 # Set Make's output directory
@@ -184,15 +185,38 @@ target_link_libraries(bf_grpc_proto
 # ATTENTION: Here's where you need to list the files you want compiled!
 # Targets files
 foreach(_target
-  # exp1_blocking_rtree
-  # exp1_non_blocking_rtree
+  exp1_blocking_rtree
+  exp1_non_blocking_rtree
+  exp2_multiple_query_multiple_thread_floating_point_client
+  exp2_multiple_query_multiple_thread_floating_point_dpu
+  exp2_multiple_query_multiple_thread_floating_point_server
+  exp3_multiple_query_multiple_thread_client
+  exp3_multiple_query_multiple_thread_server
+  exp4_multiple_query_client
+  exp4_multiple_query_dpu
+  exp4_multiple_query_server
+  exp5_multiple_thread_client
+  exp5_multiple_thread_dpu
+  exp5_multiple_thread_server
+  exp6_load_balancing_client
+  exp6_load_balancing_server
+  # geosbm_client # Has a BUG
+  # geosbm_server
   greeter_client
   greeter_server
+  lb_mt_client
+  lb_mt_server
+  lb_mt_tfr_client
+  lb_mt_tfr_server
+  # z_lb_mt_fr_sc
+  # z_lb_mt_fr_server # Has a BUG
+  zzz_fpc_lb_mt_mfr_sc
   )
   add_executable(${_target} "../experiments/${_target}.cc")
   target_link_libraries(${_target}
     bf_grpc_proto
     ${_REFLECTION}
     ${_GRPC_GRPCPP}
-    ${_PROTOBUF_LIBPROTOBUF})
+    ${_PROTOBUF_LIBPROTOBUF}
+    geos_c) # NATHAN ADDED to make GEOS library usage work
 endforeach()

@@ -6,14 +6,16 @@ For getting and testing a local install of gRPC such that this project can work:
 
 https://grpc.io/docs/languages/cpp/quickstart/
 
-For running this project, those same instructions can work. Only, rather than running their examples/cpp/helloworld within the gRPC install files, change into this project's directory and follow the same idea. Something like this:
+And follow my other instructions in the Lab-Wiki repo on installing geos and gRPC to get the path variables set up better.
+
+For running this project, the quick-start instructions above can work. Only, rather than running their examples/cpp/helloworld within the gRPC install files, change into this project's directory and follow the same idea. Something like this:
 
 ``` bash
 # Change into build directory (make it if it's missing) to keep build files contained tidily
-cd DPU_benchmark_bf3/derda_grpc/build
+cd DPU_benchmark_bf3/tutorial_grpc_test/build # We cd into this directory because cmake dumps all the temp build files wherever you're at
 
 # Generate the build files for your machine / configuration
-cmake ../cmake
+cmake ../cmake # Tells cmake where to find the CMakeLists.txt file
 # Should only need run the first time,
 #   unless you add or remove files and edit CMakeLists.txt,
 #   since cmake produces the Makefile.
