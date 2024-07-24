@@ -218,5 +218,5 @@ foreach(_target
     ${_REFLECTION}
     ${_GRPC_GRPCPP}
     ${_PROTOBUF_LIBPROTOBUF}
-    geos_c) # NATHAN ADDED to make GEOS library usage work
+    geos_c) # NATHAN ADDED to make GEOS library usage work. Apparently if GEOS is installed correctly it knows where to find it based on the name geos_c
 endforeach()
