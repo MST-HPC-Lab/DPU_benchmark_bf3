@@ -1,3 +1,7 @@
+Data/*
+!Data/*.py
+!Data/*.md
+
 grpc_full/*
 
 */build/*
