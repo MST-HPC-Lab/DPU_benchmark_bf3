@@ -179,9 +179,11 @@ class ServerImpl final {
     // const char* filename = "/home/dpu/data/cemet_data_indexed";
     // const char* filename = "/home/dpu/data/cemet_data_indexed";
     const char* fileBase =
-        "/global/scratch/users/satishp/data/lakes_data_indexed";
+        // "/global/scratch/users/satishp/data/lakes_data_indexed";
+        "../../Data/no_partition/cemetery.wkt_indexed";
     const char* fileQuery =
-        "/global/scratch/users/satishp/data/sports_data_indexed";
+        // "/global/scratch/users/satishp/data/sports_data_indexed";
+        "../../Data/no_partition/sports.wkt_indexed";
 
     map<std::string, GEOSGeometry*> geomsBase = get_polygon_map(fileBase, ctx);
     map<std::string, GEOSGeometry*> geomsQuery =
