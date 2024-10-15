@@ -88,7 +88,13 @@ map<std::string, GEOSGeometry*> get_polygon_map_without_id(
   return geom_map;
 }
 
-void intersect_callback(void* geom, void* base_geom) {
+struct CallbackData
+{
+  GEOSContextHandle_t* ctx;
+  GEOSGeometry* geom;
+};
+
+void intersect_callback(void* matching_geom, void* callback_data) {
   // GEOSWKTWriter* writer = GEOSWKTWriter_create_r(ctx);
   // GEOSWKTWriter_setTrim_r(ctx, writer, 1);
   // GEOSWKTWriter_setRoundingPrecision_r(ctx, writer, 3);
@@ -104,8 +110,9 @@ void intersect_callback(void* geom, void* base_geom) {
   //                              string(wkt_geom));
   // cout << "Intersect candidate..." << endl;
 
-  if (GEOSIntersects_r(ctx, static_cast<const GEOSGeometry*>(geom),
-                       static_cast<const GEOSGeometry*>(base_geom))) {
+  CallbackData inputs = *static_cast<CallbackData*>(callback_data);
+  if (GEOSIntersects_r(*(inputs.ctx), static_cast<const GEOSGeometry*>(matching_geom),
+                       inputs.geom)) {
     cout << "Intersection found!" << endl;
     intersectCount++;
     if (intersectCount % 100 == 0) {
@@ -123,8 +130,10 @@ void non_blocking_rtree_intersect(map<std::string, GEOSGeometry*> geoms,
                                   GEOSContextHandle_t ctx) {
   for (auto const& cur : geoms) {
     GEOSGeometry* geom = cur.second;
-    GEOSSTRtree_insert_r(ctx, treeBase, geom, GEOSEnvelope_r(ctx, geom));
-    GEOSSTRtree_query_r(ctx, queryTree, geom, intersect_callback, geom);
+    CallbackData inputs = { &ctx, geom };
+    GEOSSTRtree_insert_r(ctx, treeBase, geom, GEOSEnvelope_r(ctx, geom)); // TODO: isn't the whole point of an RTree that it does the rectangle stuff for you, built-in?
+    GEOSSTRtree_query_r(ctx, queryTree, geom, intersect_callback, &inputs);
+    cout << "DOING non_blocking_rtree_intersect FUNCTION" << endl; // TODO: Remove
   }
 }
 
@@ -206,7 +215,9 @@ class ServerImpl final {
 
     for (auto const& cur : geomsQuery) {
       GEOSGeometry* geom = cur.second;
-      GEOSSTRtree_query_r(ctx, tree, geom, intersect_callback, geom);
+      CallbackData inputs = { &ctx, geom };
+      GEOSSTRtree_query_r(ctx, tree, geom, intersect_callback, &inputs); // <---------------------------------------------------------------------<<< ?
+      cout << "DOING run FUNCTION" << endl; // TODO: remove
     }
 
     cout << "intersectCount: " << intersectCount << endl;
@@ -349,8 +360,10 @@ class ServerImpl final {
             }
             geomString = geomString + "))";
             geomSize = polygonArray[i];
+
             GEOSGeometry* geom = GEOSGeomFromWKT_r(ctx, geomString.c_str());
-            GEOSSTRtree_query_r(ctx, tree, geom, intersect_callback, geom);
+            CallbackData inputs = { &ctx, geom };
+            GEOSSTRtree_query_r(ctx, tree, geom, intersect_callback, &inputs); // <---------------------------------------------------------------------<<< ?
             // cout << "GeomSize:" << geomSize << endl;
 
             // cout << "i:" << i << endl;

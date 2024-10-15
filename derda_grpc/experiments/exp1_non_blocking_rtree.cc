@@ -22,65 +22,84 @@
 #include "bluefield_grpc.grpc.pb.h"
 #endif
 
+using bluefield_grpc::Greeter;
+using bluefield_grpc::HelloReply;
+using bluefield_grpc::HelloRequest;
 using grpc::Server;
 using grpc::ServerAsyncResponseWriter;
 using grpc::ServerBuilder;
 using grpc::ServerCompletionQueue;
 using grpc::ServerContext;
 using grpc::Status;
-using bluefield_grpc::Greeter;
-using bluefield_grpc::HelloReply;
-using bluefield_grpc::HelloRequest;
 
 using namespace std;
+
+
 double total_intersect_time = 0;
-int start_test(std::string file1, std::string file2, GEOSContextHandle_t ctx);
-
-GEOSContextHandle_t ctx;
-queue<std::string> intersectCandidateQueue;
-
-GEOSSTRtree* tree;
-GEOSSTRtree* treeBase;
-GEOSSTRtree* treeQuery;
+// int start_test(std::string file1, std::string file2, GEOSContextHandle_t ctx);
 
 struct timeval tv1, tv2;
 vector<double> elapsedTimes;
-
 int intersectCount = 0;
 
-static void geos_message_handler(const char* fmt, ...) {
+
+
+static void geos_message_handler(const char *fmt, ...)
+{
   va_list ap;
   va_start(ap, fmt);
   vprintf(fmt, ap);
   va_end(ap);
 }
 
-map<std::string, GEOSGeometry*> get_polygon_map(const char* filename,
-                                                GEOSContextHandle_t ctx) {
-  map<std::string, GEOSGeometry*> geom_map;
+static GEOSContextHandle_t init_geos()
+{ // Simple function to run some GEOS initialization, to be called in each
+  //   thread, including root (reentrant version)
+  GEOSContextHandle_t ctx = GEOS_init_r();
+  GEOSContext_setNoticeHandler_r(ctx, geos_message_handler);
+  GEOSContext_setErrorHandler_r(ctx, geos_message_handler);
+  return ctx;
+}
+
+// static void cleanup_geos(GEOSContextHandle_t &ctx)
+// { // Clean up GEOS, to be called in each thread & root (reentrant version)
+//   GEOS_finish_r(ctx);
+// }
+
+
+
+map<std::string, GEOSGeometry *> get_polygon_map(const char *filename,
+                                                 GEOSContextHandle_t ctx)
+{
+  map<std::string, GEOSGeometry *> geom_map;
   std::ifstream input(filename);
-  for (std::string line; getline(input, line);) {
-    if (line.length() > 5 && line.find("(")) {
+  for (std::string line; getline(input, line);)
+  {
+    if (line.length() > 5 && line.find("("))
+    {
       string id = line.substr(0, line.find(" - "));
       string geom_string = line.substr(line.find(" - ") + 3);
       // cout << geom_string << endl;
-      GEOSGeometry* geom = GEOSGeomFromWKT_r(ctx, geom_string.c_str());
+      GEOSGeometry *geom = GEOSGeomFromWKT_r(ctx, geom_string.c_str());
       geom_map[id] = geom;
     }
   }
   return geom_map;
 }
 
-map<std::string, GEOSGeometry*> get_polygon_map_without_id(
-    const char* filename, GEOSContextHandle_t ctx) {
-  map<std::string, GEOSGeometry*> geom_map;
+map<std::string, GEOSGeometry *> get_polygon_map_without_id(
+    const char *filename, GEOSContextHandle_t ctx)
+{
+  map<std::string, GEOSGeometry *> geom_map;
   std::ifstream input(filename);
   int ai_id = 0;
-  for (std::string line; getline(input, line);) {
-    if (line.length() > 5 && line.find("(")) {
+  for (std::string line; getline(input, line);)
+  {
+    if (line.length() > 5 && line.find("("))
+    {
       string geom_string = line;
       // cout << geom_string << endl;
-      GEOSGeometry* geom = GEOSGeomFromWKT_r(ctx, geom_string.c_str());
+      GEOSGeometry *geom = GEOSGeomFromWKT_r(ctx, geom_string.c_str());
       geom_map[to_string(ai_id)] = geom;
       ai_id++;
     }
@@ -88,7 +107,13 @@ map<std::string, GEOSGeometry*> get_polygon_map_without_id(
   return geom_map;
 }
 
-void intersect_callback(void* geom, void* base_geom) {
+struct CallbackData
+{
+  GEOSContextHandle_t* ctx;
+  GEOSGeometry* geom;
+};
+
+void intersect_callback(void* matching_geom, void* callback_data) {
   // GEOSWKTWriter* writer = GEOSWKTWriter_create_r(ctx);
   // GEOSWKTWriter_setTrim_r(ctx, writer, 1);
   // GEOSWKTWriter_setRoundingPrecision_r(ctx, writer, 3);
@@ -104,11 +129,13 @@ void intersect_callback(void* geom, void* base_geom) {
   //                              string(wkt_geom));
   // cout << "Intersect candidate..." << endl;
 
-  if (GEOSIntersects_r(ctx, static_cast<const GEOSGeometry*>(geom),
-                       static_cast<const GEOSGeometry*>(base_geom))) {
+  CallbackData inputs = *static_cast<CallbackData*>(callback_data);
+  if (GEOSIntersects_r(*(inputs.ctx), static_cast<const GEOSGeometry*>(matching_geom),
+                       inputs.geom)) {
     cout << "Intersection found!" << endl;
     intersectCount++;
-    if (intersectCount % 100 == 0) {
+    if (intersectCount % 100 == 0)
+    {
       gettimeofday(&tv2, NULL);
       double time_spent = (double)(tv2.tv_usec - tv1.tv_usec) / 1000000 +
                           (double)(tv2.tv_sec - tv1.tv_sec);
@@ -118,14 +145,25 @@ void intersect_callback(void* geom, void* base_geom) {
   }
 }
 
-void non_blocking_rtree_intersect(map<std::string, GEOSGeometry*> geoms, GEOSSTRtree* tree1,
-                                  GEOSSTRtree* tree2,
-                                  GEOSContextHandle_t ctx) {
-  for (auto const& cur : geoms) {
-    GEOSGeometry* geom = cur.second;
+// Reentrant-prepared function for a threaded call
+void non_blocking_rtree_intersect_thread(
+          map<std::string, GEOSGeometry *> geoms, 
+          GEOSSTRtree *tree1,
+          GEOSSTRtree *tree2)
+{
+  // Initialize GEOS for this thread
+  GEOSContextHandle_t ctx = init_geos();
+
+  for (auto const &cur : geoms)
+  {
+    GEOSGeometry *geom = cur.second;
+    CallbackData inputs = { &ctx, geom };
     GEOSSTRtree_insert_r(ctx, tree1, geom, GEOSEnvelope_r(ctx, geom));
-    GEOSSTRtree_query_r(ctx, tree2, geom, intersect_callback, geom);
+    GEOSSTRtree_query_r(ctx, tree2, geom, intersect_callback, &inputs);
   }
+
+  // Clean up GEOS for this thread
+  GEOS_finish_r(ctx);
 }
 
 // string intersectsRefinement(string candidatePair) {
@@ -143,18 +181,28 @@ void non_blocking_rtree_intersect(map<std::string, GEOSGeometry*> geoms, GEOSSTR
 //   }
 // }
 
-class ServerImpl final {
- public:
-  ~ServerImpl() {
+class ServerImpl final
+{
+public:
+  ServerImpl() // Constructor
+  {
+    ctx_0 = init_geos(); // The GEOS context for the root thread
+    // queue<std::string> intersectCandidateQueue;
+  }
+
+  ~ServerImpl() // Destructor
+  {
+    finishGEOS_r(ctx_0);
+
     server_->Shutdown();
     // Always shutdown the completion queue after the server.
     cq_->Shutdown();
   }
 
   // There is no shutdown handling in this code.
-  void Run() {
+  void Run()
+  {
     std::string server_address("0.0.0.0:50051");
-
     ServerBuilder builder;
     // Listen on the given address without any authentication mechanism.
     builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
@@ -171,27 +219,26 @@ class ServerImpl final {
     // Proceed to the server's main loop.
     // HandleRpcs();
 
-    ctx = GEOS_init_r();
-    GEOSContext_setNoticeHandler_r(ctx, geos_message_handler);
-    GEOSContext_setErrorHandler_r(ctx, geos_message_handler);
-    cout << "GEOS version: %s\n" << GEOSversion() << endl;
+    //////
+
+    cout << "GEOS version: %s\n"
+         << GEOSversion() << endl;
 
     // const char* filename = "/home/dpu/data/cemet_data_indexed";
     // const char* filename = "/home/dpu/data/cemet_data_indexed";
-    const char* fileBase =
+    const char *fileBase =
         // "/global/scratch/users/satishp/data/lakes_data_indexed";
         "../../Data/no_partition/cemetery.wkt_indexed";
-    const char* fileQuery =
+    const char *fileQuery =
         // "/global/scratch/users/satishp/data/sports_data_indexed";
         "../../Data/no_partition/sports.wkt_indexed";
 
-    map<std::string, GEOSGeometry*> geomsBase = get_polygon_map(fileBase, ctx);
-    map<std::string, GEOSGeometry*> geomsQuery =
-        get_polygon_map(fileQuery, ctx);
+    map<std::string, GEOSGeometry *> geomsBase = get_polygon_map(fileBase, ctx_0);
+    map<std::string, GEOSGeometry *> geomsQuery = get_polygon_map(fileQuery, ctx_0);
     // const char* filename = "/home/dpu/data/lakes_data";
     // map<std::string, GEOSGeometry*> geoms =
     // get_polygon_map_without_id(filename, ctx);
- 
+
     ///////////////////////////////////////////////////////////////////////////
     // struct timeval tv1, tv2;
     // gettimeofday(&tv1, NULL);
@@ -242,28 +289,20 @@ class ServerImpl final {
 
     gettimeofday(&tv1, NULL);
 
-    treeBase = GEOSSTRtree_create_r(ctx, 10);
-    treeQuery = GEOSSTRtree_create_r(ctx, 10);
+    // GEOSSTRtree *tree;
+    GEOSSTRtree *treeBase;
+    GEOSSTRtree *treeQuery;
+    treeBase = GEOSSTRtree_create_r(ctx_0, 10); // 2nd param is node capacity. Defaults to 10.
+    treeQuery = GEOSSTRtree_create_r(ctx_0, 10);
 
-    std::thread thread1(non_blocking_rtree_intersect, geomsBase, treeBase, treeQuery,
-                        ctx);
-    std::thread thread2(non_blocking_rtree_intersect, geomsQuery, treeQuery, treeBase,
-                        ctx);
+    std::thread thread1(
+        non_blocking_rtree_intersect_thread, geomsBase, treeBase, treeQuery);
+    std::thread thread2(
+        non_blocking_rtree_intersect_thread, geomsQuery, treeQuery, treeBase);
 
     thread1.join();
     thread2.join();
 
-    cout << "intersectCount: " << intersectCount << endl;
-    cout << "Elapsed Times: [";
-    for (double time : elapsedTimes) {
-      cout << time << ",";
-    }
-    cout << "]" << endl;
-
-    gettimeofday(&tv2, NULL);
-    double time_spent = (double)(tv2.tv_usec - tv1.tv_usec) / 1000000 +
-                        (double)(tv2.tv_sec - tv1.tv_sec);
-    cout << endl << endl << "Total Time:" << time_spent << endl;
     ///////////////////////////////////////////////////////////////////////////
 
     // GEOSGeometry* geom = GEOSGeomFromWKT_r(ctx, geomString.c_str());
@@ -285,25 +324,27 @@ class ServerImpl final {
     // thread6.join();
     // thread7.join();
     // thread8.join();
-
-    finishGEOS_r(ctx);
   }
 
- private:
+private:
   // Class encompasing the state and logic needed to serve a request.
-  class CallData {
-   public:
+  class CallData
+  {
+  public:
     // Take in the "service" instance (in this case representing an asynchronous
     // server) and the completion queue "cq" used for asynchronous communication
     // with the gRPC runtime.
-    CallData(Greeter::AsyncService* service, ServerCompletionQueue* cq)
-        : service_(service), cq_(cq), responder_(&ctx_), status_(CREATE) {
+    CallData(Greeter::AsyncService *service, ServerCompletionQueue *cq, GEOSContextHandle_t ctx_geos)
+        : service_(service), cq_(cq), responder_(&ctx_), status_(CREATE)
+    {
       // Invoke the serving logic right away.
       Proceed();
     }
 
-    void Proceed() {
-      if (status_ == CREATE) {
+    void Proceed()
+    {
+      if (status_ == CREATE)
+      {
         // Make this instance progress to the PROCESS state.
         status_ = PROCESS;
 
@@ -314,11 +355,13 @@ class ServerImpl final {
         // the memory address of this CallData instance.
         service_->RequestSayHello(&ctx_, &request_, &responder_, cq_, cq_,
                                   this);
-      } else if (status_ == PROCESS) {
+      }
+      else if (status_ == PROCESS)
+      {
         // Spawn a new CallData instance to serve new clients while we process
         // the one for this CallData. The instance will deallocate itself as
         // part of its FINISH state.
-        new CallData(service_, cq_);
+        new CallData(service_, cq_, ctx_geos);
 
         // The actual processing.
 
@@ -355,24 +398,31 @@ class ServerImpl final {
         //  for (int i = 0; i < polygonArray.size(); i++) {
         //    cout << polygonArray[i] << endl;
         //  }
-        if (polygonArray.size() > 0) {
+        if (polygonArray.size() > 0)
+        {
           int geomSize = polygonArray[0];
           // cout << "GeomSize:" << geomSize << endl;
 
-          for (int i = 1; i < polygonArray.size(); i++) {
+          for (int i = 1; i < polygonArray.size(); i++)
+          {
             string geomString = "POLYGON((";
-            for (int j = i; j <= geomSize; j += 2) {
+            for (int j = i; j <= geomSize; j += 2)
+            {
               i += 2;
               geomString = geomString + to_string(polygonArray[j]) + " " +
                            to_string(polygonArray[j + 1]);
-              if (i < geomSize) {
+              if (i < geomSize)
+              {
                 geomString = geomString + ",";
               }
             }
             geomString = geomString + "))";
             geomSize = polygonArray[i];
-            GEOSGeometry* geom = GEOSGeomFromWKT_r(ctx, geomString.c_str());
-            GEOSSTRtree_query_r(ctx, tree, geom, intersect_callback, geom);
+            
+            GEOSGeometry *geom = GEOSGeomFromWKT_r(ctx_geos, geomString.c_str());
+            CallbackData inputs = { &ctx_geos, geom };
+            GEOSSTRtree_query_r(ctx_geos, tree, geom, intersect_callback, &inputs); // TODO: should the tree pointer being passed in be blank? It is. // <-----------------------------------------------<<< ?
+            cout << "DOING Proceed FUNCTION" << endl; // TODO: remove
             // cout << "GeomSize:" << geomSize << endl;
 
             // cout << "i:" << i << endl;
@@ -407,19 +457,21 @@ class ServerImpl final {
         // the event.
         status_ = FINISH;
         responder_.Finish(reply_, Status::OK, this);
-      } else {
+      }
+      else
+      {
         GPR_ASSERT(status_ == FINISH);
         // Once in the FINISH state, deallocate ourselves (CallData).
         delete this;
       }
     }
 
-   private:
+  private:
     // The means of communication with the gRPC runtime for an asynchronous
     // server.
-    Greeter::AsyncService* service_;
+    Greeter::AsyncService *service_;
     // The producer-consumer queue where for asynchronous server notifications.
-    ServerCompletionQueue* cq_;
+    ServerCompletionQueue *cq_;
     // Context for the rpc, allowing to tweak aspects of it such as the use
     // of compression, authentication, as well as to send metadata back to the
     // client.
@@ -434,22 +486,33 @@ class ServerImpl final {
     ServerAsyncResponseWriter<HelloReply> responder_;
 
     // Let's implement a tiny state machine with the following states.
-    enum CallStatus { CREATE, PROCESS, FINISH };
-    CallStatus status_;  // The current serving state.
+    enum CallStatus
+    {
+      CREATE,
+      PROCESS,
+      FINISH
+    };
+    CallStatus status_; // The current serving state.
+
+    GEOSContextHandle_t ctx_geos;
+    GEOSSTRtree *tree;
   };
 
-  static void HandleRpcsHelper(int id, ServerImpl* server) {
+  static void HandleRpcsHelper(int id, ServerImpl *server)
+  {
     std::cout << "ID:" << id << std::endl;
     server->HandleRpcs();
   }
 
   // This can be run in multiple threads if needed.
-  void HandleRpcs() {
+  void HandleRpcs()
+  {
     // Spawn a new CallData instance to serve new clients.
-    new CallData(&service_, cq_.get());
-    void* tag;  // uniquely identifies a request.
+    new CallData(&service_, cq_.get(), ctx_0);
+    void *tag; // uniquely identifies a request.
     bool ok;
-    while (true) {
+    while (true)
+    {
       // Block waiting to read the next event from the completion queue. The
       // event is uniquely identified by its tag, which in this case is the
       // memory address of a CallData instance.
@@ -457,21 +520,29 @@ class ServerImpl final {
       // tells us whether there is any kind of event or cq_ is shutting down.
       GPR_ASSERT(cq_->Next(&tag, &ok));
       GPR_ASSERT(ok);
-      static_cast<CallData*>(tag)->Proceed();
+      static_cast<CallData *>(tag)->Proceed();
     }
   }
 
+  GEOSContextHandle_t ctx_0;
   std::unique_ptr<ServerCompletionQueue> cq_;
   Greeter::AsyncService service_;
   std::unique_ptr<Server> server_;
 };
 
-int main(int argc, char** argv) {
+
+////////////////////////////////////////////////////////////////////////////////
+
+int main(int argc, char **argv)
+{
   ServerImpl server;
   server.Run();
 
   return 0;
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
 
 // vector<GEOSGeometry*>* get_polygons(const char* filename,
 //                                     GEOSContextHandle_t ctx) {

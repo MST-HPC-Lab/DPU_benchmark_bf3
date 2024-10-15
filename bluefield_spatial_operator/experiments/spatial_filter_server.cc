@@ -23,21 +23,24 @@
 #include <grpcpp/ext/proto_server_reflection_plugin.h>
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/health_check_service_interface.h>
+#include "bluefield_spatial.grpc.pb.h"
 
-#include "helloworld.grpc.pb.h"
+#include <spatial_utilities.cc>
 
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::Status;
-using helloworld::Greeter;
-using helloworld::HelloReply;
-using helloworld::HelloRequest;
+using bluefield_spatial::SpatialOp;
+using bluefield_spatial::SimpleReply;
+using bluefield_spatial::SimpleRequest;
+using bluefield_spatial::GeomReply;
+using bluefield_spatial::GeomRequest;
 
 // Logic and data behind the server's behavior.
-class GreeterServiceImpl final : public Greeter::Service {
-  Status SayHello(ServerContext* context, const HelloRequest* request,
-                  HelloReply* reply) override {
+class SpatialServiceImpl final : public SpatialOp::Service {
+  Status SayMessage(ServerContext* context, const SimpleRequest* request,
+                  SimpleReply* reply) override {
     std::string prefix("Hello ");
     reply->set_message(prefix + request->name());
     return Status::OK;
@@ -46,7 +49,7 @@ class GreeterServiceImpl final : public Greeter::Service {
 
 void RunServer() {
   std::string server_address("0.0.0.0:50051");
-  GreeterServiceImpl service;
+  SpatialServiceImpl service;
 
   grpc::EnableDefaultHealthCheckService(true);
   grpc::reflection::InitProtoReflectionServerBuilderPlugin();

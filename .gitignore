@@ -2,10 +2,12 @@ Data/*
 !Data/*.py
 !Data/*.md
 
-grpc_full/*
+derda_grpc_full/*
 
 */build/*
 !*/build/
 
 */bin/*
 # */lib/*
+
+*.zip
