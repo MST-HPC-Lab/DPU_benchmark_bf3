@@ -23,7 +23,7 @@
 #include <grpcpp/grpcpp.h>
 #include "bluefield_spatial.grpc.pb.h"
 
-// #include <src/utilities/spatial_utilities.cc>
+// #include "spatial_utilities.cc"
 
 using grpc::Channel;
 using grpc::ClientContext;

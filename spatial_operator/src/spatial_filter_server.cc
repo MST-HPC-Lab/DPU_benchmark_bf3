@@ -25,7 +25,7 @@
 #include <grpcpp/health_check_service_interface.h>
 #include "bluefield_spatial.grpc.pb.h"
 
-#include <src/utilities/spatial_utilities.cc>
+#include "spatial_utilities.cc"
 
 using grpc::Server;
 using grpc::ServerBuilder;
