@@ -421,8 +421,8 @@ private:
             
             GEOSGeometry *geom = GEOSGeomFromWKT_r(ctx_geos, geomString.c_str());
             CallbackData inputs = { &ctx_geos, geom };
-            GEOSSTRtree_query_r(ctx_geos, tree, geom, intersect_callback, &inputs); // TODO: should the tree pointer being passed in be blank? It is. // <-----------------------------------------------<<< ?
             cout << "DOING Proceed FUNCTION" << endl; // TODO: remove
+            GEOSSTRtree_query_r(ctx_geos, tree, geom, intersect_callback, &inputs); // TODO: should the tree pointer being passed in be blank? It is. // <-----------------------------------------------<<< ?
             // cout << "GeomSize:" << geomSize << endl;
 
             // cout << "i:" << i << endl;
