@@ -1,3 +1,10 @@
+/*
+  METANOTES by Nathan Tibbetts, Oct 2024:
+  - Blocking Rtree should not have been implemented using the _r reentrant versions of GEOS objects,
+    as there is no threading going on, I think?
+  - Ignore this version and look at the non-blocking version.
+*/
+
 #include <geos_c.h>
 #include <stdarg.h>
 #include <stdlib.h>

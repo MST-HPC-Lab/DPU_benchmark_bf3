@@ -29,13 +29,13 @@ package bluefield_spatial;
 service SpatialOp {
   // Sends a join request
   rpc SayMessage (SimpleRequest) returns (SimpleReply) {}
-  rpc SayJoin (SimpleRequest) returns (GeomReply) {}
+  rpc SayJoin (CommandRequest) returns (GeomReply) {}
   rpc SayQuery (GeomRequest) returns (GeomReply) {}
 }
 
 // A request message containing only a string
 message SimpleRequest {
-  string name = 1;
+  string operation = 1;
 }
 
 // A response message containing only a string
@@ -43,14 +43,22 @@ message SimpleReply {
   string message = 1;
 }
 
-// A request message containing GEOS geometries
-message GeomRequest {
-  string name = 1;
-  repeated float geom = 2;
+// A request message containing a command: an operation to do, and the names
+//  of the datasets to do it on
+message CommandRequest {
+  string operation = 1;
+  repeated string dataSetName = 2;
 }
 
-// A response message containing GEOS geometries
+// A request message containing a command and GEOS geometries in float form
+message GeomRequest {
+  string operation = 1;
+  repeated float geom = 2;
+  repeated string dataSetName = 3;
+}
+
+// A response message containing GEOS geometries in float form
 message GeomReply {
   string message = 1;
-  repeated float geomReply = 2;
+  repeated float geom = 2;
 }

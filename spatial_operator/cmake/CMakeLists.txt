@@ -66,8 +66,8 @@ target_link_libraries(bf_grpc_proto
 
 # Targets spatial_(client|server)
 foreach(_target
-  spatial_client spatial_server )
-  add_executable(${_target} "../experiments/${_target}.cc")
+  spatial_client spatial_filter_server spatial_refine_server )
+  add_executable(${_target} "../src/${_target}.cc")
   target_link_libraries(${_target}
     bf_grpc_proto
     ${_REFLECTION}

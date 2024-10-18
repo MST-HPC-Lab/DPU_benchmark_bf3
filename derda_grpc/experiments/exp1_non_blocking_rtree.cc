@@ -1,3 +1,13 @@
+/*
+  METANOTES by Nathan Tibbetts, Oct 2024:
+  - I corrected this version to separate
+    GEOS contexts between threads rather than sharing one, as per their proper
+    use in the GEOS documentation.
+  - Still incorrect: appears to have an incomplete async implementation in the
+    calldata class, which means we have three trees, and that's not right.
+  - Current work is in the spatial_operator project folder.
+*/
+
 #include <geos_c.h>
 #include <stdarg.h>
 #include <stdlib.h>
