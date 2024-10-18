@@ -58,7 +58,7 @@ message Geoms {
     repeated float coord = 1 [packed=true];
   }
   optional string name = 2;
-  map<int, Polygon> index = 3;
+  map<int32, Polygon> index = 3;
 }
 
 // A request message containing a command, a group of geometries, and the names
