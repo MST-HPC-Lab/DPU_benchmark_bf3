@@ -43,7 +43,7 @@ class SpatialServiceImpl final : public SpatialOp::Service {
   Status SayMessage(ServerContext* context, const SimpleRequest* request,
                   SimpleReply* reply) override {
     std::string prefix("Hello ");
-    reply->set_message(prefix + request->name());
+    reply->set_message(prefix + request->operation());
     return Status::OK;
   }
 };
