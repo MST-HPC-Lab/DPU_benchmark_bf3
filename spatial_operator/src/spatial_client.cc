@@ -31,6 +31,7 @@ using grpc::Status;
 using bluefield_spatial::SpatialOp;
 using bluefield_spatial::SimpleReply;
 using bluefield_spatial::SimpleRequest;
+using bluefield_spatial::CommandRequest;
 using bluefield_spatial::GeomReply;
 using bluefield_spatial::GeomRequest;
 
@@ -44,7 +45,7 @@ class SpatialClient {
   std::string SayMessage(const std::string& user) {
     // Data we are sending to the server.
     SimpleRequest request;
-    request.set_name(user);
+    request.set_operation(user);
 
     // Container for the data we expect from the server.
     SimpleReply reply;

@@ -20,6 +20,7 @@
 // using bluefield_spatial::SpatialOp;
 // using bluefield_spatial::SimpleReply;
 // using bluefield_spatial::SimpleRequest;
+// using bluefield_spatial::CommandRequest;
 // using bluefield_spatial::GeomReply;
 // using bluefield_spatial::GeomRequest;
 // using grpc::Server;

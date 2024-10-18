@@ -35,30 +35,43 @@ service SpatialOp {
 
 // A request message containing only a string
 message SimpleRequest {
-  string operation = 1;
+  string operation = 1; // Name of operation to be performed
 }
 
 // A response message containing only a string
 message SimpleReply {
-  string message = 1;
+  string message = 1; // Response message
 }
 
 // A request message containing a command: an operation to do, and the names
 //  of the datasets to do it on
 message CommandRequest {
-  string operation = 1;
-  repeated string dataSetName = 2;
+  string operation = 1;            // Name of operation to be performed
+  repeated string dataSetName = 2; // Operands from server's data sets
+  optional string resultName = 3;  // Add a name to get it to store the result
 }
 
-// A request message containing a command and GEOS geometries in float form
+// A collection of polygons
+//  (For internal use, as part of other messages)
+message Geoms {
+  message Polygon {
+    repeated float coord = 1 [packed=true];
+  }
+  optional string name = 2;
+  map<int, Polygon> index = 3;
+}
+
+// A request message containing a command, a group of geometries, and the names
+//  of internal datasets to compare it against
 message GeomRequest {
-  string operation = 1;
-  repeated float geom = 2;
-  repeated string dataSetName = 3;
+  string operation = 1;            // Name of operation to be performed
+  Geoms geom = 2;                  // Client-sent first operand
+  repeated string dataSetName = 3; // Additional operands from server's data sets
+  optional string resultName = 4;  // Add a name to get it to store the result
 }
 
 // A response message containing GEOS geometries in float form
 message GeomReply {
-  string message = 1;
-  repeated float geom = 2;
+  string message = 1; // Response message
+  Geoms geom = 2;     // Geometries resulting from a requested operation
 }
