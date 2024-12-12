@@ -18,7 +18,7 @@
 #include <sys/time.h>
 
 #define MAX_LINE_LENGTH 300000 // 30000 wasn't enough, nor was 100000
-#define MAX_GEOM_NUMBER 800000
+#define MAX_GEOM_NUMBER 500000
 
 using namespace std;
 
@@ -91,6 +91,10 @@ int iterate_tree(const char *filename, const char *filename2)
             GEOSSTRtree_insert(tree, geom, GEOSEnvelope(geom));
             index++;
         }
+        if (index >= MAX_GEOM_NUMBER) {
+            cout << "MAX SIZE OF " << MAX_GEOM_NUMBER << " EXCEEDED! TRUNCATING.";
+            break;
+        }
     }
 
     GEOSSTRtree_iterate(tree, iterate_tree_callback, 0);
@@ -100,7 +104,6 @@ int iterate_tree(const char *filename, const char *filename2)
     for (size_t i = 0; i < index; i++)
     {
         GEOSGeom_destroy(geoms[i]);
-        if (i%1000 == 0) cout << "SUCCESS " << i;
     }
     finishGEOS();
 
