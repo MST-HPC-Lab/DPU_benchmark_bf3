@@ -100,9 +100,9 @@ int iterate_tree(const char *filename, const char *filename2)
     for (size_t i = 0; i < index; i++)
     {
         GEOSGeom_destroy(geoms[i]);
+        if (i%1000 == 0) cout << "SUCCESS " << i;
     }
     finishGEOS();
-    cout << "SUCCESS";
 
     return 0;
 }
