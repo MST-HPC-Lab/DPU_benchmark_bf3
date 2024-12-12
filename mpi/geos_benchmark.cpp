@@ -17,7 +17,7 @@
 #include <vector>
 #include <sys/time.h>
 
-#define MAX_LINE_LENGTH 100000 // 30000
+#define MAX_LINE_LENGTH 300000 // 30000
 #define MAX_GEOM_NUMBER 500000
 
 using namespace std;
