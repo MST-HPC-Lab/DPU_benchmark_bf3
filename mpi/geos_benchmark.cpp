@@ -18,7 +18,7 @@
 #include <sys/time.h>
 
 #define MAX_LINE_LENGTH 300000 // 30000 wasn't enough, nor was 100000
-#define MAX_GEOM_NUMBER 800000
+#define MAX_GEOM_NUMBER 400000
 
 using namespace std;
 
