@@ -918,7 +918,7 @@ int covered_by(const char *filename, const char *filename2)
     return geom;
 }*/
 
-double select_test(char *name, int (*test_function)(const char *, const char *), const char *filename, const char *filename2, int n)
+double select_test(const char *name, int (*test_function)(const char *, const char *), const char *filename, const char *filename2, int n)
 {
     double time_arr[n];
     for (int i = 0; i < n; i++)

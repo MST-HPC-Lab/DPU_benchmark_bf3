@@ -1,12 +1,19 @@
 // This program performs various geospatial operations using 
-// the two given geospatial datasets and outputs the elapsed time. 
+//   the two given geospatial datasets and outputs the elapsed time. 
 // This program uses the MPI library. The first file should be partitioned 
-// and the directory name of the data should be given as the first parameter.
+//   and the directory name of the data should be given as the first parameter.
+//   Number of partitions is not told, but is understood implicitly based on the
+//   number of processes, which must not exceed the number of the split.
+//   Directory name argument must include trailing "/" so the program can directly
+//   concatenate to it, and those files must be named purely with their number,
+//   no extension or anything, like "0", "1", ... "31", etc.
+// Every MPI process duplicates the same work n times, to give more solid numbers;
+//   this is what the last argument is for, not number of partitions.
 //
 // USAGE
 // -----
 // mpic++ geos_benchmark.cpp
-// mpirun -np <# of processes>  ./a.out <directorypath1> <filepath2> <# of repetition of operations>
+// mpirun -np <# of processes == split of data set>  ./a.out <directorypath1/> <filepath2> <# of repetition of operations>
 
 
 #include <iostream>
@@ -862,6 +869,7 @@ int covered_by(const char *filename, const char *filename2)
 
 double select_test(const char *name, int (*test_function)(const char *, const char *), const char *filename, const char *filename2, int n)
 {
+    // n is the number of times to repeat all work, for stable numbers' sake
     double time_arr[n];
     for (int i = 0; i < n; i++)
     {
@@ -906,118 +914,7 @@ double select_test(const char *name, int (*test_function)(const char *, const ch
     }
 }
 
-// int main(int argc, char **argv)
-// {
-//     int rank;
-//     int numProcs;
-
-//     MPI_Init(&argc, &argv);
-
-//     MPI_Comm_rank(MPI_COMM_WORLD, &rank); // rank is process id
-
-//     MPI_Comm_size(MPI_COMM_WORLD, &numProcs);
-
-//     // send side
-//     int sendCode = 123456;
-//     int destination = 0;
-//     int tag = 100;
-
-//     MPI_Status status;
-
-//     if (rank == 0)
-//     {
-
-//         double test_time_arr_sum[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
-//         for (size_t i = 1; i < numProcs; i++)
-//         {
-//             double test_time_arr_of_process[12];
-//             MPI_Recv(&test_time_arr_of_process, 12, MPI_DOUBLE, i, tag, MPI_COMM_WORLD, &status);
-//             printf("Received %d \n", i);
-//             for (size_t j = 0; j < 12; j++)
-//             {
-//                 test_time_arr_sum[j] += test_time_arr_of_process[j];
-//             }
-//         }
-
-//         cout << endl
-//              << endl;
-//         cout << "------------------------------------------------------------------" << endl;
-//         cout << "-------------------- BENCHMARK RESULT (TOTAL) --------------------" << endl;
-//         cout << "------------------------------------------------------------------" << endl;
-//         cout << "Total Create Time: " << test_time_arr_sum[0] << endl;
-//         cout << "Total Iterate Time: " << test_time_arr_sum[1] << endl;
-//         cout << "Total Query Time: " << test_time_arr_sum[2] << endl;
-//         cout << "Total Intersect Time: " << test_time_arr_sum[3] << endl;
-//         cout << "Total Overlap Time: " << test_time_arr_sum[4] << endl;
-//         cout << "Total Touch Time: " << test_time_arr_sum[5] << endl;
-//         cout << "Total Cross Time: " << test_time_arr_sum[6] << endl;
-//         cout << "Total Contain Time: " << test_time_arr_sum[7] << endl;
-//         cout << "Total Equal Time: " << test_time_arr_sum[8] << endl;
-//         cout << "Total Equal Exact (0.3) Time: " << test_time_arr_sum[9] << endl;
-//         cout << "Total Cover Time: " << test_time_arr_sum[10] << endl;
-//         cout << "Total Covered By Time: " << test_time_arr_sum[11] << endl;
-//         cout << "------------------------------------------------------------------" << endl;
-//         cout << "------------------------------------------------------------------" << endl;
-//         cout << endl
-//              << endl;
-//     }
-//     else
-//     {
-//         int n = 1;
-//         if (argc > 3)
-//             n = atoi(argv[3]);
-//         if (!n)
-//             n = 1;
-//         // const char *filename = (string(argv[1]) + "/x" + to_string(rank)).c_str();
-//         const char *filename = argv[1];
-//         const char *filename2 = argv[2];
-
-//         double create_time = select_test("Create", &create_tree, filename, filename2, n);
-//         double iterate_time = select_test("Iterate", &iterate_tree, filename, filename2, n);
-//         double query_time = select_test("Query", &query, filename, filename2, n);
-//         double intersect_time = select_test("Intersect", &intersect, filename, filename2, n);
-//         double overlap_time = select_test("Overlap", &overlap, filename, filename2, n);
-//         double touch_time = select_test("Touch", &touch, filename, filename2, n);
-//         double cross_time = select_test("Cross", &cross, filename, filename2, n);
-//         double contain_time = select_test("Contain", &contain, filename, filename2, n);
-//         double equal_time = select_test("Equal", &equal, filename, filename2, n);
-//         double equal_exact_time = select_test("Equal Exact (0.3)", &equal_exact, filename, filename2, n);
-//         double cover_time = select_test("Cover", &cover, filename, filename2, n);
-//         double covered_by_time = select_test("Covered By", &covered_by, filename, filename2, n);
-
-//         cout << endl
-//              << endl;
-//         cout << "------------------------------------------------------------------" << endl;
-//         cout << "--------------- BENCHMARK RESULT (Process rank:" << rank << ") ---------------" << endl;
-//         cout << "------------------------------------------------------------------" << endl;
-//         cout << "Average Create Time: " << create_time << endl;
-//         cout << "Average Iterate Time: " << iterate_time << endl;
-//         cout << "Average Query Time: " << query_time << endl;
-//         cout << "Average Intersect Time: " << intersect_time << endl;
-//         cout << "Average Overlap Time: " << overlap_time << endl;
-//         cout << "Average Touch Time: " << touch_time << endl;
-//         cout << "Average Cross Time: " << cross_time << endl;
-//         cout << "Average Contain Time: " << contain_time << endl;
-//         cout << "Average Equal Time: " << equal_time << endl;
-//         cout << "Average Equal Exact (0.3) Time: " << equal_exact_time << endl;
-//         cout << "Average Cover Time: " << cover_time << endl;
-//         cout << "Average Covered By Time: " << covered_by_time << endl;
-//         cout << "------------------------------------------------------------------" << endl;
-//         cout << "------------------------------------------------------------------" << endl;
-//         cout << endl
-//              << endl;
-
-//         double test_time_arr[12] = {create_time, iterate_time, query_time, intersect_time, overlap_time, touch_time,
-//                                     cross_time, contain_time, equal_time, equal_exact_time, cover_time, covered_by_time};
-
-//         MPI_Send(test_time_arr, 12, MPI_DOUBLE, destination, tag, MPI_COMM_WORLD);
-//     }
-
-//     MPI_Finalize();
-//     return 0;
-// }
-
-int main(int argc, char **argv)
+/* int main(int argc, char **argv)
 {
     int rank;
     int numProcs;
@@ -1029,12 +926,118 @@ int main(int argc, char **argv)
     MPI_Comm_size(MPI_COMM_WORLD, &numProcs);
 
     // send side
-    int sendCode = 123456;
     int destination = 0;
     int tag = 100;
 
     MPI_Status status;
 
+    if (rank == 0)
+    {
+
+        double test_time_arr_sum[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
+        for (size_t i = 1; i < numProcs; i++)
+        {
+            double test_time_arr_of_process[12];
+            MPI_Recv(&test_time_arr_of_process, 12, MPI_DOUBLE, i, tag, MPI_COMM_WORLD, &status);
+            printf("Received %d \n", i);
+            for (size_t j = 0; j < 12; j++)
+            {
+                test_time_arr_sum[j] += test_time_arr_of_process[j];
+            }
+        }
+
+        cout << endl
+             << endl;
+        cout << "------------------------------------------------------------------" << endl;
+        cout << "-------------------- BENCHMARK RESULT (TOTAL) --------------------" << endl;
+        cout << "------------------------------------------------------------------" << endl;
+        cout << "Total Create Time: " << test_time_arr_sum[0] << endl;
+        cout << "Total Iterate Time: " << test_time_arr_sum[1] << endl;
+        cout << "Total Query Time: " << test_time_arr_sum[2] << endl;
+        cout << "Total Intersect Time: " << test_time_arr_sum[3] << endl;
+        cout << "Total Overlap Time: " << test_time_arr_sum[4] << endl;
+        cout << "Total Touch Time: " << test_time_arr_sum[5] << endl;
+        cout << "Total Cross Time: " << test_time_arr_sum[6] << endl;
+        cout << "Total Contain Time: " << test_time_arr_sum[7] << endl;
+        cout << "Total Equal Time: " << test_time_arr_sum[8] << endl;
+        cout << "Total Equal Exact (0.3) Time: " << test_time_arr_sum[9] << endl;
+        cout << "Total Cover Time: " << test_time_arr_sum[10] << endl;
+        cout << "Total Covered By Time: " << test_time_arr_sum[11] << endl;
+        cout << "------------------------------------------------------------------" << endl;
+        cout << "------------------------------------------------------------------" << endl;
+        cout << endl
+             << endl;
+    }
+    else
+    {
+        int n = 1;
+        if (argc > 3)
+            n = atoi(argv[3]);
+        if (!n)
+            n = 1;
+        // const char *filename = (string(argv[1]) + "/x" + to_string(rank)).c_str();
+        const char *filename = argv[1];
+        const char *filename2 = argv[2];
+
+        double create_time = select_test("Create", &create_tree, filename, filename2, n);
+        double iterate_time = select_test("Iterate", &iterate_tree, filename, filename2, n);
+        double query_time = select_test("Query", &query, filename, filename2, n);
+        double intersect_time = select_test("Intersect", &intersect, filename, filename2, n);
+        double overlap_time = select_test("Overlap", &overlap, filename, filename2, n);
+        double touch_time = select_test("Touch", &touch, filename, filename2, n);
+        double cross_time = select_test("Cross", &cross, filename, filename2, n);
+        double contain_time = select_test("Contain", &contain, filename, filename2, n);
+        double equal_time = select_test("Equal", &equal, filename, filename2, n);
+        double equal_exact_time = select_test("Equal Exact (0.3)", &equal_exact, filename, filename2, n);
+        double cover_time = select_test("Cover", &cover, filename, filename2, n);
+        double covered_by_time = select_test("Covered By", &covered_by, filename, filename2, n);
+
+        cout << endl
+             << endl;
+        cout << "------------------------------------------------------------------" << endl;
+        cout << "--------------- BENCHMARK RESULT (Process rank:" << rank << ") ---------------" << endl;
+        cout << "------------------------------------------------------------------" << endl;
+        cout << "Average Create Time: " << create_time << endl;
+        cout << "Average Iterate Time: " << iterate_time << endl;
+        cout << "Average Query Time: " << query_time << endl;
+        cout << "Average Intersect Time: " << intersect_time << endl;
+        cout << "Average Overlap Time: " << overlap_time << endl;
+        cout << "Average Touch Time: " << touch_time << endl;
+        cout << "Average Cross Time: " << cross_time << endl;
+        cout << "Average Contain Time: " << contain_time << endl;
+        cout << "Average Equal Time: " << equal_time << endl;
+        cout << "Average Equal Exact (0.3) Time: " << equal_exact_time << endl;
+        cout << "Average Cover Time: " << cover_time << endl;
+        cout << "Average Covered By Time: " << covered_by_time << endl;
+        cout << "------------------------------------------------------------------" << endl;
+        cout << "------------------------------------------------------------------" << endl;
+        cout << endl
+             << endl;
+
+        double test_time_arr[12] = {create_time, iterate_time, query_time, intersect_time, overlap_time, touch_time,
+                                    cross_time, contain_time, equal_time, equal_exact_time, cover_time, covered_by_time};
+
+        MPI_Send(test_time_arr, 12, MPI_DOUBLE, destination, tag, MPI_COMM_WORLD);
+    }
+
+    MPI_Finalize();
+    return 0;
+} */
+
+int main(int argc, char **argv)
+{
+    int rank;
+    int numProcs;
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank); // rank is process id
+    MPI_Comm_size(MPI_COMM_WORLD, &numProcs);
+
+    int root = 0; // All procs send results to proc 0
+    // int tag = 100;
+    // MPI_Status status;
+
+    // Get number of repeats each process is supposed to do of all work. This is n.
     int n = 1;
     if (argc > 3)
         n = atoi(argv[3]); // # of Processes
@@ -1042,9 +1045,9 @@ int main(int argc, char **argv)
         n = 1;
     // const char *filename = (string(argv[1]) + "/x" + to_string(rank)).c_str();
     // const char *filename = argv[1];
-    char filenameTemp[200];
+    char filenameTemp[256];
     strcpy(filenameTemp, argv[1]);
-    strcat(filenameTemp, to_string(rank).c_str());
+    strcat(filenameTemp, to_string(rank).c_str()); // Directory must have trailing "/" and split files must be named solely by their number.
     const char *filename = filenameTemp;
     cout << "File: " << filename << endl;
     const char *filename2 = argv[2];
@@ -1062,77 +1065,76 @@ int main(int argc, char **argv)
     double cover_time = select_test("Cover", &cover, filename, filename2, n);
     double covered_by_time = select_test("Covered By", &covered_by, filename, filename2, n);
 
-    cout << endl
-         << endl
-         << "------------------------------------------------------------------" << endl
-         << "--------------- BENCHMARK RESULT (Process rank:" << rank << ") ---------------" << endl
-         << "------------------------------------------------------------------" << endl
-         << "Average Create Time: " << create_time << endl
-         << "Average Iterate Time: " << iterate_time << endl
-         << "Average Query Time: " << query_time << endl
-         << "Average Intersect Time: " << intersect_time << endl
-         << "Average Overlap Time: " << overlap_time << endl
-         << "Average Touch Time: " << touch_time << endl
-         << "Average Cross Time: " << cross_time << endl
-         << "Average Contain Time: " << contain_time << endl
-         << "Average Equal Time: " << equal_time << endl
-         << "Average Equal Exact (0.3) Time: " << equal_exact_time << endl
-         << "Average Cover Time: " << cover_time << endl
-         << "Average Covered By Time: " << covered_by_time << endl
-         << "------------------------------------------------------------------" << endl
-         << "------------------------------------------------------------------" << endl
-         << endl
-         << endl;
+    double total_time = create_time + iterate_time + query_time + intersect_time + overlap_time + touch_time + cross_time + contain_time + equal_time + equal_exact_time + cover_time + covered_by_time;
 
-    double test_time_arr_max[12] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    double test_time_arr_sum[12] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    // cout << endl
+    //      << endl
+    //      << "------------------------------------------------------------------" << endl
+    //      << "--------------- BENCHMARK RESULT (Process rank:" << rank << ") ---------------" << endl
+    //      << "------------------------------------------------------------------" << endl
+    //      << "Average Create Time: " << create_time << endl
+    //      << "Average Iterate Time: " << iterate_time << endl
+    //      << "Average Query Time: " << query_time << endl
+    //      << "Average Intersect Time: " << intersect_time << endl
+    //      << "Average Overlap Time: " << overlap_time << endl
+    //      << "Average Touch Time: " << touch_time << endl
+    //      << "Average Cross Time: " << cross_time << endl
+    //      << "Average Contain Time: " << contain_time << endl
+    //      << "Average Equal Time: " << equal_time << endl
+    //      << "Average Equal Exact (0.3) Time: " << equal_exact_time << endl
+    //      << "Average Cover Time: " << cover_time << endl
+    //      << "Average Covered By Time: " << covered_by_time << endl
+    //      << "------------------------------------------------------------------" << endl
+    //      << "------------------------------------------------------------------" << endl
+    //      << endl
+    //      << endl;
 
-    double test_time_arr[12] = {create_time, iterate_time, query_time, intersect_time, overlap_time, touch_time,
-                                cross_time, contain_time, equal_time, equal_exact_time, cover_time, covered_by_time};
+    double test_time_arr_min[13]   = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    double test_time_arr_max[13]   = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    double test_time_arr_sum[13]   = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    double test_time_arr_avg[13]   = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    double test_time_arr_range[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-    MPI_Reduce(test_time_arr, test_time_arr_max, 12, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
-    MPI_Reduce(test_time_arr, test_time_arr_sum, 12, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    double test_time_arr[13] = {create_time, iterate_time, query_time, intersect_time, overlap_time, touch_time,
+                                cross_time, contain_time, equal_time, equal_exact_time, cover_time, covered_by_time,
+                                total_time};
 
-    if (rank == 0)
+    MPI_Reduce(test_time_arr, test_time_arr_max, 13, MPI_DOUBLE, MPI_MAX, root, MPI_COMM_WORLD);
+    MPI_Reduce(test_time_arr, test_time_arr_min, 13, MPI_DOUBLE, MPI_MIN, root, MPI_COMM_WORLD);
+    MPI_Reduce(test_time_arr, test_time_arr_sum, 13, MPI_DOUBLE, MPI_SUM, root, MPI_COMM_WORLD);
+    // Avg and range arrays filled later
+
+    if (rank == root)
     {
+        // Fill avg and range arrays
+        for (int i = 0; i < 13; i++) {
+            test_time_arr_avg[i] = test_time_arr_sum[i]/numProcs;
+            test_time_arr_range[i] = test_time_arr_max[i] - test_time_arr_min[i];
+        }
+
+        // Generate Report
         cout << endl
              << endl
              << "------------------------------------------------------------------" << endl
-             << "-------------------- BENCHMARK RESULT (MAX) --------------------" << endl
+             << "--------- BENCHMARK RESULT (TOTAL, AVG, RANGE, MIN, MAX) ---------" << endl
              << "------------------------------------------------------------------" << endl
-             << "Max Create Time: " << test_time_arr_max[0] << endl
-             << "Max Iterate Time: " << test_time_arr_max[1] << endl
-             << "Max Query Time: " << test_time_arr_max[2] << endl
-             << "Max Intersect Time: " << test_time_arr_max[3] << endl
-             << "Max Overlap Time: " << test_time_arr_max[4] << endl
-             << "Max Touch Time: " << test_time_arr_max[5] << endl
-             << "Max Cross Time: " << test_time_arr_max[6] << endl
-             << "Max Contain Time: " << test_time_arr_max[7] << endl
-             << "Max Equal Time: " << test_time_arr_max[8] << endl
-             << "Max Equal Exact (0.3) Time: " << test_time_arr_max[9] << endl
-             << "Max Cover Time: " << test_time_arr_max[10] << endl
-             << "Max Covered By Time: " << test_time_arr_max[11] << endl
+             << "Processes:  " << numProcs << "  Replication (n): " << n << endl
+             << "Directory1: " << argv[1] << endl
+             << "Filename2:  " << filename[2] << endl
              << "------------------------------------------------------------------" << endl
-             << "------------------------------------------------------------------" << endl
-             << endl
-             << endl
-             << endl
-             << endl
-             << "------------------------------------------------------------------" << endl
-             << "-------------------- BENCHMARK RESULT (TOTAL) --------------------" << endl
-             << "------------------------------------------------------------------" << endl
-             << "Total Create Time: " << test_time_arr_sum[0] << endl
-             << "Total Iterate Time: " << test_time_arr_sum[1] << endl
-             << "Total Query Time: " << test_time_arr_sum[2] << endl
-             << "Total Intersect Time: " << test_time_arr_sum[3] << endl
-             << "Total Overlap Time: " << test_time_arr_sum[4] << endl
-             << "Total Touch Time: " << test_time_arr_sum[5] << endl
-             << "Total Cross Time: " << test_time_arr_sum[6] << endl
-             << "Total Contain Time: " << test_time_arr_sum[7] << endl
-             << "Total Equal Time: " << test_time_arr_sum[8] << endl
-             << "Total Equal Exact (0.3) Time: " << test_time_arr_sum[9] << endl
-             << "Total Cover Time: " << test_time_arr_sum[10] << endl
-             << "Total Covered By Time: " << test_time_arr_sum[11] << endl
+             << "Total Create Time:             " << test_time_arr_sum[ 0] << ", " << test_time_arr_avg[ 0] << ", " << test_time_arr_range[ 0] << ", " << test_time_arr_min[ 0] << ", " << test_time_arr_max[ 0] << endl
+             << "Total Iterate Time:            " << test_time_arr_sum[ 1] << ", " << test_time_arr_avg[ 1] << ", " << test_time_arr_range[ 1] << ", " << test_time_arr_min[ 1] << ", " << test_time_arr_max[ 1] << endl
+             << "Total Query Time:              " << test_time_arr_sum[ 2] << ", " << test_time_arr_avg[ 2] << ", " << test_time_arr_range[ 2] << ", " << test_time_arr_min[ 2] << ", " << test_time_arr_max[ 2] << endl
+             << "Total Intersect Time:          " << test_time_arr_sum[ 3] << ", " << test_time_arr_avg[ 3] << ", " << test_time_arr_range[ 3] << ", " << test_time_arr_min[ 3] << ", " << test_time_arr_max[ 3] << endl
+             << "Total Overlap Time:            " << test_time_arr_sum[ 4] << ", " << test_time_arr_avg[ 4] << ", " << test_time_arr_range[ 4] << ", " << test_time_arr_min[ 4] << ", " << test_time_arr_max[ 4] << endl
+             << "Total Touch Time:              " << test_time_arr_sum[ 5] << ", " << test_time_arr_avg[ 5] << ", " << test_time_arr_range[ 5] << ", " << test_time_arr_min[ 5] << ", " << test_time_arr_max[ 5] << endl
+             << "Total Cross Time:              " << test_time_arr_sum[ 6] << ", " << test_time_arr_avg[ 6] << ", " << test_time_arr_range[ 6] << ", " << test_time_arr_min[ 6] << ", " << test_time_arr_max[ 6] << endl
+             << "Total Contain Time:            " << test_time_arr_sum[ 7] << ", " << test_time_arr_avg[ 7] << ", " << test_time_arr_range[ 7] << ", " << test_time_arr_min[ 7] << ", " << test_time_arr_max[ 7] << endl
+             << "Total Equal Time:              " << test_time_arr_sum[ 8] << ", " << test_time_arr_avg[ 8] << ", " << test_time_arr_range[ 8] << ", " << test_time_arr_min[ 8] << ", " << test_time_arr_max[ 8] << endl
+             << "Total Equal Exact (0.3) Time:  " << test_time_arr_sum[ 9] << ", " << test_time_arr_avg[ 9] << ", " << test_time_arr_range[ 9] << ", " << test_time_arr_min[ 9] << ", " << test_time_arr_max[ 9] << endl
+             << "Total Cover Time:              " << test_time_arr_sum[10] << ", " << test_time_arr_avg[10] << ", " << test_time_arr_range[10] << ", " << test_time_arr_min[10] << ", " << test_time_arr_max[10] << endl
+             << "Total Covered By Time:         " << test_time_arr_sum[11] << ", " << test_time_arr_avg[11] << ", " << test_time_arr_range[11] << ", " << test_time_arr_min[11] << ", " << test_time_arr_max[11] << endl
+             << "TOTAL TIME:                    " << test_time_arr_sum[12] << ", " << test_time_arr_avg[12] << ", " << test_time_arr_range[12] << ", " << test_time_arr_min[12] << ", " << test_time_arr_max[12] << endl
              << "------------------------------------------------------------------" << endl
              << "------------------------------------------------------------------" << endl
              << endl

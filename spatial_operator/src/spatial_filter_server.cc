@@ -19,6 +19,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <chrono>
 
 #include <grpcpp/ext/proto_server_reflection_plugin.h>
 #include <grpcpp/grpcpp.h>
@@ -31,12 +32,21 @@ using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::Status;
+
 using bluefield_spatial::SpatialOp;
+using bluefield_spatial::Polygon;
 using bluefield_spatial::SimpleReply;
 using bluefield_spatial::SimpleRequest;
-using bluefield_spatial::CommandRequest;
+using bluefield_spatial::OpRequest;
+using bluefield_spatial::OpResponse;
 using bluefield_spatial::GeomReply;
 using bluefield_spatial::GeomRequest;
+using bluefield_spatial::IndexedRequest;
+using bluefield_spatial::IndexedReply;
+
+using std::chrono::system_clock;
+
+
 
 // Logic and data behind the server's behavior.
 class SpatialServiceImpl final : public SpatialOp::Service {

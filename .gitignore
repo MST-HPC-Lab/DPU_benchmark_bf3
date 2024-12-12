@@ -11,3 +11,4 @@ derda_grpc_full/*
 # */lib/*
 
 *.zip
+*.out

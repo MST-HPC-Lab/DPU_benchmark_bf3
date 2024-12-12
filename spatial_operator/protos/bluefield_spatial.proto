@@ -29,13 +29,16 @@ package bluefield_spatial;
 service SpatialOp {
   // Sends a join request
   rpc SayMessage (SimpleRequest) returns (SimpleReply) {}
-  rpc SayJoin (CommandRequest) returns (GeomReply) {}
-  rpc SayQuery (GeomRequest) returns (GeomReply) {}
+  rpc SayJoin (OpRequest) returns (stream GeomReply) {}
+  rpc SayQuery (stream GeomRequest) returns (stream GeomReply) {}
+  // Extra communications for between the filter server and the refine server:
+  rpc FilteredJoin (stream IndexedRequest) returns (stream IndexedReply) {}
+  rpc FilteredQuery (stream GeomRequest) returns (stream IndexedReply) {}
 }
 
 // A request message containing only a string
 message SimpleRequest {
-  string operation = 1; // Name of operation to be performed
+  int32 operation = 1; // Class of operation to be performed
 }
 
 // A response message containing only a string
@@ -43,35 +46,71 @@ message SimpleReply {
   string message = 1; // Response message
 }
 
-// A request message containing a command: an operation to do, and the names
-//  of the datasets to do it on
-message CommandRequest {
-  string operation = 1;            // Name of operation to be performed
-  repeated string dataSetName = 2; // Operands from server's data sets
-  optional string resultName = 3;  // Add a name to get it to store the result
+// A single Polygon
+//  (For internal use, as part of other messages - generally streamed)
+message Polygon {
+  int32 id = 4;
+  repeated float coord = 1 [packed=true];
 }
 
-// A collection of polygons
-//  (For internal use, as part of other messages)
-message Geoms {
-  message Polygon {
-    repeated float coord = 1 [packed=true];
-  }
-  optional string name = 2;
-  map<int32, Polygon> index = 3;
+// A command, or a header message before a geometry stream
+//  Contains an operation to do, and the names of the datasets to do it on
+message OpRequest { // Sent before a group of Polygons
+  optional string operation = 1;  // Name of operation to be performed
+  optional string message = 2;    // Can be used to specify operand order
+  optional string name = 3;       // A name for the dataset we're about to send; it can store it under this name
+  repeated string compare_to = 4; // Additional operand datasets
 }
 
-// A request message containing a command, a group of geometries, and the names
-//  of internal datasets to compare it against
+// A single instance of a streamed message, containing either the command header
+//  or a single Polygon
 message GeomRequest {
-  string operation = 1;            // Name of operation to be performed
-  Geoms geom = 2;                  // Client-sent first operand
-  repeated string dataSetName = 3; // Additional operands from server's data sets
-  optional string resultName = 4;  // Add a name to get it to store the result
+  oneof poly_request_part {
+    OpRequest header = 1;
+    Polygon poly = 2;
+    string message = 3; // mid-stream message option
+  }
 }
 
-// A response message containing GEOS geometries in float form
+// A response, or a header message before a response geometry stream
+message OpResponse {
+  optional string message = 1;
+  optional float filter_time = 2; // How much time the filter step took
+  optional float refine_time = 3; // How much time the refine step took
+  optional float communication_time = 4; // How much time the communication took
+}
+
+// A single instance of a streamed response, containing either a Polygon or a trailer
 message GeomReply {
-  string message = 1; // Response message
-  Geoms geom = 2;     // Geometries resulting from a requested operation
+  oneof poly_response_part {
+    string message = 1; // mid-stream message option
+    Polygon poly = 2;
+    OpResponse trailer = 3;
+  }
+}
+
+// A group of polygon IDs
+//  (For internal use, as part of other messages - generally streamed)
+message IDs {
+  repeated int32 id = 1 [packed=true];
+}
+
+// A single instance of a streamed request message, header or group of shape IDs,
+//  for use between the filter and refine servers
+message IndexedRequest {
+  oneof id_request_part {
+    OpRequest header = 1;
+    IDs ids = 2;
+    string message = 3; // mid-stream message option
+  }
+}
+
+// A single instance of a streamed response message, IDs or trailer,
+//  for use between the filter and refine servers
+message IndexedReply {
+  oneof id_response_part {
+    IDs ids = 1;
+    string message = 2; // mid-stream message option
+    OpResponse trailer = 3;
+  }
 }
