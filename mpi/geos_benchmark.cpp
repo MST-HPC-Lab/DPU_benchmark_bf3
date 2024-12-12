@@ -102,7 +102,7 @@ int iterate_tree(const char *filename, const char *filename2)
         GEOSGeom_destroy(geoms[i]);
     }
     finishGEOS();
-    count << "SUCCESS";
+    cout << "SUCCESS";
 
     return 0;
 }
