@@ -17,8 +17,8 @@
 #include <vector>
 #include <sys/time.h>
 
-#define MAX_LINE_LENGTH 300000 // 30000
-#define MAX_GEOM_NUMBER 500000
+#define MAX_LINE_LENGTH 300000 // 30000 wasn't enough, nor was 100000
+#define MAX_GEOM_NUMBER 400000
 
 using namespace std;
 
@@ -100,7 +100,6 @@ int iterate_tree(const char *filename, const char *filename2)
     for (size_t i = 0; i < index; i++)
     {
         GEOSGeom_destroy(geoms[i]);
-        if (i%1000 == 0) cout << "SUCCESS " << i;
     }
     finishGEOS();
 
