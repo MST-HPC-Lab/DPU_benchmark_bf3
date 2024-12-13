@@ -674,7 +674,7 @@ int main(int argc, char **argv)
         }
         // Receive the last one from each, and then tell them the work is done
         MPI_Recv(NULL, 0, MPI_INT, MPI_ANY_SOURCE, WORK_TAG, MPI_COMM_WORLD, &status);
-        MPI_Send(&filenum, 1, MPI_INT, status.MPI_SOURCE, TERMINATION_TAG, MPI_COMM_WORLD);
+        MPI_Send(NULL, 0, MPI_INT, status.MPI_SOURCE, TERMINATION_TAG, MPI_COMM_WORLD);
 
         // End total timer
         total_time += MPI_Wtime();
