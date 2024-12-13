@@ -19,6 +19,7 @@
 #include <geos_c.h>
 #include <cstring>
 #include <vector>
+// #include <numeric> // for std::accumulate(vector.begin(), vector.end(), 0.0) or std::reduce(vector.begin(), vector.end())
 #include <sys/time.h>
 
 #include <mpi.h>
@@ -551,21 +552,25 @@ double select_test(const char *name, int (*test_function)(vector<GEOSGeometry *>
     }
 }
 
-bool run_all_tests(double* test_time_arr, int filenum, int n_repeats)
+void run_all_tests(double* test_time_arr, int filenum, int n_repeats)
 {
     // const char *filename = (string(argv[1]) + "/" + to_string(rank + filenum)).c_str();
     // const char *filename2 = (string(argv[2]) + "/" + to_string(rank + filenum)).c_str();
     // cout << "File: " << (string(argv[1]) + "/" + to_string(rank + filenum)).c_str() << endl;
     // cout << "File2: " << (string(argv[2]) + "/" + to_string(rank + filenum)).c_str() << endl;
-    double[13];
 
+    // Start total timer
+    struct timeval tv1, tv2;
+    gettimeofday(&tv1, NULL);
+
+    // Run tests
     try
     {
-        vector<GEOSGeometry *> *geoms = get_polygons((string(argv[1]) + "/" + to_string(rank + filenum)).c_str());
+        vector<GEOSGeometry *> *geoms = get_polygons((string(argv[1]) + "/" + to_string(filenum)).c_str());
         // vector<GEOSGeometry *> *geoms2 = get_polygons((string(argv[2]) + "/" + to_string(rank + filenum)).c_str());
         if (geoms->size() > 0)
         {
-            vector<GEOSGeometry *> *geoms2 = get_polygons((string(argv[2]) + "/" + to_string(rank + filenum)).c_str());
+            vector<GEOSGeometry *> *geoms2 = get_polygons((string(argv[2]) + "/" + to_string(filenum)).c_str());
             
             test_time_arr[ 0] += select_test("Create",            &create_tree,  geoms, geoms2, n_repeats);
             test_time_arr[ 1] += select_test("Iterate",           &iterate_tree, geoms, geoms2, n_repeats);
@@ -579,7 +584,7 @@ bool run_all_tests(double* test_time_arr, int filenum, int n_repeats)
             test_time_arr[ 9] += select_test("Equal Exact (0.3)", &equal_exact,  geoms, geoms2, n_repeats);
             test_time_arr[10] += select_test("Cover",             &cover,        geoms, geoms2, n_repeats);
             test_time_arr[11] += select_test("Covered By",        &covered_by,   geoms, geoms2, n_repeats);
-            test_time_arr[12] += create_time + iterate_time + query_time + intersect_time + overlap_time + touch_time + cross_time + contain_time + equal_time + equal_exact_time + cover_time + covered_by_time;
+            // test_time_arr[12] += create_time + iterate_time + query_time + intersect_time + overlap_time + touch_time + cross_time + contain_time + equal_time + equal_exact_time + cover_time + covered_by_time;
 
             destroy_polygons(geoms2);
         }
@@ -587,10 +592,12 @@ bool run_all_tests(double* test_time_arr, int filenum, int n_repeats)
     }
     catch (...)
     {
-        cout << "No file named " << rank + filenum << endl;
-        return false;
+        cout << "PARTIAL ABORT: No file named " << filenum << endl;
     }
-    return true;
+
+    // End total timer
+    gettimeofday(&tv2, NULL);
+    test_time_arr[12] += (double)(tv2.tv_usec - tv1.tv_usec) / 1000000 + (double)(tv2.tv_sec - tv1.tv_sec);
 }
 
 int main(int argc, char **argv)
@@ -612,31 +619,21 @@ int main(int argc, char **argv)
     if (!n)
         n = 1;
 
-    double create_time = 0;
-    double iterate_time = 0;
-    double query_time = 0;
-    double intersect_time = 0;
-    double overlap_time = 0;
-    double touch_time = 0;
-    double cross_time = 0;
-    double contain_time = 0;
-    double equal_time = 0;
-    double equal_exact_time = 0;
-    double cover_time = 0;
-    double covered_by_time = 0;
-    double total_time = 0;
-
-    // Represents the times of all the different operations, and will be cumulative over all partitions that this process will do
+    // Represents the times of all the different operations, and will be cumulative over all partitions that this process will do,
+    //  but is for the local process only
+    // Order: create_time, iterate_time, query_time, intersect_time, overlap_time, touch_time, cross_time, contain_time, equal_time, equal_exact_time, cover_time, covered_by_time, total_time
     double test_time_arr[13]       = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+    // Places to store result stats gathered from accross all processes
     double test_time_arr_max[13]   = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     double test_time_arr_min[13]   = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     double test_time_arr_sum[13]   = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     double test_time_arr_avg[13]   = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     double test_time_arr_range[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-    for (int filenum = 0; filenum < numberOfPartitions; filenum += numProcs) // Fixed round robin over partitions
-    {
-        bool success = run_all_tests(test_time_arr, filenum, n);
+    // Fixed round robin over partition files
+    for (int filenum = rank; filenum < numberOfPartitions; filenum += numProcs) {
+        run_all_tests(test_time_arr, filenum, n);
     }
 
     // cout << endl
@@ -661,10 +658,6 @@ int main(int argc, char **argv)
     //      << "------------------------------------------------------------------" << endl
     //      << endl
     //      << endl;
-
-    // double test_time_arr[13] = {create_time, iterate_time, query_time, intersect_time, overlap_time, touch_time,
-    //                             cross_time, contain_time, equal_time, equal_exact_time, cover_time, covered_by_time,
-    //                             total_time};
 
     MPI_Reduce(test_time_arr, test_time_arr_max, 13, MPI_DOUBLE, MPI_MAX, root, MPI_COMM_WORLD);
     MPI_Reduce(test_time_arr, test_time_arr_min, 13, MPI_DOUBLE, MPI_MIN, root, MPI_COMM_WORLD);
