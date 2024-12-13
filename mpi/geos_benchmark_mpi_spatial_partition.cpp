@@ -606,7 +606,7 @@ void run_all_tests(double* test_time_arr, int filenum, char *dir1, char *dir2, i
     // gettimeofday(&tv2, NULL);
     // test_time_arr[12] += (double)(tv2.tv_usec - tv1.tv_usec) / 1000000 + (double)(tv2.tv_sec - tv1.tv_sec);
     time += MPI_Wtime();
-    test_time_arr[12] += time/(double)n; // This time, like the others, reflects the average of the n duplications
+    test_time_arr[12] += time/(double)n_repeats; // This time, like the others, reflects the average of the n duplications
 }
 
 int main(int argc, char **argv)
@@ -660,7 +660,7 @@ int main(int argc, char **argv)
             if (status.MPI_TAG == TERMINATION_TAG) { break; }
             else {
                 run_all_tests(test_time_arr, filenum, argv[1], argv[2], n);
-                MPI_Send(NULL, 0, MPI_INT, root, WORK_TAG, MPI_COMM_WORLD, &status);
+                MPI_Send(NULL, 0, MPI_INT, root, WORK_TAG, MPI_COMM_WORLD);
             }
         }
     } else { // Is Master
