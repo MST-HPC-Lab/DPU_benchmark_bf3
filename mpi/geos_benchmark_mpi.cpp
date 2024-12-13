@@ -1123,19 +1123,19 @@ int main(int argc, char **argv)
              << "Directory1: " << argv[1] << endl
              << "Filename2:  " << filename[2] << endl
              << "------------------------------------------------------------------" << endl
-             << "Total Create Time:             " << test_time_arr_sum[ 0] << ", " << test_time_arr_avg[ 0] << ", " << test_time_arr_range[ 0] << ", " << test_time_arr_min[ 0] << ", " << test_time_arr_max[ 0] << endl
-             << "Total Iterate Time:            " << test_time_arr_sum[ 1] << ", " << test_time_arr_avg[ 1] << ", " << test_time_arr_range[ 1] << ", " << test_time_arr_min[ 1] << ", " << test_time_arr_max[ 1] << endl
-             << "Total Query Time:              " << test_time_arr_sum[ 2] << ", " << test_time_arr_avg[ 2] << ", " << test_time_arr_range[ 2] << ", " << test_time_arr_min[ 2] << ", " << test_time_arr_max[ 2] << endl
-             << "Total Intersect Time:          " << test_time_arr_sum[ 3] << ", " << test_time_arr_avg[ 3] << ", " << test_time_arr_range[ 3] << ", " << test_time_arr_min[ 3] << ", " << test_time_arr_max[ 3] << endl
-             << "Total Overlap Time:            " << test_time_arr_sum[ 4] << ", " << test_time_arr_avg[ 4] << ", " << test_time_arr_range[ 4] << ", " << test_time_arr_min[ 4] << ", " << test_time_arr_max[ 4] << endl
-             << "Total Touch Time:              " << test_time_arr_sum[ 5] << ", " << test_time_arr_avg[ 5] << ", " << test_time_arr_range[ 5] << ", " << test_time_arr_min[ 5] << ", " << test_time_arr_max[ 5] << endl
-             << "Total Cross Time:              " << test_time_arr_sum[ 6] << ", " << test_time_arr_avg[ 6] << ", " << test_time_arr_range[ 6] << ", " << test_time_arr_min[ 6] << ", " << test_time_arr_max[ 6] << endl
-             << "Total Contain Time:            " << test_time_arr_sum[ 7] << ", " << test_time_arr_avg[ 7] << ", " << test_time_arr_range[ 7] << ", " << test_time_arr_min[ 7] << ", " << test_time_arr_max[ 7] << endl
-             << "Total Equal Time:              " << test_time_arr_sum[ 8] << ", " << test_time_arr_avg[ 8] << ", " << test_time_arr_range[ 8] << ", " << test_time_arr_min[ 8] << ", " << test_time_arr_max[ 8] << endl
-             << "Total Equal Exact (0.3) Time:  " << test_time_arr_sum[ 9] << ", " << test_time_arr_avg[ 9] << ", " << test_time_arr_range[ 9] << ", " << test_time_arr_min[ 9] << ", " << test_time_arr_max[ 9] << endl
-             << "Total Cover Time:              " << test_time_arr_sum[10] << ", " << test_time_arr_avg[10] << ", " << test_time_arr_range[10] << ", " << test_time_arr_min[10] << ", " << test_time_arr_max[10] << endl
-             << "Total Covered By Time:         " << test_time_arr_sum[11] << ", " << test_time_arr_avg[11] << ", " << test_time_arr_range[11] << ", " << test_time_arr_min[11] << ", " << test_time_arr_max[11] << endl
-             << "TOTAL TIME:                    " << test_time_arr_sum[12] << ", " << test_time_arr_avg[12] << ", " << test_time_arr_range[12] << ", " << test_time_arr_min[12] << ", " << test_time_arr_max[12] << endl
+             << "Create Time:             " << test_time_arr_sum[ 0] << ", " << test_time_arr_avg[ 0] << ", " << test_time_arr_range[ 0] << ", " << test_time_arr_min[ 0] << ", " << test_time_arr_max[ 0] << endl
+             << "Iterate Time:            " << test_time_arr_sum[ 1] << ", " << test_time_arr_avg[ 1] << ", " << test_time_arr_range[ 1] << ", " << test_time_arr_min[ 1] << ", " << test_time_arr_max[ 1] << endl
+             << "Query Time:              " << test_time_arr_sum[ 2] << ", " << test_time_arr_avg[ 2] << ", " << test_time_arr_range[ 2] << ", " << test_time_arr_min[ 2] << ", " << test_time_arr_max[ 2] << endl
+             << "Intersect Time:          " << test_time_arr_sum[ 3] << ", " << test_time_arr_avg[ 3] << ", " << test_time_arr_range[ 3] << ", " << test_time_arr_min[ 3] << ", " << test_time_arr_max[ 3] << endl
+             << "Overlap Time:            " << test_time_arr_sum[ 4] << ", " << test_time_arr_avg[ 4] << ", " << test_time_arr_range[ 4] << ", " << test_time_arr_min[ 4] << ", " << test_time_arr_max[ 4] << endl
+             << "Touch Time:              " << test_time_arr_sum[ 5] << ", " << test_time_arr_avg[ 5] << ", " << test_time_arr_range[ 5] << ", " << test_time_arr_min[ 5] << ", " << test_time_arr_max[ 5] << endl
+             << "Cross Time:              " << test_time_arr_sum[ 6] << ", " << test_time_arr_avg[ 6] << ", " << test_time_arr_range[ 6] << ", " << test_time_arr_min[ 6] << ", " << test_time_arr_max[ 6] << endl
+             << "Contain Time:            " << test_time_arr_sum[ 7] << ", " << test_time_arr_avg[ 7] << ", " << test_time_arr_range[ 7] << ", " << test_time_arr_min[ 7] << ", " << test_time_arr_max[ 7] << endl
+             << "Equal Time:              " << test_time_arr_sum[ 8] << ", " << test_time_arr_avg[ 8] << ", " << test_time_arr_range[ 8] << ", " << test_time_arr_min[ 8] << ", " << test_time_arr_max[ 8] << endl
+             << "Equal Exact (0.3) Time:  " << test_time_arr_sum[ 9] << ", " << test_time_arr_avg[ 9] << ", " << test_time_arr_range[ 9] << ", " << test_time_arr_min[ 9] << ", " << test_time_arr_max[ 9] << endl
+             << "Cover Time:              " << test_time_arr_sum[10] << ", " << test_time_arr_avg[10] << ", " << test_time_arr_range[10] << ", " << test_time_arr_min[10] << ", " << test_time_arr_max[10] << endl
+             << "Covered By Time:         " << test_time_arr_sum[11] << ", " << test_time_arr_avg[11] << ", " << test_time_arr_range[11] << ", " << test_time_arr_min[11] << ", " << test_time_arr_max[11] << endl
+             << "TOTAL TIME:              " << test_time_arr_sum[12] << ", " << test_time_arr_avg[12] << ", " << test_time_arr_range[12] << ", " << test_time_arr_min[12] << ", " << test_time_arr_max[12] << endl
              << "------------------------------------------------------------------" << endl
              << "------------------------------------------------------------------" << endl
              << endl

@@ -6,6 +6,7 @@
 // -----
 // g++ geos_benchmark.cpp
 // ./a.out <filepath1> <filepath2> <# of repetition of operations>
+// ./geos_benchmark ../Data/no_partition/cemetery.wkt ../Data/no_partition/sports.wkt 1 
 
 
 #include <iostream>

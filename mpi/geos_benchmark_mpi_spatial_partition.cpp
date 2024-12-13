@@ -8,6 +8,8 @@
 // -----
 // mpic++ geos_benchmark.cpp
 // mpirun -np <# of processes>  ./a.out <directorypath1> <directorypath2> <# of partitions> <# of repetition of operations>
+// mpirun -np 8 ./geos_benchmark_mpi_spatial_partition ../Data/spatial_partition/cemetery/64_parts_cemetery ../Data/spatial_partition/sports/64_parts_sports 64 1
+// mpirun -np 8 ./geos_benchmark_mpi_spatial_partition ../Data/spatial_partition/sports/64_parts_sports ../Data/spatial_partition/lakes/64_parts_lakes 64 1
 
 #include <iostream>
 #include <stdarg.h>
@@ -23,7 +25,7 @@
 
 using namespace std;
 
-int processRank = -1;
+int rank = -1;
 
 static void
 geos_message_handler(const char *fmt, ...)
@@ -539,16 +541,12 @@ double select_test(const char *name, int (*test_function)(vector<GEOSGeometry *>
 
 int main(int argc, char **argv)
 {
-    int rank;
     int numProcs;
+    int root = 0; // The process handling the control
 
     MPI_Init(&argc, &argv);
-
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-    processRank = rank;
-
     MPI_Comm_size(MPI_COMM_WORLD, &numProcs);
-
     initGEOS(geos_message_handler, geos_message_handler);
 
     int numberOfPartitions = atoi(argv[3]);
@@ -570,6 +568,7 @@ int main(int argc, char **argv)
     double equal_exact_time = 0;
     double cover_time = 0;
     double covered_by_time = 0;
+    double total_time = 0;
     for (int i = 0; i < numberOfPartitions; i += numProcs)
     {
         // const char *filename = (string(argv[1]) + "/" + to_string(rank + i)).c_str();
@@ -582,19 +581,22 @@ int main(int argc, char **argv)
             // vector<GEOSGeometry *> *geoms2 = get_polygons((string(argv[2]) + "/" + to_string(rank + i)).c_str());
             if (geoms->size() > 0)
             {
-            vector<GEOSGeometry *> *geoms2 = get_polygons((string(argv[2]) + "/" + to_string(rank + i)).c_str());
-                //create_time += select_test("Create", &create_tree, geoms, geoms2, n);
-                //iterate_time += select_test("Iterate", &iterate_tree, geoms, geoms2, n);
-                //query_time += select_test("Query", &query, geoms, geoms2, n);
+                vector<GEOSGeometry *> *geoms2 = get_polygons((string(argv[2]) + "/" + to_string(rank + i)).c_str());
+                
+                create_time += select_test("Create", &create_tree, geoms, geoms2, n);
+                iterate_time += select_test("Iterate", &iterate_tree, geoms, geoms2, n);
+                query_time += select_test("Query", &query, geoms, geoms2, n);
                 intersect_time += select_test("Intersect", &intersect, geoms, geoms2, n);
-                // overlap_time += select_test("Overlap", &overlap, geoms, geoms2, n);
-                // touch_time += select_test("Touch", &touch, geoms, geoms2, n);
-                // cross_time += select_test("Cross", &cross, geoms, geoms2, n);
-                // contain_time += select_test("Contain", &contain, geoms, geoms2, n);
-                // equal_time += select_test("Equal", &equal, geoms, geoms2, n);
-                // equal_exact_time += select_test("Equal Exact (0.3)", &equal_exact, geoms, geoms2, n);
-                // cover_time += select_test("Cover", &cover, geoms, geoms2, n);
-                // covered_by_time += select_test("Covered By", &covered_by, geoms, geoms2, n);
+                overlap_time += select_test("Overlap", &overlap, geoms, geoms2, n);
+                touch_time += select_test("Touch", &touch, geoms, geoms2, n);
+                cross_time += select_test("Cross", &cross, geoms, geoms2, n);
+                contain_time += select_test("Contain", &contain, geoms, geoms2, n);
+                equal_time += select_test("Equal", &equal, geoms, geoms2, n);
+                equal_exact_time += select_test("Equal Exact (0.3)", &equal_exact, geoms, geoms2, n);
+                cover_time += select_test("Cover", &cover, geoms, geoms2, n);
+                covered_by_time += select_test("Covered By", &covered_by, geoms, geoms2, n);
+                
+                total_time = create_time + iterate_time + query_time + intersect_time + overlap_time + touch_time + cross_time + contain_time + equal_time + equal_exact_time + cover_time + covered_by_time;
 
                 GEOSGeometry *geom;
                 for (auto cur = geoms->begin(); cur != geoms->end(); ++cur)
@@ -641,65 +643,59 @@ int main(int argc, char **argv)
     //      << endl
     //      << endl;
 
-    double test_time_arr_max[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    double test_time_arr_sum[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    double test_time_arr_max[13]   = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    double test_time_arr_sum[13]   = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    double test_time_arr_sum[13]   = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    double test_time_arr_avg[13]   = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    double test_time_arr_range[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
     double test_time_arr[13] = {create_time, iterate_time, query_time, intersect_time, overlap_time, touch_time,
                                 cross_time, contain_time, equal_time, equal_exact_time, cover_time, covered_by_time,
-                                create_time + iterate_time + query_time + intersect_time + overlap_time + touch_time + cross_time + contain_time + equal_time + equal_exact_time + cover_time + covered_by_time};
+                                total_time};
 
-    MPI_Reduce(test_time_arr, test_time_arr_max, 13, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
-    MPI_Reduce(test_time_arr, test_time_arr_sum, 13, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Reduce(test_time_arr, test_time_arr_max, 13, MPI_DOUBLE, MPI_MAX, root, MPI_COMM_WORLD);
+    MPI_Reduce(test_time_arr, test_time_arr_min, 13, MPI_DOUBLE, MPI_MIN, root, MPI_COMM_WORLD);
+    MPI_Reduce(test_time_arr, test_time_arr_sum, 13, MPI_DOUBLE, MPI_SUM, root, MPI_COMM_WORLD);
+    // Avg and range arrays filled later
 
-    if (rank == 0)
+    if (rank == root)
     {
+        // Fill avg and range arrays
+        for (int i = 0; i < 13; i++) {
+            test_time_arr_avg[i] = test_time_arr_sum[i]/numProcs;
+            test_time_arr_range[i] = test_time_arr_max[i] - test_time_arr_min[i];
+        }
+
         // if (numProcs > 1)
         // {
         //     system("rm ./file_part_*");
         // }
+        
+        // Generate Report
         cout << endl
              << endl
              << "------------------------------------------------------------------" << endl
-             << "-------------------- BENCHMARK RESULT (MAX) --------------------" << endl
+             << "--------- BENCHMARK RESULT (TOTAL, AVG, RANGE, MIN, MAX) ---------" << endl
              << "------------------------------------------------------------------" << endl
-             << argv[1] << " - " << argv[2] << " - " << numProcs << endl
-             //  << "Max Create Time: " << test_time_arr_max[0] << endl
-             //  << "Max Iterate Time: " << test_time_arr_max[1] << endl
-             //  << "Max Query Time: " << test_time_arr_max[2] << endl
-               << "Max Intersect Time: " << test_time_arr_max[3] << endl
-             //  << "Max Overlap Time: " << test_time_arr_max[4] << endl
-             //  << "Max Touch Time: " << test_time_arr_max[5] << endl
-             //  << "Max Cross Time: " << test_time_arr_max[6] << endl
-             //  << "Max Contain Time: " << test_time_arr_max[7] << endl
-             //  << "Max Equal Time: " << test_time_arr_max[8] << endl
-             //  << "Max Equal Exact (0.3) Time: " << test_time_arr_max[9] << endl
-             //  << "Max Cover Time: " << test_time_arr_max[10] << endl
-             //  << "Max Covered By Time: " << test_time_arr_max[11] << endl
-             << "Max TOTAL: " << test_time_arr_max[12] << endl
+             << "Processes:  " << numProcs << "  Partitions:  " << argv[3] << "  Replication (n): " << n << endl
+             << "Directory1: " << argv[1] << endl
+             << "Filename2:  " << argv[2] << endl
+             << "------------------------------------------------------------------" << endl
+             << "Create Time:             " << test_time_arr_sum[ 0] << ", " << test_time_arr_avg[ 0] << ", " << test_time_arr_range[ 0] << ", " << test_time_arr_min[ 0] << ", " << test_time_arr_max[ 0] << endl
+             << "Iterate Time:            " << test_time_arr_sum[ 1] << ", " << test_time_arr_avg[ 1] << ", " << test_time_arr_range[ 1] << ", " << test_time_arr_min[ 1] << ", " << test_time_arr_max[ 1] << endl
+             << "Query Time:              " << test_time_arr_sum[ 2] << ", " << test_time_arr_avg[ 2] << ", " << test_time_arr_range[ 2] << ", " << test_time_arr_min[ 2] << ", " << test_time_arr_max[ 2] << endl
+             << "Intersect Time:          " << test_time_arr_sum[ 3] << ", " << test_time_arr_avg[ 3] << ", " << test_time_arr_range[ 3] << ", " << test_time_arr_min[ 3] << ", " << test_time_arr_max[ 3] << endl
+             << "Overlap Time:            " << test_time_arr_sum[ 4] << ", " << test_time_arr_avg[ 4] << ", " << test_time_arr_range[ 4] << ", " << test_time_arr_min[ 4] << ", " << test_time_arr_max[ 4] << endl
+             << "Touch Time:              " << test_time_arr_sum[ 5] << ", " << test_time_arr_avg[ 5] << ", " << test_time_arr_range[ 5] << ", " << test_time_arr_min[ 5] << ", " << test_time_arr_max[ 5] << endl
+             << "Cross Time:              " << test_time_arr_sum[ 6] << ", " << test_time_arr_avg[ 6] << ", " << test_time_arr_range[ 6] << ", " << test_time_arr_min[ 6] << ", " << test_time_arr_max[ 6] << endl
+             << "Contain Time:            " << test_time_arr_sum[ 7] << ", " << test_time_arr_avg[ 7] << ", " << test_time_arr_range[ 7] << ", " << test_time_arr_min[ 7] << ", " << test_time_arr_max[ 7] << endl
+             << "Equal Time:              " << test_time_arr_sum[ 8] << ", " << test_time_arr_avg[ 8] << ", " << test_time_arr_range[ 8] << ", " << test_time_arr_min[ 8] << ", " << test_time_arr_max[ 8] << endl
+             << "Equal Exact (0.3) Time:  " << test_time_arr_sum[ 9] << ", " << test_time_arr_avg[ 9] << ", " << test_time_arr_range[ 9] << ", " << test_time_arr_min[ 9] << ", " << test_time_arr_max[ 9] << endl
+             << "Cover Time:              " << test_time_arr_sum[10] << ", " << test_time_arr_avg[10] << ", " << test_time_arr_range[10] << ", " << test_time_arr_min[10] << ", " << test_time_arr_max[10] << endl
+             << "Covered By Time:         " << test_time_arr_sum[11] << ", " << test_time_arr_avg[11] << ", " << test_time_arr_range[11] << ", " << test_time_arr_min[11] << ", " << test_time_arr_max[11] << endl
+             << "TOTAL TIME:              " << test_time_arr_sum[12] << ", " << test_time_arr_avg[12] << ", " << test_time_arr_range[12] << ", " << test_time_arr_min[12] << ", " << test_time_arr_max[12] << endl
              << "------------------------------------------------------------------" << endl
              << "------------------------------------------------------------------" << endl
-            //  << endl
-            //  << endl
-            //  << endl
-            //  << endl
-            //  << "------------------------------------------------------------------" << endl
-            //  << "-------------------- BENCHMARK RESULT (AVG) --------------------" << endl
-            //  << "------------------------------------------------------------------" << endl
-            //  << "Average Create Time: " << test_time_arr_sum[0] / numProcs << endl
-            //  << "Average Iterate Time: " << test_time_arr_sum[1] / numProcs << endl
-            //  << "Average Query Time: " << test_time_arr_sum[2] / numProcs << endl
-            //  << "Average Intersect Time: " << test_time_arr_sum[3] / numProcs << endl
-            //  << "Average Overlap Time: " << test_time_arr_sum[4] / numProcs << endl
-            //  << "Average Touch Time: " << test_time_arr_sum[5] / numProcs << endl
-            //  << "Average Cross Time: " << test_time_arr_sum[6] / numProcs << endl
-            //  << "Average Contain Time: " << test_time_arr_sum[7] / numProcs << endl
-            //  << "Average Equal Time: " << test_time_arr_sum[8] / numProcs << endl
-            //  << "Average Equal Exact (0.3) Time: " << test_time_arr_sum[9] / numProcs << endl
-            //  << "Average Cover Time: " << test_time_arr_sum[10] / numProcs << endl
-            //  << "Average Covered By Time: " << test_time_arr_sum[11] / numProcs << endl
-            //  << "Average TOTAL: " << test_time_arr_sum[12] / numProcs << endl
-            //  << "------------------------------------------------------------------" << endl
-            //  << "------------------------------------------------------------------" << endl
             //  << endl
             //  << endl
             ;
