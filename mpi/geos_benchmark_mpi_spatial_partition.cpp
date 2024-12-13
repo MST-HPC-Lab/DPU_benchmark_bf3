@@ -52,7 +52,7 @@ vector<GEOSGeometry *> *get_polygons(const char *filename)
     return geoms;
 }
 
-void *destroy_polygons(vector<GEOSGeometry *> geoms)
+void *destroy_polygons(vector<GEOSGeometry *> *geoms)
 {
     for (auto cur = geoms->begin(); cur != geoms->end(); ++cur)
     {
