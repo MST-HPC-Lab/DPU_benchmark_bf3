@@ -3,6 +3,7 @@
 // This program uses the MPI library. Both files should be spatially partitioned 
 // and the directory names of the data should be given as the first two arguments.
 // You have to specifiy the number of partitions as the third argument.
+// Do NOT add a "/" onto the ends of the directory paths, as that is done internally.
 //
 // USAGE
 // -----
@@ -552,7 +553,7 @@ double select_test(const char *name, int (*test_function)(vector<GEOSGeometry *>
     }
 }
 
-void run_all_tests(double* test_time_arr, int filenum, int n_repeats)
+void run_all_tests(double* test_time_arr, int filenum, char *dir1, char *dir2, int n_repeats)
 {
     // const char *filename = (string(argv[1]) + "/" + to_string(rank + filenum)).c_str();
     // const char *filename2 = (string(argv[2]) + "/" + to_string(rank + filenum)).c_str();
@@ -566,11 +567,11 @@ void run_all_tests(double* test_time_arr, int filenum, int n_repeats)
     // Run tests
     try
     {
-        vector<GEOSGeometry *> *geoms = get_polygons((string(argv[1]) + "/" + to_string(filenum)).c_str());
+        vector<GEOSGeometry *> *geoms = get_polygons((string(dir1) + "/" + to_string(filenum)).c_str());
         // vector<GEOSGeometry *> *geoms2 = get_polygons((string(argv[2]) + "/" + to_string(rank + filenum)).c_str());
         if (geoms->size() > 0)
         {
-            vector<GEOSGeometry *> *geoms2 = get_polygons((string(argv[2]) + "/" + to_string(filenum)).c_str());
+            vector<GEOSGeometry *> *geoms2 = get_polygons((string(dir2) + "/" + to_string(filenum)).c_str());
             
             test_time_arr[ 0] += select_test("Create",            &create_tree,  geoms, geoms2, n_repeats);
             test_time_arr[ 1] += select_test("Iterate",           &iterate_tree, geoms, geoms2, n_repeats);
@@ -633,7 +634,7 @@ int main(int argc, char **argv)
 
     // Fixed round robin over partition files
     for (int filenum = rank; filenum < numberOfPartitions; filenum += numProcs) {
-        run_all_tests(test_time_arr, filenum, n);
+        run_all_tests(test_time_arr, filenum, argv[1], argv[2], n);
     }
 
     // cout << endl
