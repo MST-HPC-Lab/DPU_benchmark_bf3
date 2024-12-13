@@ -683,6 +683,7 @@ int main(int argc, char **argv)
             // cout << "MASTER> Received from " << status.MPI_SOURCE << endl;
             MPI_Send(&filenum, 1, MPI_INT, status.MPI_SOURCE, WORK_TAG, MPI_COMM_WORLD);
             cout << "\rCURRENT FILENUM: " << filenum;
+            fflush(stdout);
         }
         cout << endl;
         // cout << "MASTER> Finished work" << endl;
