@@ -653,9 +653,11 @@ int main(int argc, char **argv)
     int filenum;
     if (rank != root) { // Is Worker
         // Workers start work automatically
+        int tasks_done = 0;
         if (rank < numberOfPartitions) {
             run_all_tests(test_time_arr, rank, argv[1], argv[2], n);
             // cout << "WORKER> Partition " << rank << " from " << rank << endl;
+            tasks_done++;
         }
 
         // Then wait for more
@@ -665,10 +667,12 @@ int main(int argc, char **argv)
             if (status.MPI_TAG == TERMINATION_TAG) { break; }
             else {
                 run_all_tests(test_time_arr, filenum, argv[1], argv[2], n);
+                tasks_done++;
                 // cout << "WORKER> Partition " << filenum << " from " << rank << endl;
                 MPI_Send(NULL, 0, MPI_INT, root, WORK_TAG, MPI_COMM_WORLD);
             }
         }
+        cout << "WORKER " << rank << " COMPLETED " << tasks_done << " TASKS" << endl;
     } else { // Is Master
         // Start total timer
         total_time = -MPI_Wtime();
@@ -678,7 +682,9 @@ int main(int argc, char **argv)
             MPI_Recv(NULL, 0, MPI_INT, MPI_ANY_SOURCE, WORK_TAG, MPI_COMM_WORLD, &status);
             // cout << "MASTER> Received from " << status.MPI_SOURCE << endl;
             MPI_Send(&filenum, 1, MPI_INT, status.MPI_SOURCE, WORK_TAG, MPI_COMM_WORLD);
+            cout << "\rCURRENT FILENUM: " << filenum;
         }
+        cout << endl;
         // cout << "MASTER> Finished work" << endl;
         // Receive the last one from each, and then tell them the work is done
         for (int i=1; i<numProcs; i++) {
@@ -740,7 +746,7 @@ int main(int argc, char **argv)
         cout << endl
              << endl
              << "------------------------------------------------------------------" << endl
-             << "---- BENCHMARK RESULT (SUM, AVG, RANGE, MIN, MAX over procs) -----" << endl
+             << "---- BENCHMARK RESULT (SUM, AVG, RANGE, MIN, MAX) Over procs -----" << endl
              << "------------------------------------------------------------------" << endl
              << "Processes:  " << numProcs << "  Partitions: " << argv[3] << "  Replication (n): " << n << endl
              << "Directory1: " << argv[1] << endl
