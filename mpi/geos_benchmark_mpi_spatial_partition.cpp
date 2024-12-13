@@ -551,7 +551,7 @@ double select_test(const char *name, int (*test_function)(vector<GEOSGeometry *>
     }
 }
 
-void run_all_tests(double* test_time_arr, int filenum, int n_repeats)
+bool run_all_tests(double* test_time_arr, int filenum, int n_repeats)
 {
     // const char *filename = (string(argv[1]) + "/" + to_string(rank + filenum)).c_str();
     // const char *filename2 = (string(argv[2]) + "/" + to_string(rank + filenum)).c_str();
@@ -588,8 +588,9 @@ void run_all_tests(double* test_time_arr, int filenum, int n_repeats)
     catch (...)
     {
         cout << "No file named " << rank + filenum << endl;
-        continue;
+        return false;
     }
+    return true;
 }
 
 int main(int argc, char **argv)
@@ -635,7 +636,7 @@ int main(int argc, char **argv)
 
     for (int filenum = 0; filenum < numberOfPartitions; filenum += numProcs) // Fixed round robin over partitions
     {
-        run_all_tests(test_time_arr, filenum, n);
+        bool success = run_all_tests(test_time_arr, filenum, n);
     }
 
     // cout << endl
