@@ -551,6 +551,47 @@ double select_test(const char *name, int (*test_function)(vector<GEOSGeometry *>
     }
 }
 
+void run_all_tests(double* test_time_arr, int n_repeats)
+{
+    // const char *filename = (string(argv[1]) + "/" + to_string(rank + i)).c_str();
+    // const char *filename2 = (string(argv[2]) + "/" + to_string(rank + i)).c_str();
+    // cout << "File: " << (string(argv[1]) + "/" + to_string(rank + i)).c_str() << endl;
+    // cout << "File2: " << (string(argv[2]) + "/" + to_string(rank + i)).c_str() << endl;
+    double[13];
+
+    try
+    {
+        vector<GEOSGeometry *> *geoms = get_polygons((string(argv[1]) + "/" + to_string(rank + i)).c_str());
+        // vector<GEOSGeometry *> *geoms2 = get_polygons((string(argv[2]) + "/" + to_string(rank + i)).c_str());
+        if (geoms->size() > 0)
+        {
+            vector<GEOSGeometry *> *geoms2 = get_polygons((string(argv[2]) + "/" + to_string(rank + i)).c_str());
+            
+            test_time_arr[ 0] += select_test("Create",            &create_tree,  geoms, geoms2, n_repeats);
+            test_time_arr[ 1] += select_test("Iterate",           &iterate_tree, geoms, geoms2, n_repeats);
+            test_time_arr[ 2] += select_test("Query",             &query,        geoms, geoms2, n_repeats);
+            test_time_arr[ 3] += select_test("Intersect",         &intersect,    geoms, geoms2, n_repeats);
+            test_time_arr[ 4] += select_test("Overlap",           &overlap,      geoms, geoms2, n_repeats);
+            test_time_arr[ 5] += select_test("Touch",             &touch,        geoms, geoms2, n_repeats);
+            test_time_arr[ 6] += select_test("Cross",             &cross,        geoms, geoms2, n_repeats);
+            test_time_arr[ 7] += select_test("Contain",           &contain,      geoms, geoms2, n_repeats);
+            test_time_arr[ 8] += select_test("Equal",             &equal,        geoms, geoms2, n_repeats);
+            test_time_arr[ 9] += select_test("Equal Exact (0.3)", &equal_exact,  geoms, geoms2, n_repeats);
+            test_time_arr[10] += select_test("Cover",             &cover,        geoms, geoms2, n_repeats);
+            test_time_arr[11] += select_test("Covered By",        &covered_by,   geoms, geoms2, n_repeats);
+            test_time_arr[12] += create_time + iterate_time + query_time + intersect_time + overlap_time + touch_time + cross_time + contain_time + equal_time + equal_exact_time + cover_time + covered_by_time;
+
+            destroy_polygons(geoms2);
+        }
+        destroy_polygons(geoms);
+    }
+    catch (...)
+    {
+        cout << "No file named " << rank + i << endl;
+        continue;
+    }
+}
+
 int main(int argc, char **argv)
 {
     int rank;
@@ -584,57 +625,16 @@ int main(int argc, char **argv)
     double covered_by_time = 0;
     double total_time = 0;
 
+    double test_time_arr[13]       = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    double test_time_arr_max[13]   = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    double test_time_arr_min[13]   = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    double test_time_arr_sum[13]   = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    double test_time_arr_avg[13]   = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    double test_time_arr_range[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
     for (int i = 0; i < numberOfPartitions; i += numProcs) // Fixed round robin over partitions
     {
-        // const char *filename = (string(argv[1]) + "/" + to_string(rank + i)).c_str();
-        // const char *filename2 = (string(argv[2]) + "/" + to_string(rank + i)).c_str();
-        // cout << "File: " << (string(argv[1]) + "/" + to_string(rank + i)).c_str() << endl;
-        // cout << "File2: " << (string(argv[2]) + "/" + to_string(rank + i)).c_str() << endl;
-        try
-        {
-            vector<GEOSGeometry *> *geoms = get_polygons((string(argv[1]) + "/" + to_string(rank + i)).c_str());
-            // vector<GEOSGeometry *> *geoms2 = get_polygons((string(argv[2]) + "/" + to_string(rank + i)).c_str());
-            if (geoms->size() > 0)
-            {
-                vector<GEOSGeometry *> *geoms2 = get_polygons((string(argv[2]) + "/" + to_string(rank + i)).c_str());
-                
-                create_time += select_test("Create", &create_tree, geoms, geoms2, n);
-                iterate_time += select_test("Iterate", &iterate_tree, geoms, geoms2, n);
-                query_time += select_test("Query", &query, geoms, geoms2, n);
-                intersect_time += select_test("Intersect", &intersect, geoms, geoms2, n);
-                overlap_time += select_test("Overlap", &overlap, geoms, geoms2, n);
-                touch_time += select_test("Touch", &touch, geoms, geoms2, n);
-                cross_time += select_test("Cross", &cross, geoms, geoms2, n);
-                contain_time += select_test("Contain", &contain, geoms, geoms2, n);
-                equal_time += select_test("Equal", &equal, geoms, geoms2, n);
-                equal_exact_time += select_test("Equal Exact (0.3)", &equal_exact, geoms, geoms2, n);
-                cover_time += select_test("Cover", &cover, geoms, geoms2, n);
-                covered_by_time += select_test("Covered By", &covered_by, geoms, geoms2, n);
-                
-                total_time = create_time + iterate_time + query_time + intersect_time + overlap_time + touch_time + cross_time + contain_time + equal_time + equal_exact_time + cover_time + covered_by_time;
-
-                // GEOSGeometry *geom;
-                // for (auto cur = geoms->begin(); cur != geoms->end(); ++cur)
-                // {
-                //     geom = *cur;
-                //     GEOSGeom_destroy(geom);
-                // }
-                // for (auto cur = geoms2->begin(); cur != geoms2->end(); ++cur)
-                // {
-                //     geom = *cur;
-                //     GEOSGeom_destroy(geom);
-                // }
-                // delete geoms2;
-                destroy_polygons(geoms2);
-            }
-            destroy_polygons(geoms);
-            // delete geoms;
-        }
-        catch (...)
-        {
-            cout << "No file named " << rank + i << endl;
-            continue;
-        }
+        run_all_tests(test_time_arr, n);
     }
 
     // cout << endl
@@ -660,15 +660,9 @@ int main(int argc, char **argv)
     //      << endl
     //      << endl;
 
-    double test_time_arr_max[13]   = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    double test_time_arr_min[13]   = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    double test_time_arr_sum[13]   = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    double test_time_arr_avg[13]   = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    double test_time_arr_range[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-
-    double test_time_arr[13] = {create_time, iterate_time, query_time, intersect_time, overlap_time, touch_time,
-                                cross_time, contain_time, equal_time, equal_exact_time, cover_time, covered_by_time,
-                                total_time};
+    // double test_time_arr[13] = {create_time, iterate_time, query_time, intersect_time, overlap_time, touch_time,
+    //                             cross_time, contain_time, equal_time, equal_exact_time, cover_time, covered_by_time,
+    //                             total_time};
 
     MPI_Reduce(test_time_arr, test_time_arr_max, 13, MPI_DOUBLE, MPI_MAX, root, MPI_COMM_WORLD);
     MPI_Reduce(test_time_arr, test_time_arr_min, 13, MPI_DOUBLE, MPI_MIN, root, MPI_COMM_WORLD);
