@@ -649,11 +649,14 @@ int main(int argc, char **argv)
     MPI_Status status;
     double total_time;
     int filenum;
-    if (rank != root && rank < numberOfPartitions) { // Is Worker
+    if (rank != root) { // Is Worker
         // Workers start work automatically
-        run_all_tests(test_time_arr, rank, argv[1], argv[2], n);
+        if (rank < numberOfPartitions) {
+            run_all_tests(test_time_arr, rank, argv[1], argv[2], n);
+        }
 
         // Then wait for more
+        MPI_Send(NULL, 0, MPI_INT, root, WORK_TAG, MPI_COMM_WORLD);
         while (true) {
             MPI_Recv(&filenum, 1, MPI_INT, root, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
             if (status.MPI_TAG == TERMINATION_TAG) { break; }
