@@ -653,6 +653,7 @@ int main(int argc, char **argv)
         // Workers start work automatically
         if (rank < numberOfPartitions) {
             run_all_tests(test_time_arr, rank, argv[1], argv[2], n);
+            // cout << "WORKER> Partition " << rank << " from " << rank << endl;
         }
 
         // Then wait for more
@@ -662,6 +663,7 @@ int main(int argc, char **argv)
             if (status.MPI_TAG == TERMINATION_TAG) { break; }
             else {
                 run_all_tests(test_time_arr, filenum, argv[1], argv[2], n);
+                // cout << "WORKER> Partition " << filenum << " from " << rank << endl;
                 MPI_Send(NULL, 0, MPI_INT, root, WORK_TAG, MPI_COMM_WORLD);
             }
         }
@@ -672,11 +674,16 @@ int main(int argc, char **argv)
         // Start the main receiving/work-serving loop
         for (filenum = numProcs; filenum < numberOfPartitions; filenum++) {
             MPI_Recv(NULL, 0, MPI_INT, MPI_ANY_SOURCE, WORK_TAG, MPI_COMM_WORLD, &status);
+            // cout << "MASTER> Received from " << status.MPI_SOURCE << endl;
             MPI_Send(&filenum, 1, MPI_INT, status.MPI_SOURCE, WORK_TAG, MPI_COMM_WORLD);
         }
+        // cout << "MASTER> Finished work" << endl;
         // Receive the last one from each, and then tell them the work is done
-        MPI_Recv(NULL, 0, MPI_INT, MPI_ANY_SOURCE, WORK_TAG, MPI_COMM_WORLD, &status);
-        MPI_Send(&filenum, 1, MPI_INT, status.MPI_SOURCE, TERMINATION_TAG, MPI_COMM_WORLD);
+        for (int i=1; i<numProcs; i++) {
+            MPI_Recv(NULL, 0, MPI_INT, MPI_ANY_SOURCE, WORK_TAG, MPI_COMM_WORLD, &status);
+            MPI_Send(&filenum, 1, MPI_INT, status.MPI_SOURCE, TERMINATION_TAG, MPI_COMM_WORLD);
+            // cout << "MASTER> Sent termination to " << i << endl;
+        }
 
         // End total timer
         total_time += MPI_Wtime();
