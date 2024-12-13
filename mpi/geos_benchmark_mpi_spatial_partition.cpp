@@ -672,7 +672,8 @@ int main(int argc, char **argv)
                 MPI_Send(NULL, 0, MPI_INT, root, WORK_TAG, MPI_COMM_WORLD);
             }
         }
-        cout << "WORKER " << rank << " COMPLETED " << tasks_done << " TASKS" << endl;
+        printf("WORKER %d COMPLETED %d TASKS\n", rank, tasks_done);
+        fflush(stdout);
     } else { // Is Master
         // Start total timer
         total_time = -MPI_Wtime();
@@ -682,10 +683,11 @@ int main(int argc, char **argv)
             MPI_Recv(NULL, 0, MPI_INT, MPI_ANY_SOURCE, WORK_TAG, MPI_COMM_WORLD, &status);
             // cout << "MASTER> Received from " << status.MPI_SOURCE << endl;
             MPI_Send(&filenum, 1, MPI_INT, status.MPI_SOURCE, WORK_TAG, MPI_COMM_WORLD);
-            cout << "\rCURRENT FILENUM: " << filenum;
+            printf("\rCURRENT FILENUM: %d", filenum);
             fflush(stdout);
         }
-        cout << endl;
+        printf("\n");
+        fflush(stdout);
         // cout << "MASTER> Finished work" << endl;
         // Receive the last one from each, and then tell them the work is done
         for (int i=1; i<numProcs; i++) {
