@@ -648,11 +648,10 @@ int main(int argc, char **argv)
     // Load-balancing over the partitions
     MPI_Status status;
     double total_time;
+    int filenum;
     if (rank != root && rank < numberOfPartitions) { // Is Worker
         // Workers start work automatically
         run_all_tests(test_time_arr, rank, argv[1], argv[2], n);
-
-        int filenum;
 
         // Then wait for more
         while (true) {
@@ -668,13 +667,13 @@ int main(int argc, char **argv)
         total_time = -MPI_Wtime();
 
         // Start the main receiving/work-serving loop
-        for (int filenum = numProcs; filenum < numberOfPartitions; filenum++) {
+        for (filenum = numProcs; filenum < numberOfPartitions; filenum++) {
             MPI_Recv(NULL, 0, MPI_INT, MPI_ANY_SOURCE, WORK_TAG, MPI_COMM_WORLD, &status);
             MPI_Send(&filenum, 1, MPI_INT, status.MPI_SOURCE, WORK_TAG, MPI_COMM_WORLD);
         }
         // Receive the last one from each, and then tell them the work is done
         MPI_Recv(NULL, 0, MPI_INT, MPI_ANY_SOURCE, WORK_TAG, MPI_COMM_WORLD, &status);
-        MPI_Send(NULL, 0, MPI_INT, status.MPI_SOURCE, TERMINATION_TAG, MPI_COMM_WORLD);
+        MPI_Send(&filenum, 1, MPI_INT, status.MPI_SOURCE, TERMINATION_TAG, MPI_COMM_WORLD);
 
         // End total timer
         total_time += MPI_Wtime();
