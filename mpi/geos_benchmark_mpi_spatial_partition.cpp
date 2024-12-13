@@ -52,6 +52,16 @@ vector<GEOSGeometry *> *get_polygons(const char *filename)
     return geoms;
 }
 
+void *destroy_polygons(vector<GEOSGeometry *> geoms)
+{
+    for (auto cur = geoms->begin(); cur != geoms->end(); ++cur)
+    {
+        geom = *cur;
+        GEOSGeom_destroy(geom);
+    }
+    delete geoms;
+}
+
 int create_tree(vector<GEOSGeometry *> *geoms, vector<GEOSGeometry *> *geoms2)
 {
 
@@ -572,7 +582,8 @@ int main(int argc, char **argv)
     double cover_time = 0;
     double covered_by_time = 0;
     double total_time = 0;
-    for (int i = 0; i < numberOfPartitions; i += numProcs)
+
+    for (int i = 0; i < numberOfPartitions; i += numProcs) // Fixed round robin over partitions
     {
         // const char *filename = (string(argv[1]) + "/" + to_string(rank + i)).c_str();
         // const char *filename2 = (string(argv[2]) + "/" + to_string(rank + i)).c_str();
@@ -601,20 +612,22 @@ int main(int argc, char **argv)
                 
                 total_time = create_time + iterate_time + query_time + intersect_time + overlap_time + touch_time + cross_time + contain_time + equal_time + equal_exact_time + cover_time + covered_by_time;
 
-                GEOSGeometry *geom;
-                for (auto cur = geoms->begin(); cur != geoms->end(); ++cur)
-                {
-                    geom = *cur;
-                    GEOSGeom_destroy(geom);
-                }
-                for (auto cur = geoms2->begin(); cur != geoms2->end(); ++cur)
-                {
-                    geom = *cur;
-                    GEOSGeom_destroy(geom);
-                }
-                delete geoms2;
+                // GEOSGeometry *geom;
+                // for (auto cur = geoms->begin(); cur != geoms->end(); ++cur)
+                // {
+                //     geom = *cur;
+                //     GEOSGeom_destroy(geom);
+                // }
+                // for (auto cur = geoms2->begin(); cur != geoms2->end(); ++cur)
+                // {
+                //     geom = *cur;
+                //     GEOSGeom_destroy(geom);
+                // }
+                // delete geoms2;
+                destroy_polygons(geoms2);
             }
-            delete geoms;
+            destroy_polygons(geoms);
+            // delete geoms;
         }
         catch (...)
         {
@@ -680,9 +693,9 @@ int main(int argc, char **argv)
              << "------------------------------------------------------------------" << endl
              << "--------- BENCHMARK RESULT (TOTAL, AVG, RANGE, MIN, MAX) ---------" << endl
              << "------------------------------------------------------------------" << endl
-             << "Processes:  " << numProcs << "  Partitions:  " << argv[3] << "  Replication (n): " << n << endl
+             << "Processes:  " << numProcs << "  Partitions: " << argv[3] << "  Replication (n): " << n << endl
              << "Directory1: " << argv[1] << endl
-             << "Filename2:  " << argv[2] << endl
+             << "Directory2: " << argv[2] << endl
              << "------------------------------------------------------------------" << endl
              << "Create Time:             " << test_time_arr_sum[ 0] << ", " << test_time_arr_avg[ 0] << ", " << test_time_arr_range[ 0] << ", " << test_time_arr_min[ 0] << ", " << test_time_arr_max[ 0] << endl
              << "Iterate Time:            " << test_time_arr_sum[ 1] << ", " << test_time_arr_avg[ 1] << ", " << test_time_arr_range[ 1] << ", " << test_time_arr_min[ 1] << ", " << test_time_arr_max[ 1] << endl
