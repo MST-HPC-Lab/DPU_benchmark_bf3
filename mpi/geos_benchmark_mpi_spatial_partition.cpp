@@ -20,6 +20,7 @@
 #include <geos_c.h>
 #include <cstring>
 #include <vector>
+#include <limits>
 // #include <numeric> // for std::accumulate(vector.begin(), vector.end(), 0.0) or std::reduce(vector.begin(), vector.end())
 #include <sys/time.h>
 
@@ -33,6 +34,7 @@ enum Tag {
    TERMINATION_TAG,
    // WARNING: If add to this, refactor code below to include checks for other tags
 };
+const double I = std::numeric_limits<double>::max();
 
 
 static void
@@ -714,8 +716,11 @@ int main(int argc, char **argv)
     //      << endl;
 
     MPI_Reduce(test_time_arr, test_time_arr_max, 13, MPI_DOUBLE, MPI_MAX, root, MPI_COMM_WORLD);
-    MPI_Reduce(test_time_arr, test_time_arr_min, 13, MPI_DOUBLE, MPI_MIN, root, MPI_COMM_WORLD);
     MPI_Reduce(test_time_arr, test_time_arr_sum, 13, MPI_DOUBLE, MPI_SUM, root, MPI_COMM_WORLD);
+    if (rank == root) { // This is a hack to prevent the 0 from the root from being the min.
+        double temp = {I, I, I, I, I, I, I, I, I, I, I, I, I};
+        MPI_Reduce(temp, test_time_arr_min, 13, MPI_DOUBLE, MPI_MIN, root, MPI_COMM_WORLD);}
+    else MPI_Reduce(test_time_arr, test_time_arr_min, 13, MPI_DOUBLE, MPI_MIN, root, MPI_COMM_WORLD);
     // Avg and range arrays filled later
 
     if (rank == root)
