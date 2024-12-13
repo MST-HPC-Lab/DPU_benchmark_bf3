@@ -551,21 +551,21 @@ double select_test(const char *name, int (*test_function)(vector<GEOSGeometry *>
     }
 }
 
-void run_all_tests(double* test_time_arr, int n_repeats)
+void run_all_tests(double* test_time_arr, int filenum, int n_repeats)
 {
-    // const char *filename = (string(argv[1]) + "/" + to_string(rank + i)).c_str();
-    // const char *filename2 = (string(argv[2]) + "/" + to_string(rank + i)).c_str();
-    // cout << "File: " << (string(argv[1]) + "/" + to_string(rank + i)).c_str() << endl;
-    // cout << "File2: " << (string(argv[2]) + "/" + to_string(rank + i)).c_str() << endl;
+    // const char *filename = (string(argv[1]) + "/" + to_string(rank + filenum)).c_str();
+    // const char *filename2 = (string(argv[2]) + "/" + to_string(rank + filenum)).c_str();
+    // cout << "File: " << (string(argv[1]) + "/" + to_string(rank + filenum)).c_str() << endl;
+    // cout << "File2: " << (string(argv[2]) + "/" + to_string(rank + filenum)).c_str() << endl;
     double[13];
 
     try
     {
-        vector<GEOSGeometry *> *geoms = get_polygons((string(argv[1]) + "/" + to_string(rank + i)).c_str());
-        // vector<GEOSGeometry *> *geoms2 = get_polygons((string(argv[2]) + "/" + to_string(rank + i)).c_str());
+        vector<GEOSGeometry *> *geoms = get_polygons((string(argv[1]) + "/" + to_string(rank + filenum)).c_str());
+        // vector<GEOSGeometry *> *geoms2 = get_polygons((string(argv[2]) + "/" + to_string(rank + filenum)).c_str());
         if (geoms->size() > 0)
         {
-            vector<GEOSGeometry *> *geoms2 = get_polygons((string(argv[2]) + "/" + to_string(rank + i)).c_str());
+            vector<GEOSGeometry *> *geoms2 = get_polygons((string(argv[2]) + "/" + to_string(rank + filenum)).c_str());
             
             test_time_arr[ 0] += select_test("Create",            &create_tree,  geoms, geoms2, n_repeats);
             test_time_arr[ 1] += select_test("Iterate",           &iterate_tree, geoms, geoms2, n_repeats);
@@ -587,7 +587,7 @@ void run_all_tests(double* test_time_arr, int n_repeats)
     }
     catch (...)
     {
-        cout << "No file named " << rank + i << endl;
+        cout << "No file named " << rank + filenum << endl;
         continue;
     }
 }
@@ -625,6 +625,7 @@ int main(int argc, char **argv)
     double covered_by_time = 0;
     double total_time = 0;
 
+    // Represents the times of all the different operations, and will be cumulative over all partitions that this process will do
     double test_time_arr[13]       = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     double test_time_arr_max[13]   = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     double test_time_arr_min[13]   = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
@@ -632,9 +633,9 @@ int main(int argc, char **argv)
     double test_time_arr_avg[13]   = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
     double test_time_arr_range[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
-    for (int i = 0; i < numberOfPartitions; i += numProcs) // Fixed round robin over partitions
+    for (int filenum = 0; filenum < numberOfPartitions; filenum += numProcs) // Fixed round robin over partitions
     {
-        run_all_tests(test_time_arr, n);
+        run_all_tests(test_time_arr, filenum, n);
     }
 
     // cout << endl
