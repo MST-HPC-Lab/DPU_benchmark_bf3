@@ -1,7 +1,7 @@
 // This program performs various geospatial operations using 
 // the two given geospatial datasets and outputs the elapsed time. 
 // This program uses the MPI library. Both files should be spatially partitioned 
-// and the directory names of the data should be given as the first two arquments.
+// and the directory names of the data should be given as the first two arguments.
 // You have to specifiy the number of partitions as the third argument.
 //
 // USAGE

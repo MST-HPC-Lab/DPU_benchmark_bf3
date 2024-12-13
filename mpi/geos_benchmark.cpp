@@ -18,7 +18,7 @@
 #include <sys/time.h>
 
 #define MAX_LINE_LENGTH 300000 // 30000 wasn't enough, nor was 100000
-#define MAX_GEOM_NUMBER 500000
+#define MAX_GEOM_NUMBER 1800000 // I believe the Sports file has 1,767,137 lines, Cemetery has 193,076, and Lakes has 8,419,324.
 
 using namespace std;
 
