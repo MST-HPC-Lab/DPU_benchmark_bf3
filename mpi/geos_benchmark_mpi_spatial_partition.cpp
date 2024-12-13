@@ -25,7 +25,8 @@
 
 using namespace std;
 
-int rank = -1;
+// int processRank = -1;
+
 
 static void
 geos_message_handler(const char *fmt, ...)
@@ -541,6 +542,7 @@ double select_test(const char *name, int (*test_function)(vector<GEOSGeometry *>
 
 int main(int argc, char **argv)
 {
+    int rank;
     int numProcs;
     int root = 0; // The process handling the control
 
@@ -548,6 +550,7 @@ int main(int argc, char **argv)
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &numProcs);
     initGEOS(geos_message_handler, geos_message_handler);
+    // processRank = rank;
 
     int numberOfPartitions = atoi(argv[3]);
     int n = 1;
