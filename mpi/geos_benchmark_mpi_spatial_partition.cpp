@@ -843,6 +843,7 @@ int main(int argc, char **argv)
     MPI_Comm_size(MPI_COMM_WORLD, &numProcs);
     initGEOS(geos_message_handler, geos_message_handler);
     processRank = rank;
+    bool intersect_only = true;
 
     int numberOfPartitions = atoi(argv[3]);
     int n = 1;
@@ -871,10 +872,10 @@ int main(int argc, char **argv)
     }
 
     // Perform the actual varied test types
-    double seq_time = all_files_round_robin(   argv[1], argv[2], numberOfPartitions, n, 1,          true);
-    double rr_time  = all_files_round_robin(   argv[1], argv[2], numberOfPartitions, n, numProcs,   false);
-    double rr2_time = all_files_round_robin(   argv[1], argv[2], numberOfPartitions, n, numProcs-1, false);
-    double lb_time  = all_files_load_balancing(argv[1], argv[2], numberOfPartitions, n, numProcs,   true);
+    double seq_time = all_files_round_robin(   argv[1], argv[2], numberOfPartitions, n, 1,          true,  intersect_only);
+    double rr_time  = all_files_round_robin(   argv[1], argv[2], numberOfPartitions, n, numProcs,   false, intersect_only);
+    double rr2_time = all_files_round_robin(   argv[1], argv[2], numberOfPartitions, n, numProcs-1, false, intersect_only);
+    double lb_time  = all_files_load_balancing(argv[1], argv[2], numberOfPartitions, n, numProcs,   true,  intersect_only);
     double rr2_speedup = seq_time/rr2_time;
     double rr_speedup  = seq_time/rr_time;
     double lb_speedup  = seq_time/lb_time;
@@ -905,8 +906,8 @@ int main(int argc, char **argv)
         processes /= 2;
         partitions /= 2;
         seq_time_fraction /= 2.0;
-        lb_time_weak[i]      = all_files_load_balancing(argv[1], argv[2], partitions,         n, processes, false);
-        lb_time_strong[i]    = all_files_load_balancing(argv[1], argv[2], numberOfPartitions, n, processes, false);
+        lb_time_weak[i]      = all_files_load_balancing(argv[1], argv[2], partitions,         n, processes, false, intersect_only);
+        lb_time_strong[i]    = all_files_load_balancing(argv[1], argv[2], numberOfPartitions, n, processes, false, intersect_only);
         lb_speedup_weak[i]   = seq_time_fraction / lb_time_weak[i];
         lb_speedup_strong[i] = seq_time / lb_time_strong[i];
     }
