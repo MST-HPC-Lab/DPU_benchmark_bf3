@@ -881,8 +881,9 @@ int main(int argc, char **argv)
     int processes = numProcs;
     int partitions = numberOfPartitions;
     double seq_time_fraction = seq_time;
-    while (processes >>= 1) data_points++;
-    cout << "DATA POINTS: " << data_points << endl;
+    // while (processes >>= 1) data_points++;
+    data_points=2;
+    // cout << "DATA POINTS: " << data_points << endl;
     double lb_time_weak[data_points];
     double lb_time_strong[data_points];
     double lb_speedup_weak[data_points];
