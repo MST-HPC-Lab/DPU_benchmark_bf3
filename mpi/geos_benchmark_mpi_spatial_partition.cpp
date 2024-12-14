@@ -657,10 +657,10 @@ double all_files_round_robin(char *dir1, char *dir2, int partitions, int n_repea
     double reduction_time;
     if (processRank == root) reduction_time = -MPI_Wtime();
     MPI_Reduce(test_time_arr, comb_time_arr_sum, 13, MPI_DOUBLE, MPI_SUM, root, MPI_COMM_WORLD);
-    MPI_Reduce(&(test_time_arr[12]), &comb_time_max, 1, MPI_DOUBLE, MPI_MAX, root, MPI_COMM_WORLD);
+    MPI_Reduce(&test_time_arr[12], &comb_time_max, 1, MPI_DOUBLE, MPI_MAX, root, MPI_COMM_WORLD);
     if (processRank >= limit_procs) { // This is a hack to prevent the 0s from unused procs from being the min.
         MPI_Reduce(&I, &comb_time_min, 1, MPI_DOUBLE, MPI_MIN, root, MPI_COMM_WORLD);}
-    else MPI_Reduce(&(test_time_arr[12]), &comb_time_min, 1, MPI_DOUBLE, MPI_MIN, root, MPI_COMM_WORLD);
+    else MPI_Reduce(&test_time_arr[12], &comb_time_min, 1, MPI_DOUBLE, MPI_MIN, root, MPI_COMM_WORLD);
     if (processRank == root) reduction_time += MPI_Wtime();
 
     if (processRank == root) {
@@ -792,11 +792,11 @@ double all_files_load_balancing(char *dir1, char*dir2, int partitions, int n_rep
     // Reduce between processes
     double reduction_time;
     if (processRank == root) reduction_time = -MPI_Wtime();
-    MPI_Reduce(&(test_time_arr[12]), &comb_time_sum, 1, MPI_DOUBLE, MPI_SUM, root, MPI_COMM_WORLD);
-    MPI_Reduce(&(test_time_arr[12]), &comb_time_max, 1, MPI_DOUBLE, MPI_MAX, root, MPI_COMM_WORLD);
+    MPI_Reduce(&test_time_arr[12], &comb_time_sum, 1, MPI_DOUBLE, MPI_SUM, root, MPI_COMM_WORLD);
+    MPI_Reduce(&test_time_arr[12], &comb_time_max, 1, MPI_DOUBLE, MPI_MAX, root, MPI_COMM_WORLD);
     if (processRank >= limit_procs || processRank == root) { // This is a hack to prevent the 0s from unused procs from being the min.
         MPI_Reduce(&I, &comb_time_min, 1, MPI_DOUBLE, MPI_MIN, root, MPI_COMM_WORLD);}
-    else MPI_Reduce(&(test_time_arr[12]), &comb_time_min, 1, MPI_DOUBLE, MPI_MIN, root, MPI_COMM_WORLD);
+    else MPI_Reduce(&test_time_arr[12], &comb_time_min, 1, MPI_DOUBLE, MPI_MIN, root, MPI_COMM_WORLD);
     if (processRank == root) reduction_time += MPI_Wtime();
 
     if (processRank == root) {
@@ -881,8 +881,8 @@ int main(int argc, char **argv)
     int processes = numProcs;
     int partitions = numberOfPartitions;
     double seq_time_fraction = seq_time;
-    // while (processes >>= 1) data_points++;
-    data_points=2;
+    while (processes >>= 1) data_points++;
+    // data_points=2;
     // cout << "DATA POINTS: " << data_points << endl;
     double lb_time_weak[data_points];
     double lb_time_strong[data_points];
@@ -935,7 +935,7 @@ int main(int argc, char **argv)
              << "      uneven spatial partitions."                                   << endl
              << "STRONG SCALABILITY SPEEDUP:       WEAK SCALABILITY SPEEDUP:"        << endl
              ;
-        for (int i=data_points-1; i>=0; i++) {
+        for (int i=data_points-1; i>=0; i--) {
         cout << "Processes: "   << processes  << " T: " << lb_time_strong[i] << " S: " << lb_speedup_strong[i]
              << " Partitions: " << partitions << " T: " << lb_time_weak[i]   << " S: " << lb_speedup_weak[i] << endl;
             processes *= 2;
