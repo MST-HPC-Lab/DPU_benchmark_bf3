@@ -843,7 +843,7 @@ int main(int argc, char **argv)
     MPI_Comm_size(MPI_COMM_WORLD, &numProcs);
     initGEOS(geos_message_handler, geos_message_handler);
     processRank = rank;
-    bool intersect_only = true;
+    bool intersect_only = false;
 
     int numberOfPartitions = atoi(argv[3]);
     int n = 1;
