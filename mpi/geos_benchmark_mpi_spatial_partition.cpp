@@ -37,7 +37,6 @@ const double I = std::numeric_limits<double>::max();
 
 const int root = 0; // The process handling the control
 int processRank;
-int numberOfPartitions;
 int numProcs;
 
 
@@ -618,7 +617,7 @@ void all_tests(double* test_time_arr, int filenum, char *dir1, char *dir2, int n
     test_time_arr[12] += time/(double)n_repeats; // This time, like the others, reflects the average of the n duplications
 }
 
-double all_files_round_robin(char *dir1, char *dir2, int n_repeats, int limit_procs, bool print_categories)
+double all_files_round_robin(char *dir1, char *dir2, int partitions, int n_repeats, int limit_procs, bool print_categories)
 {
     // Fixed round robin over partition files
     // Also can be used for sequential (non-parallel) test, if limit_procs == 1
@@ -642,14 +641,14 @@ double all_files_round_robin(char *dir1, char *dir2, int n_repeats, int limit_pr
     // Do the actual work
     if (processRank < limit_procs) {
         for (int n=0; n<n_repeats; n++) { // over-ride the n built-in to all_tests, so that we're doing it the same way the load-balancing function has to
-            for (int filenum = processRank; filenum < numberOfPartitions; filenum += limit_procs) {
+            for (int filenum = processRank; filenum < partitions; filenum += limit_procs) {
                 all_tests(test_time_arr, filenum, dir1, dir2, 1);
                 if (processRank == limit_procs-1) {
-                    printf("\rCURRENT FILENUM: %d", filenum);
+                    printf("[CURRENT FILENUM: %d]\r", filenum);
                     fflush(stdout);
                 }
             }
-            if (processRank == limit_procs-1) cout << endl;
+            // if (processRank == limit_procs-1) cout << endl;
         }
         for (int i=0; i<13; i++) test_time_arr[i] = test_time_arr[i] / (double)n_repeats;
     }
@@ -711,7 +710,7 @@ double all_files_round_robin(char *dir1, char *dir2, int n_repeats, int limit_pr
     return total_time;
 }
 
-double all_files_load_balancing(char *dir1, char*dir2, int n_repeats, int limit_procs)
+double all_files_load_balancing(char *dir1, char*dir2, int partitions, int n_repeats, int limit_procs, bool report)
 {
     // Allocates work as workers finish
     // NOTE: limit_procs includes the root, so really there will be limit_procs-1 workers.
@@ -741,7 +740,7 @@ double all_files_load_balancing(char *dir1, char*dir2, int n_repeats, int limit_
         if (processRank != root) { // Is Worker
             // Workers start work automatically
             int tasks_done = 0;
-            if (processRank < numberOfPartitions && processRank < limit_procs) {
+            if (processRank < partitions && processRank < limit_procs) {
                 all_tests(test_time_arr, processRank, dir1, dir2, n);
                 // cout << "WORKER> Partition " << processRank << " from " << processRank << endl;
                 tasks_done++;
@@ -760,21 +759,25 @@ double all_files_load_balancing(char *dir1, char*dir2, int n_repeats, int limit_
                         MPI_Send(NULL, 0, MPI_INT, root, WORK_TAG, MPI_COMM_WORLD);
                     }
                 }
-                printf("WORKER %d COMPLETED %d TASKS\n", processRank, tasks_done);
-                fflush(stdout);
+                if (report) {
+                    printf("[WORKER %d COMPLETED %d TASKS]\n", processRank, tasks_done);
+                    fflush(stdout);
+                }
             }
         } else { // Is Master, i.e.: root
-            cout << endl;
+            if (report) cout << endl;
 
             // Start the main receiving/work-serving loop
-            for (filenum = numProcs; filenum < numberOfPartitions; filenum++) {
+            for (filenum = numProcs; filenum < partitions; filenum++) {
                 MPI_Recv(NULL, 0, MPI_INT, MPI_ANY_SOURCE, WORK_TAG, MPI_COMM_WORLD, &status);
                 // cout << "MASTER> Received from " << status.MPI_SOURCE << endl;
                 MPI_Send(&filenum, 1, MPI_INT, status.MPI_SOURCE, WORK_TAG, MPI_COMM_WORLD);
-                printf("\rCURRENT FILENUM: %d", filenum);
-                fflush(stdout);
+                if (report) {
+                    printf("[CURRENT FILENUM: %d]\r", filenum);
+                    fflush(stdout);
+                }
             }
-            cout << endl;
+            // if (report) cout << endl;
             // cout << "MASTER> Finished work" << endl;
             // Receive the last one from each, and then tell them the work is done
             for (int i=1; i<limit_procs; i++) {
@@ -806,7 +809,7 @@ double all_files_load_balancing(char *dir1, char*dir2, int n_repeats, int limit_
     if (processRank == root) total_time += MPI_Wtime();
 
     // Print Report
-    if (processRank == root) {
+    if (processRank == root && report) {
         cout    << "------------------------ LOAD-BALANCING --------------------------" << endl
                 << "Workers: " << limit_procs << "  Duplication: " << n_repeats << endl;
         cout    << "------------------------------------------------------------------" << endl
@@ -837,7 +840,7 @@ int main(int argc, char **argv)
     initGEOS(geos_message_handler, geos_message_handler);
     processRank = rank;
 
-    numberOfPartitions = atoi(argv[3]);
+    int numberOfPartitions = atoi(argv[3]);
     int n = 1;
     if (argc > 4)
         n = atoi(argv[4]);
@@ -864,13 +867,44 @@ int main(int argc, char **argv)
     }
 
     // Perform the actual varied test types
-    double seq_time = all_files_round_robin(argv[1], argv[2], n, 1, true);
-    double rr_time  = all_files_round_robin(argv[1], argv[2], n, numProcs, false);
-    double rr2_time = all_files_round_robin(argv[1], argv[2], n, numProcs-1, false);
-    double lb_time  = all_files_load_balancing(argv[1], argv[2], n, numProcs);
+    double seq_time = all_files_round_robin(   argv[1], argv[2], numberOfPartitions, n, 1,          true);
+    double rr_time  = all_files_round_robin(   argv[1], argv[2], numberOfPartitions, n, numProcs,   false);
+    double rr2_time = all_files_round_robin(   argv[1], argv[2], numberOfPartitions, n, numProcs-1, false);
+    double lb_time  = all_files_load_balancing(argv[1], argv[2], numberOfPartitions, n, numProcs,   true);
     double rr2_speedup = seq_time/rr2_time;
-    double rr_speedup = seq_time/rr_time;
+    double rr_speedup  = seq_time/rr_time;
     double lb_speedup  = seq_time/lb_time;
+
+    // Scalability Tests
+    // Figure out how many times we can cut the cores in half
+    int data_points = 0;
+    int processes = numProcs;
+    int partitions = numberOfPartitions;
+    double seq_time_fraction = seq_time;
+    while (processes >>= 1) ++data_points;
+    double lb_time_weak[data_points];
+    double lb_time_strong[data_points];
+    double lb_speedup_weak[data_points];
+    double lb_speedup_strong[data_points];
+    processes = numProcs;
+    lb_time_weak[0] = lb_time;
+    lb_time_strong[0] = lb_time;
+    lb_speedup_weak[0] = lb_speedup;
+    lb_speedup_strong[0] = lb_speedup;
+    for (int i=1; i<data_points; i++) {
+        if (rank == 0) {
+            printf("[DOING SCALABILITY 1/2^%d]\r", i);
+            fflush(stdout);
+        }
+        processes /= 2;
+        partitions /= 2;
+        seq_time_fraction /= 2.0;
+        lb_time_weak[i]      = all_files_load_balancing(argv[1], argv[2], partitions,         n, processes, false);
+        lb_time_strong[i]    = all_files_load_balancing(argv[1], argv[2], numberOfPartitions, n, processes, false);
+        lb_speedup_weak[i]   = seq_time_fraction / lb_time_weak[i];
+        lb_speedup_strong[i] = seq_time / lb_time_strong[i];
+    }
+    // if (rank == 0) cout << endl;
 
     if (rank == root)
     {
@@ -879,19 +913,35 @@ int main(int argc, char **argv)
         // if (numProcs > 1) system("rm ./file_part_*");
 
         // Generate Report End
-        cout << "-------------------- PARALLELISM REPORT --------------------------" << endl
+        cout << "--------------------- PARALLELISM REPORT -------------------------" << endl
              << "Sequential Time:                  " << seq_time                     << endl
              << "Round Robin Parallel Time:        " << rr_time                      << endl
              << "     Speedup:                     " << rr_speedup                   << endl
              << "     Efficiency:                  " << rr_speedup/numProcs          << endl
+             << "     Cost:                        " << numProcs*rr_time             << endl
              << "*Round Robin Parallel-1 Time:     " << rr2_time                     << endl
              << "     Speedup:                     " << rr2_speedup                  << endl
              << "     Efficiency:                  " << rr2_speedup/(numProcs-1)     << endl
+             << "     Cost:                        " << (numProcs-1)*rr2_time        << endl
              << "*Load-Balancing Par. Time:        " << lb_time                      << endl
              << "     Bottleneck Speedup (uses *): " << rr2_time/lb_time             << endl
              << "     Speedup:                     " << lb_speedup                   << endl
              << "     Efficiency:                  " << lb_speedup/numProcs          << endl
-             << "------------------------------------------------------------------" << endl
+             << "     Cost:                        " << numProcs*lb_time             << endl
+             << "--------------------- Scalability Report -------------------------" << endl
+             << "NOTE: Weak Scalability tests are somewhat inaccurate, due to"       << endl
+             << "      uneven spatial partitions."                                   << endl
+             << "STRONG SCALABILITY SPEEDUP:       WEAK SCALABILITY SPEEDUP:"        << endl
+             ;
+        for (int i=data_points-1; i>=0; i++) {
+        cout << "Processes: "   << processes  << " T: " << lb_time_strong[i] << " S: " << lb_speedup_strong[i]
+             << " Partitions: " << partitions << " T: " << lb_time_weak[i]   << " S: " << lb_speedup_weak[i] << endl;
+            processes *= 2;
+            partitions *= 2;
+        }
+        cout << "Strong Scalability (last S / first S): " << lb_speedup_strong[0]/lb_speedup_strong[data_points-1] << endl
+             << "Weak Scalability   (last S / first S): " << lb_speedup_weak[0]/lb_speedup_weak[data_points-1]     << endl
+             << "==================================================================" << endl
              << "OVERALL TESTS RUNTIME:            " << total_time                   << endl
              << "==================================================================" << endl
              << endl
