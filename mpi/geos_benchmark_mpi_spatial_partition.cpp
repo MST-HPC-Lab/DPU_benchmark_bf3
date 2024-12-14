@@ -27,14 +27,19 @@
 #include <mpi.h>
 
 using namespace std;
-
-// int processRank = -1;
 enum Tag {
    WORK_TAG,
    TERMINATION_TAG,
    // WARNING: If add to this, refactor code below to include checks for other tags
 };
+
 const double I = std::numeric_limits<double>::max();
+
+const int root = 0; // The process handling the control
+int processRank;
+int numberOfPartitions;
+int numProcs;
+
 
 
 static void
@@ -514,6 +519,8 @@ int covered_by(vector<GEOSGeometry *> *geoms, vector<GEOSGeometry *> *geoms2)
     return 0;
 }
 
+//----------------------------------------------------------------------------//
+
 double select_test(const char *name, int (*test_function)(vector<GEOSGeometry *> *, vector<GEOSGeometry *> *), vector<GEOSGeometry *> *geoms, vector<GEOSGeometry *> *geoms2, int n)
 {
     double time_arr[n];
@@ -560,7 +567,7 @@ double select_test(const char *name, int (*test_function)(vector<GEOSGeometry *>
     }
 }
 
-void run_all_tests(double* test_time_arr, int filenum, char *dir1, char *dir2, int n_repeats)
+void all_tests(double* test_time_arr, int filenum, char *dir1, char *dir2, int n_repeats)
 {
     // const char *filename = (string(argv[1]) + "/" + to_string(rank + filenum)).c_str();
     // const char *filename2 = (string(argv[2]) + "/" + to_string(rank + filenum)).c_str();
@@ -611,168 +618,256 @@ void run_all_tests(double* test_time_arr, int filenum, char *dir1, char *dir2, i
     test_time_arr[12] += time/(double)n_repeats; // This time, like the others, reflects the average of the n duplications
 }
 
+double all_files_round_robin(char *dir1, char *dir2, int n_repeats, int limit_procs, bool print_categories)
+{
+    // Fixed round robin over partition files
+    // Also can be used for sequential (non-parallel) test, if limit_procs == 1
+    if (processRank >= limit_procs) return;
+
+    // Represents the times of all the different operations, and will be cumulative over all partitions that this process will do,
+    //    but is for the local process only
+    // Order: create_time, iterate_time, query_time, intersect_time, overlap_time, touch_time, cross_time, contain_time, equal_time, equal_exact_time, cover_time, covered_by_time, total_time
+    double test_time_arr[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+    // Places to store result stats gathered from accross all processes
+    double comb_time_arr_sum[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    double comb_time_max = 0;
+    double comb_time_min = 0;
+    double comb_time_avg = 0;
+    double comb_time_range = 0;
+
+    // Start total timer
+    double total_time = 0;
+    if (processRank == root) total_time = -MPI_Wtime();
+
+    // Do the actual work
+    for (int n=0; n<n_repeats; n++) { // over-ride the n built-in to all_tests, so that we're doing it the same way the load-balancing function has to
+        for (int filenum = processRank; filenum < numberOfPartitions; filenum += limit_procs) {
+            all_tests(test_time_arr, filenum, argv[1], argv[2], 1);
+            if (processRank == root) {
+                printf("\rCURRENT FILENUM: %d", filenum);
+                fflush(stdout);
+            }
+        }
+    }
+    for (int i=0; i<13; i++) test_time_arr[i] = test_time_arr[i] / (double)n_repeats;
+
+    // Reduce between processes
+    if (processRank == root) duoble reduction_time = -MPI_Wtime();
+    MPI_Reduce(test_time_arr, comb_time_arr_sum, 13, MPI_DOUBLE, MPI_SUM, root, MPI_COMM_WORLD);
+    MPI_Reduce(test_time_arr[12], comb_time_max, 1, MPI_DOUBLE, MPI_MAX, root, MPI_COMM_WORLD);
+    if (processRank >= limit_procs) { // This is a hack to prevent the 0s from unused procs from being the min.
+        MPI_Reduce(&I, comb_time_min, 1, MPI_DOUBLE, MPI_MIN, root, MPI_COMM_WORLD);}
+    else MPI_Reduce(test_time_arr[12], comb_time_min, 1, MPI_DOUBLE, MPI_MIN, root, MPI_COMM_WORLD);
+    if (processRank == root) reduction_time += MPI_Wtime();
+
+    if (processRank == root) {
+        comb_time_avg = comb_time_arr_sum[12]/numProcs;
+        comb_time_range = comb_time_max - comb_time_min;
+        // for (int i=0; i<12; i++) comb_time_arr_sum[i] /= comb_time_arr_sum[12];
+    }
+
+    // End total timer
+    if (processRank == root) total_time += MPI_Wtime();
+
+    // Print Report
+    if (processRank == root) {
+           cout << "-------------------------- ROUND ROBIN ---------------------------" << endl
+                << "Workers: " << limit_procs << "  Duplication: " << n_repeats << endl;
+        if (print_categories) {
+           cout << "------------------------------------------------------------------" << endl
+                << "Create Time:             " << comb_time_arr_sum[ 0] << endl
+                << "Iterate Time:            " << comb_time_arr_sum[ 1] << endl
+                << "Query Time:              " << comb_time_arr_sum[ 2] << endl
+                << "Intersect Time:          " << comb_time_arr_sum[ 3] << endl
+                << "Overlap Time:            " << comb_time_arr_sum[ 4] << endl
+                << "Touch Time:              " << comb_time_arr_sum[ 5] << endl
+                << "Cross Time:              " << comb_time_arr_sum[ 6] << endl
+                << "Contain Time:            " << comb_time_arr_sum[ 7] << endl
+                << "Equal Time:              " << comb_time_arr_sum[ 8] << endl
+                << "Equal Exact (0.3) Time:  " << comb_time_arr_sum[ 9] << endl
+                << "Cover Time:              " << comb_time_arr_sum[10] << endl
+                << "Covered By Time:         " << comb_time_arr_sum[11] << endl
+                ;
+        }
+        cout    << "------------------------------------------------------------------" << endl
+                << "Reduction Time:      " << reduction_time        << endl
+                << "Sequential Time:     " << comb_time_arr_sum[12] << endl
+                << "Avg Worker Time:     " << comb_time_avg         << endl
+                << "Bottleneck Range:    " << comb_time_range       << endl
+                << "Min Worker Time:     " << comb_time_min         << endl
+                << "Max Worker Time:     " << comb_time_max         << endl
+                << "------------------------------------------------------------------" << endl
+                << "TOTAL PARALLEL Time: " << total_time      << endl
+                << "==================================================================" << endl
+                ;
+    }
+
+    return total_time;
+}
+
+double all_files_load_balancing(char *dir1, char*dir2, int n_repeats, int limit_procs)
+{
+    // Allocates work as workers finish
+    if (processRank >= limit_procs) return;
+    
+    MPI_Status status;
+    int filenum;
+
+    // Represents the times of all the different operations, and will be cumulative over all partitions that this process will do,
+    //    but is for the local process only
+    // Order: create_time, iterate_time, query_time, intersect_time, overlap_time, touch_time, cross_time, contain_time, equal_time, equal_exact_time, cover_time, covered_by_time, total_time
+    double test_time_arr[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+
+    // Places to store result stats gathered from accross all processes
+    double comb_time_sum = 0;
+    double comb_time_max = 0;
+    double comb_time_min = 0;
+    double comb_time_avg = 0;
+    double comb_time_range = 0;
+
+    // Start total timer
+    double total_time = 0;
+    if (processRank == root) total_time = -MPI_Wtime();
+
+    // Do the actual work
+    for (int n=0; n<n_repeats; n++) { // over-ride the n built-in to all_tests, because this way allows work to be reshuffled naturally
+
+        if (processRank != root) { // Is Worker
+            // Workers start work automatically
+            int tasks_done = 0;
+            if (processRank < numberOfPartitions) {
+                all_tests(test_time_arr, processRank, argv[1], argv[2], n);
+                // cout << "WORKER> Partition " << processRank << " from " << processRank << endl;
+                tasks_done++;
+            }
+
+            // Then wait for more
+            MPI_Send(NULL, 0, MPI_INT, root, WORK_TAG, MPI_COMM_WORLD);
+            while (true) {
+                MPI_Recv(&filenum, 1, MPI_INT, root, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+                if (status.MPI_TAG == TERMINATION_TAG) { break; }
+                else {
+                    all_tests(test_time_arr, filenum, argv[1], argv[2], n);
+                    tasks_done++;
+                    // cout << "WORKER> Partition " << filenum << " from " << processRank << endl;
+                    MPI_Send(NULL, 0, MPI_INT, root, WORK_TAG, MPI_COMM_WORLD);
+                }
+            }
+            printf("WORKER %d COMPLETED %d TASKS\n", processRank, tasks_done);
+            fflush(stdout);
+        } else { // Is Master, i.e.: root
+            cout << endl;
+
+            // Start the main receiving/work-serving loop
+            for (filenum = numProcs; filenum < numberOfPartitions; filenum++) {
+                MPI_Recv(NULL, 0, MPI_INT, MPI_ANY_SOURCE, WORK_TAG, MPI_COMM_WORLD, &status);
+                // cout << "MASTER> Received from " << status.MPI_SOURCE << endl;
+                MPI_Send(&filenum, 1, MPI_INT, status.MPI_SOURCE, WORK_TAG, MPI_COMM_WORLD);
+                printf("\rCURRENT FILENUM: %d", filenum);
+                fflush(stdout);
+            }
+            cout << endl;
+            // cout << "MASTER> Finished work" << endl;
+            // Receive the last one from each, and then tell them the work is done
+            for (int i=1; i<numProcs; i++) {
+                MPI_Recv(NULL, 0, MPI_INT, MPI_ANY_SOURCE, WORK_TAG, MPI_COMM_WORLD, &status);
+                MPI_Send(&filenum, 1, MPI_INT, status.MPI_SOURCE, TERMINATION_TAG, MPI_COMM_WORLD);
+                // cout << "MASTER> Sent termination to " << i << endl;
+            }
+        }
+    }
+    for (int i=0; i<13; i++) test_time_arr[i] = test_time_arr[i] / (double)n_repeats;
+
+    // Reduce between processes
+    if (processRank == root) duoble reduction_time = -MPI_Wtime();
+    MPI_Reduce(test_time_arr[12], comb_time_sum, 1, MPI_DOUBLE, MPI_SUM, root, MPI_COMM_WORLD);
+    MPI_Reduce(test_time_arr[12], comb_time_max, 1, MPI_DOUBLE, MPI_MAX, root, MPI_COMM_WORLD);
+    if (processRank >= limit_procs+1 || processRank == root) { // This is a hack to prevent the 0s from unused procs from being the min.
+        MPI_Reduce(&I, comb_time_min, 1, MPI_DOUBLE, MPI_MIN, root, MPI_COMM_WORLD);}
+    else MPI_Reduce(test_time_arr[12], comb_time_min, 1, MPI_DOUBLE, MPI_MIN, root, MPI_COMM_WORLD);
+    if (processRank == root) reduction_time += MPI_Wtime();
+
+    if (processRank == root) {
+        comb_time_avg = comb_time_sum/numProcs;
+        comb_time_range = comb_time_max - comb_time_min;
+        // for (int i=0; i<12; i++) comb_time_arr_sum[i] /= comb_time_arr_sum[12];
+    }
+
+    // End total timer
+    if (processRank == root) total_time += MPI_Wtime();
+
+    // Print Report
+    if (processRank == root) {
+        cout    << "------------------------ LOAD-BALANCING --------------------------" << endl
+                << "Workers: " << limit_procs << "  Duplication: " << n_repeats << endl;
+        cout    << "------------------------------------------------------------------" << endl
+                << "Reduction Time:      " << reduction_time  << endl
+                << "Sequential Time:     " << comb_time_sum   << endl
+                << "Avg Worker Time:     " << comb_time_avg   << endl
+                << "Bottleneck Range:    " << comb_time_range << endl
+                << "Min Worker Time:     " << comb_time_min   << endl
+                << "Max Worker Time:     " << comb_time_max   << endl
+                << "------------------------------------------------------------------" << endl
+                << "TOTAL PARALLEL Time: " << total_time      << endl
+                << "==================================================================" << endl
+                ;
+    }
+
+    return total_time;
+}
+
 int main(int argc, char **argv)
 {
     int rank;
-    int numProcs;
-    int root = 0; // The process handling the control
 
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &numProcs);
     initGEOS(geos_message_handler, geos_message_handler);
-    // processRank = rank;
+    processRank = rank;
 
-    int numberOfPartitions = atoi(argv[3]);
+    numberOfPartitions = atoi(argv[3]);
     int n = 1;
     if (argc > 4)
         n = atoi(argv[4]);
     if (!n)
         n = 1;
 
-    // Represents the times of all the different operations, and will be cumulative over all partitions that this process will do,
-    //  but is for the local process only
-    // Order: create_time, iterate_time, query_time, intersect_time, overlap_time, touch_time, cross_time, contain_time, equal_time, equal_exact_time, cover_time, covered_by_time, total_time
-    double test_time_arr[13]       = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    if (rank == root)
+    {        
+        // Generate Report Start
+        cout << endl
+             << endl
+             << "==================================================================" << endl
+             << "----------------------- BENCHMARK RESULTS ------------------------" << endl
+             << "------------------------------------------------------------------" << endl
+             << "Processes:  " << numProcs << "  Partitions: " << argv[3] << "  Duplication (n): " << n << endl
+             << "Directory1: " << argv[1] << endl
+             << "Directory2: " << argv[2] << endl
+             << "NOTE: All polygons are discarded and re-read between test suites." << endl
+             << "==================================================================" << endl
+             ;
 
-    // Places to store result stats gathered from accross all processes
-    double test_time_arr_max[13]   = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    double test_time_arr_min[13]   = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    double test_time_arr_sum[13]   = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    double test_time_arr_avg[13]   = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-    double test_time_arr_range[13] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-
-    // // Fixed round robin over partition files
-    // for (int filenum = rank; filenum < numberOfPartitions; filenum += numProcs) {
-    //     run_all_tests(test_time_arr, filenum, argv[1], argv[2], n);
-    // }
-
-    // Load-balancing over the partitions
-    MPI_Status status;
-    double total_time;
-    int filenum;
-    if (rank != root) { // Is Worker
-        // Workers start work automatically
-        int tasks_done = 0;
-        if (rank < numberOfPartitions) {
-            run_all_tests(test_time_arr, rank, argv[1], argv[2], n);
-            // cout << "WORKER> Partition " << rank << " from " << rank << endl;
-            tasks_done++;
-        }
-
-        // Then wait for more
-        MPI_Send(NULL, 0, MPI_INT, root, WORK_TAG, MPI_COMM_WORLD);
-        while (true) {
-            MPI_Recv(&filenum, 1, MPI_INT, root, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-            if (status.MPI_TAG == TERMINATION_TAG) { break; }
-            else {
-                run_all_tests(test_time_arr, filenum, argv[1], argv[2], n);
-                tasks_done++;
-                // cout << "WORKER> Partition " << filenum << " from " << rank << endl;
-                MPI_Send(NULL, 0, MPI_INT, root, WORK_TAG, MPI_COMM_WORLD);
-            }
-        }
-        printf("WORKER %d COMPLETED %d TASKS\n", rank, tasks_done);
-        fflush(stdout);
-    } else { // Is Master
-        // Start total timer
-        total_time = -MPI_Wtime();
-
-        // Start the main receiving/work-serving loop
-        for (filenum = numProcs; filenum < numberOfPartitions; filenum++) {
-            MPI_Recv(NULL, 0, MPI_INT, MPI_ANY_SOURCE, WORK_TAG, MPI_COMM_WORLD, &status);
-            // cout << "MASTER> Received from " << status.MPI_SOURCE << endl;
-            MPI_Send(&filenum, 1, MPI_INT, status.MPI_SOURCE, WORK_TAG, MPI_COMM_WORLD);
-            printf("\rCURRENT FILENUM: %d", filenum);
-            fflush(stdout);
-        }
-        printf("\n");
-        fflush(stdout);
-        // cout << "MASTER> Finished work" << endl;
-        // Receive the last one from each, and then tell them the work is done
-        for (int i=1; i<numProcs; i++) {
-            MPI_Recv(NULL, 0, MPI_INT, MPI_ANY_SOURCE, WORK_TAG, MPI_COMM_WORLD, &status);
-            MPI_Send(&filenum, 1, MPI_INT, status.MPI_SOURCE, TERMINATION_TAG, MPI_COMM_WORLD);
-            // cout << "MASTER> Sent termination to " << i << endl;
-        }
-
-        // End total timer
-        total_time += MPI_Wtime();
+        double total_time = -MPI_Wtime();
     }
-    // 
 
-    // cout << endl
-    //      << endl
-    //      << "------------------------------------------------------------------" << endl
-    //      << "--------------- BENCHMARK RESULT (Process rank:" << rank << ") ---------------" << endl
-    //      << "------------------------------------------------------------------" << endl
-    //      << "Average Create Time: " << create_time << endl
-    //      << "Average Iterate Time: " << iterate_time << endl
-    //      << "Average Query Time: " << query_time << endl
-    //      << "Average Intersect Time: " << intersect_time << endl
-    //      << "Average Overlap Time: " << overlap_time << endl
-    //      << "Average Touch Time: " << touch_time << endl
-    //      << "Average Cross Time: " << cross_time << endl
-    //      << "Average Contain Time: " << contain_time << endl
-    //      << "Average Equal Time: " << equal_time << endl
-    //      << "Average Equal Exact (0.3) Time: " << equal_exact_time << endl
-    //      << "Average Cover Time: " << cover_time << endl
-    //      << "Average Covered By Time: " << covered_by_time << endl
-    //      << "Average TOTAL: " << create_time + iterate_time + query_time + intersect_time + overlap_time + touch_time + cross_time + contain_time + equal_time + equal_exact_time + cover_time + covered_by_time << endl
-    //      << "------------------------------------------------------------------" << endl
-    //      << "------------------------------------------------------------------" << endl
-    //      << endl
-    //      << endl;
-
-    MPI_Reduce(test_time_arr, test_time_arr_max, 13, MPI_DOUBLE, MPI_MAX, root, MPI_COMM_WORLD);
-    MPI_Reduce(test_time_arr, test_time_arr_sum, 13, MPI_DOUBLE, MPI_SUM, root, MPI_COMM_WORLD);
-    if (rank == root) { // This is a hack to prevent the 0 from the root from being the min.
-        double temp[13] = {I, I, I, I, I, I, I, I, I, I, I, I, I};
-        MPI_Reduce(temp, test_time_arr_min, 13, MPI_DOUBLE, MPI_MIN, root, MPI_COMM_WORLD);}
-    else MPI_Reduce(test_time_arr, test_time_arr_min, 13, MPI_DOUBLE, MPI_MIN, root, MPI_COMM_WORLD);
-    // Avg and range arrays filled later
+    // Perform the actual varied test types
+    all_files_round_robin(argv[1], argv[2], n, numProcs, true);
+    all_files_round_robin(argv[1], argv[2], n, numProcs-1, false);
+    all_files_load_balancing(argv[1], argv[2], n, numProcs);
 
     if (rank == root)
     {
-        // Fill avg and range arrays
-        for (int i = 0; i < 13; i++) {
-            test_time_arr_avg[i] = test_time_arr_sum[i]/numProcs;
-            test_time_arr_range[i] = test_time_arr_max[i] - test_time_arr_min[i];
-        }
+        total_time += MPI_Wtime();
 
-        // if (numProcs > 1)
-        // {
-        //     system("rm ./file_part_*");
-        // }
-        
-        // Generate Report
-        cout << endl
+        // if (numProcs > 1) system("rm ./file_part_*");
+
+        // Generate Report End
+        cout << "OVERALL TESTS RUNTIME: " << total_time << endl
+             << "==================================================================" << endl
              << endl
-             << "------------------------------------------------------------------" << endl
-             << "---- BENCHMARK RESULT (SUM, AVG, RANGE, MIN, MAX) Over procs -----" << endl
-             << "------------------------------------------------------------------" << endl
-             << "Processes:  " << numProcs << "  Partitions: " << argv[3] << "  Replication (n): " << n << endl
-             << "Directory1: " << argv[1] << endl
-             << "Directory2: " << argv[2] << endl
-             << "------------------------------------------------------------------" << endl
-             << "Create Time:             " << test_time_arr_sum[ 0] << ", " << test_time_arr_avg[ 0] << ", " << test_time_arr_range[ 0] << ", " << test_time_arr_min[ 0] << ", " << test_time_arr_max[ 0] << endl
-             << "Iterate Time:            " << test_time_arr_sum[ 1] << ", " << test_time_arr_avg[ 1] << ", " << test_time_arr_range[ 1] << ", " << test_time_arr_min[ 1] << ", " << test_time_arr_max[ 1] << endl
-             << "Query Time:              " << test_time_arr_sum[ 2] << ", " << test_time_arr_avg[ 2] << ", " << test_time_arr_range[ 2] << ", " << test_time_arr_min[ 2] << ", " << test_time_arr_max[ 2] << endl
-             << "Intersect Time:          " << test_time_arr_sum[ 3] << ", " << test_time_arr_avg[ 3] << ", " << test_time_arr_range[ 3] << ", " << test_time_arr_min[ 3] << ", " << test_time_arr_max[ 3] << endl
-             << "Overlap Time:            " << test_time_arr_sum[ 4] << ", " << test_time_arr_avg[ 4] << ", " << test_time_arr_range[ 4] << ", " << test_time_arr_min[ 4] << ", " << test_time_arr_max[ 4] << endl
-             << "Touch Time:              " << test_time_arr_sum[ 5] << ", " << test_time_arr_avg[ 5] << ", " << test_time_arr_range[ 5] << ", " << test_time_arr_min[ 5] << ", " << test_time_arr_max[ 5] << endl
-             << "Cross Time:              " << test_time_arr_sum[ 6] << ", " << test_time_arr_avg[ 6] << ", " << test_time_arr_range[ 6] << ", " << test_time_arr_min[ 6] << ", " << test_time_arr_max[ 6] << endl
-             << "Contain Time:            " << test_time_arr_sum[ 7] << ", " << test_time_arr_avg[ 7] << ", " << test_time_arr_range[ 7] << ", " << test_time_arr_min[ 7] << ", " << test_time_arr_max[ 7] << endl
-             << "Equal Time:              " << test_time_arr_sum[ 8] << ", " << test_time_arr_avg[ 8] << ", " << test_time_arr_range[ 8] << ", " << test_time_arr_min[ 8] << ", " << test_time_arr_max[ 8] << endl
-             << "Equal Exact (0.3) Time:  " << test_time_arr_sum[ 9] << ", " << test_time_arr_avg[ 9] << ", " << test_time_arr_range[ 9] << ", " << test_time_arr_min[ 9] << ", " << test_time_arr_max[ 9] << endl
-             << "Cover Time:              " << test_time_arr_sum[10] << ", " << test_time_arr_avg[10] << ", " << test_time_arr_range[10] << ", " << test_time_arr_min[10] << ", " << test_time_arr_max[10] << endl
-             << "Covered By Time:         " << test_time_arr_sum[11] << ", " << test_time_arr_avg[11] << ", " << test_time_arr_range[11] << ", " << test_time_arr_min[11] << ", " << test_time_arr_max[11] << endl
-             << "Combined Time:           " << test_time_arr_sum[12] << ", " << test_time_arr_avg[12] << ", " << test_time_arr_range[12] << ", " << test_time_arr_min[12] << ", " << test_time_arr_max[12] << endl
-             << "------------------------------------------------------------------" << endl
-             << "TOTAL TIME: " << total_time << endl
-             << "------------------------------------------------------------------" << endl
              << endl
-            //  << endl
             ;
     }
 
