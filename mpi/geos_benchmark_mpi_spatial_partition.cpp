@@ -622,7 +622,7 @@ double all_files_round_robin(char *dir1, char *dir2, int n_repeats, int limit_pr
 {
     // Fixed round robin over partition files
     // Also can be used for sequential (non-parallel) test, if limit_procs == 1
-    if (processRank >= limit_procs) return;
+    if (processRank >= limit_procs) return 0.0;
 
     // Represents the times of all the different operations, and will be cumulative over all partitions that this process will do,
     //    but is for the local process only
@@ -643,7 +643,7 @@ double all_files_round_robin(char *dir1, char *dir2, int n_repeats, int limit_pr
     // Do the actual work
     for (int n=0; n<n_repeats; n++) { // over-ride the n built-in to all_tests, so that we're doing it the same way the load-balancing function has to
         for (int filenum = processRank; filenum < numberOfPartitions; filenum += limit_procs) {
-            all_tests(test_time_arr, filenum, argv[1], argv[2], 1);
+            all_tests(test_time_arr, filenum, dir1, dir2, 1);
             if (processRank == root) {
                 printf("\rCURRENT FILENUM: %d", filenum);
                 fflush(stdout);
@@ -653,16 +653,16 @@ double all_files_round_robin(char *dir1, char *dir2, int n_repeats, int limit_pr
     for (int i=0; i<13; i++) test_time_arr[i] = test_time_arr[i] / (double)n_repeats;
 
     // Reduce between processes
-    if (processRank == root) duoble reduction_time = -MPI_Wtime();
+    double reduction_time = -MPI_Wtime();
     MPI_Reduce(test_time_arr, comb_time_arr_sum, 13, MPI_DOUBLE, MPI_SUM, root, MPI_COMM_WORLD);
-    MPI_Reduce(test_time_arr[12], comb_time_max, 1, MPI_DOUBLE, MPI_MAX, root, MPI_COMM_WORLD);
+    MPI_Reduce(&(test_time_arr[12]), &comb_time_max, 1, MPI_DOUBLE, MPI_MAX, root, MPI_COMM_WORLD);
     if (processRank >= limit_procs) { // This is a hack to prevent the 0s from unused procs from being the min.
         MPI_Reduce(&I, comb_time_min, 1, MPI_DOUBLE, MPI_MIN, root, MPI_COMM_WORLD);}
-    else MPI_Reduce(test_time_arr[12], comb_time_min, 1, MPI_DOUBLE, MPI_MIN, root, MPI_COMM_WORLD);
-    if (processRank == root) reduction_time += MPI_Wtime();
+    else MPI_Reduce(&(test_time_arr[12]), &comb_time_min, 1, MPI_DOUBLE, MPI_MIN, root, MPI_COMM_WORLD);
+    reduction_time += MPI_Wtime();
 
     if (processRank == root) {
-        comb_time_avg = comb_time_arr_sum[12]/numProcs;
+        comb_time_avg = comb_time_arr_sum[12]/limit_procs;
         comb_time_range = comb_time_max - comb_time_min;
         // for (int i=0; i<12; i++) comb_time_arr_sum[i] /= comb_time_arr_sum[12];
     }
@@ -709,7 +709,7 @@ double all_files_round_robin(char *dir1, char *dir2, int n_repeats, int limit_pr
 double all_files_load_balancing(char *dir1, char*dir2, int n_repeats, int limit_procs)
 {
     // Allocates work as workers finish
-    if (processRank >= limit_procs) return;
+    if (processRank >= limit_procs) return 0.0;
     
     MPI_Status status;
     int filenum;
@@ -748,7 +748,7 @@ double all_files_load_balancing(char *dir1, char*dir2, int n_repeats, int limit_
                 MPI_Recv(&filenum, 1, MPI_INT, root, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
                 if (status.MPI_TAG == TERMINATION_TAG) { break; }
                 else {
-                    all_tests(test_time_arr, filenum, argv[1], argv[2], n);
+                    all_tests(test_time_arr, filenum, dir1, dir2, n);
                     tasks_done++;
                     // cout << "WORKER> Partition " << filenum << " from " << processRank << endl;
                     MPI_Send(NULL, 0, MPI_INT, root, WORK_TAG, MPI_COMM_WORLD);
@@ -780,16 +780,16 @@ double all_files_load_balancing(char *dir1, char*dir2, int n_repeats, int limit_
     for (int i=0; i<13; i++) test_time_arr[i] = test_time_arr[i] / (double)n_repeats;
 
     // Reduce between processes
-    if (processRank == root) duoble reduction_time = -MPI_Wtime();
-    MPI_Reduce(test_time_arr[12], comb_time_sum, 1, MPI_DOUBLE, MPI_SUM, root, MPI_COMM_WORLD);
-    MPI_Reduce(test_time_arr[12], comb_time_max, 1, MPI_DOUBLE, MPI_MAX, root, MPI_COMM_WORLD);
+    double reduction_time = -MPI_Wtime();
+    MPI_Reduce(&(test_time_arr[12]), &comb_time_sum, 1, MPI_DOUBLE, MPI_SUM, root, MPI_COMM_WORLD);
+    MPI_Reduce(&(test_time_arr[12]), &comb_time_max, 1, MPI_DOUBLE, MPI_MAX, root, MPI_COMM_WORLD);
     if (processRank >= limit_procs+1 || processRank == root) { // This is a hack to prevent the 0s from unused procs from being the min.
-        MPI_Reduce(&I, comb_time_min, 1, MPI_DOUBLE, MPI_MIN, root, MPI_COMM_WORLD);}
-    else MPI_Reduce(test_time_arr[12], comb_time_min, 1, MPI_DOUBLE, MPI_MIN, root, MPI_COMM_WORLD);
-    if (processRank == root) reduction_time += MPI_Wtime();
+        MPI_Reduce(&I, &comb_time_min, 1, MPI_DOUBLE, MPI_MIN, root, MPI_COMM_WORLD);}
+    else MPI_Reduce(&(test_time_arr[12]), &comb_time_min, 1, MPI_DOUBLE, MPI_MIN, root, MPI_COMM_WORLD);
+    reduction_time += MPI_Wtime();
 
     if (processRank == root) {
-        comb_time_avg = comb_time_sum/numProcs;
+        comb_time_avg = comb_time_sum/limit_procs;
         comb_time_range = comb_time_max - comb_time_min;
         // for (int i=0; i<12; i++) comb_time_arr_sum[i] /= comb_time_arr_sum[12];
     }
@@ -834,6 +834,7 @@ int main(int argc, char **argv)
     if (!n)
         n = 1;
 
+    double total_time;
     if (rank == root)
     {        
         // Generate Report Start
@@ -849,13 +850,17 @@ int main(int argc, char **argv)
              << "==================================================================" << endl
              ;
 
-        double total_time = -MPI_Wtime();
+        total_time = -MPI_Wtime();
     }
 
     // Perform the actual varied test types
-    all_files_round_robin(argv[1], argv[2], n, numProcs, true);
-    all_files_round_robin(argv[1], argv[2], n, numProcs-1, false);
-    all_files_load_balancing(argv[1], argv[2], n, numProcs);
+    double seq_time = all_files_round_robin(argv[1], argv[2], n, 1, true);
+    double rr_time  = all_files_round_robin(argv[1], argv[2], n, numProcs, false);
+    double rr2_time = all_files_round_robin(argv[1], argv[2], n, numProcs-1, false);
+    double lb_time  = all_files_load_balancing(argv[1], argv[2], n, numProcs);
+    double rr2_speedup = seq_time/rr2_time;
+    double rr_speedup = seq_time/rr_time;
+    double lb_speedup  = seq_time/lb_time;
 
     if (rank == root)
     {
@@ -864,7 +869,20 @@ int main(int argc, char **argv)
         // if (numProcs > 1) system("rm ./file_part_*");
 
         // Generate Report End
-        cout << "OVERALL TESTS RUNTIME: " << total_time << endl
+        cout << "-------------------- PARALLELISM REPORT --------------------------" << endl
+             << "Sequential Time:                  " << seq_time                     << endl
+             << "Round Robin Parallel Time:        " << rr_time                      << endl
+             << "     Speedup:                     " << rr_speedup                   << endl
+             << "     Efficiency:                  " << rr_speedup/numProcs          << endl
+             << "*Round Robin Parallel-1 Time:     " << rr2_time                     << endl
+             << "     Speedup:                     " << rr2_speedup                  << endl
+             << "     Efficiency:                  " << rr2_speedup/(numProcs-1)     << endl
+             << "*Load-Balancing Par. Time:        " << lb_time                      << endl
+             << "     Bottleneck Speedup (uses *): " << rr2_time/lb_time             << endl
+             << "     Speedup:                     " << lb_speedup                   << endl
+             << "     Efficiency:                  " << lb_speedup/numProcs          << endl
+             << "------------------------------------------------------------------" << endl
+             << "OVERALL TESTS RUNTIME:            " << total_time                   << endl
              << "==================================================================" << endl
              << endl
              << endl
