@@ -877,11 +877,12 @@ int main(int argc, char **argv)
 
     // Scalability Tests
     // Figure out how many times we can cut the cores in half
-    int data_points = 0;
+    int data_points = 1;
     int processes = numProcs;
     int partitions = numberOfPartitions;
     double seq_time_fraction = seq_time;
-    while (processes >>= 1) ++data_points;
+    while (processes >>= 1) data_points++;
+    cout << "DATA POINTS: " << data_points << endl;
     double lb_time_weak[data_points];
     double lb_time_strong[data_points];
     double lb_speedup_weak[data_points];
