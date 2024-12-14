@@ -880,38 +880,39 @@ int main(int argc, char **argv)
     double rr_speedup  = seq_time/rr_time;
     double lb_speedup  = seq_time/lb_time;
 
-    // Scalability Tests
-    // Figure out how many times we can cut the cores in half
-    int data_points = 0; // We'd start at 1 to go all the way down to 1, but we can't, because then there would be a master and no workers.
-    int processes = numProcs;
-    int partitions = numberOfPartitions;
-    double seq_time_fraction = seq_time;
-    while (processes >>= 1) data_points++;
-    // data_points=2;
-    // cout << "DATA POINTS: " << data_points << endl;
-    double lb_time_weak[data_points];
-    double lb_time_strong[data_points];
-    double lb_speedup_weak[data_points];
-    double lb_speedup_strong[data_points];
-    processes = numProcs;
-    lb_time_weak[0] = lb_time;
-    lb_time_strong[0] = lb_time;
-    lb_speedup_weak[0] = lb_speedup;
-    lb_speedup_strong[0] = lb_speedup;
-    for (int i=1; i<data_points; i++) {
-        if (rank == 0) {
-            printf("[DOING SCALABILITY 1/2^%d]\r", i);
-            fflush(stdout);
-        }
-        processes /= 2;
-        partitions /= 2;
-        seq_time_fraction /= 2.0;
-        lb_time_weak[i]      = all_files_load_balancing(argv[1], argv[2], partitions,         n, processes, false, intersect_only);
-        lb_time_strong[i]    = all_files_load_balancing(argv[1], argv[2], numberOfPartitions, n, processes, false, intersect_only);
-        lb_speedup_weak[i]   = seq_time_fraction / lb_time_weak[i];
-        lb_speedup_strong[i] = seq_time / lb_time_strong[i];
-    }
-    // if (rank == 0) cout << endl;
+    // Turns out, scalability tests are too much for the poor little bluefield's memory... I think we have memory leaks, otherwise it should have been OK. I'll just have to run these one at a time.
+    // // Scalability Tests
+    // // Figure out how many times we can cut the cores in half
+    // int data_points = 0; // We'd start at 1 to go all the way down to 1, but we can't, because then there would be a master and no workers.
+    // int processes = numProcs;
+    // int partitions = numberOfPartitions;
+    // double seq_time_fraction = seq_time;
+    // while (processes >>= 1) data_points++;
+    // // data_points=2;
+    // // cout << "DATA POINTS: " << data_points << endl;
+    // double lb_time_weak[data_points];
+    // double lb_time_strong[data_points];
+    // double lb_speedup_weak[data_points];
+    // double lb_speedup_strong[data_points];
+    // processes = numProcs;
+    // lb_time_weak[0] = lb_time;
+    // lb_time_strong[0] = lb_time;
+    // lb_speedup_weak[0] = lb_speedup;
+    // lb_speedup_strong[0] = lb_speedup;
+    // for (int i=1; i<data_points; i++) {
+    //     if (rank == 0) {
+    //         printf("[DOING SCALABILITY 1/2^%d]\r", i);
+    //         fflush(stdout);
+    //     }
+    //     processes /= 2;
+    //     partitions /= 2;
+    //     seq_time_fraction /= 2.0;
+    //     lb_time_weak[i]      = all_files_load_balancing(argv[1], argv[2], partitions,         n, processes, false, intersect_only);
+    //     lb_time_strong[i]    = all_files_load_balancing(argv[1], argv[2], numberOfPartitions, n, processes, false, intersect_only);
+    //     lb_speedup_weak[i]   = seq_time_fraction / lb_time_weak[i];
+    //     lb_speedup_strong[i] = seq_time / lb_time_strong[i];
+    // }
+    // // if (rank == 0) cout << endl;
 
     if (rank == root)
     {
@@ -935,19 +936,19 @@ int main(int argc, char **argv)
              << "     Speedup:                     " << lb_speedup                   << endl
              << "     Efficiency:                  " << lb_speedup/numProcs          << endl
              << "     Cost:                        " << numProcs*lb_time             << endl
-             << "--------------------- Scalability Report -------------------------" << endl
-             << "NOTE: Weak Scalability tests are somewhat inaccurate, due to"       << endl
-             << "      uneven spatial partitions."                                   << endl
-             << "STRONG SCALABILITY SPEEDUP:       WEAK SCALABILITY SPEEDUP:"        << endl
-             ;
-        for (int i=data_points-1; i>=0; i--) {
-        cout << "Processes: "   << processes  << " T: " << lb_time_strong[i] << " S: " << lb_speedup_strong[i]
-             << " Partitions: " << partitions << " T: " << lb_time_weak[i]   << " S: " << lb_speedup_weak[i] << endl;
-            processes *= 2;
-            partitions *= 2;
-        }
-        cout << "Strong Scalability (last S / first S): " << lb_speedup_strong[0]/lb_speedup_strong[data_points-1] << endl
-             << "Weak Scalability   (last S / first S): " << lb_speedup_weak[0]/lb_speedup_weak[data_points-1]     << endl
+        //      << "--------------------- Scalability Report -------------------------" << endl
+        //      << "NOTE: Weak Scalability tests are somewhat inaccurate, due to"       << endl
+        //      << "      uneven spatial partitions."                                   << endl
+        //      << "STRONG SCALABILITY SPEEDUP:       WEAK SCALABILITY SPEEDUP:"        << endl
+        //      ;
+        // for (int i=data_points-1; i>=0; i--) {
+        // cout << "Processes: "   << processes  << " T: " << lb_time_strong[i] << " S: " << lb_speedup_strong[i]
+        //      << " Partitions: " << partitions << " T: " << lb_time_weak[i]   << " S: " << lb_speedup_weak[i] << endl;
+        //     processes *= 2;
+        //     partitions *= 2;
+        // }
+        // cout << "Strong Scalability (last S / first S): " << lb_speedup_strong[0]/lb_speedup_strong[data_points-1] << endl
+        //      << "Weak Scalability   (last S / first S): " << lb_speedup_weak[0]/lb_speedup_weak[data_points-1]     << endl
              << "==================================================================" << endl
              << "OVERALL TESTS RUNTIME:            " << total_time                   << endl
              << "==================================================================" << endl
