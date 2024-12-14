@@ -1,3 +1,4 @@
+#!/bin/bash
 mpirun -np 16 ./geos_benchmark_mpi_spatial_partition ../Data/spatial_partition/sports/64_parts_sports ../Data/spatial_partition/cemetery/64_parts_cemetery 64 2 > benchmark16x64x2.txt
 mpirun -np 8  ./geos_benchmark_mpi_spatial_partition ../Data/spatial_partition/sports/64_parts_sports ../Data/spatial_partition/cemetery/64_parts_cemetery 64 2 > benchmark8x64x2.txt
 mpirun -np 4  ./geos_benchmark_mpi_spatial_partition ../Data/spatial_partition/sports/64_parts_sports ../Data/spatial_partition/cemetery/64_parts_cemetery 64 2 > benchmark4x64x2.txt
