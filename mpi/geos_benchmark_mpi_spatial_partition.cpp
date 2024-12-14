@@ -566,7 +566,7 @@ double select_test(const char *name, int (*test_function)(vector<GEOSGeometry *>
     }
 }
 
-void all_tests(double* test_time_arr, int filenum, char *dir1, char *dir2, int n_repeats)
+void all_tests(double* test_time_arr, int filenum, char *dir1, char *dir2, int n_repeats, bool intersect_only)
 {
     // const char *filename = (string(argv[1]) + "/" + to_string(rank + filenum)).c_str();
     // const char *filename2 = (string(argv[2]) + "/" + to_string(rank + filenum)).c_str();
@@ -587,19 +587,23 @@ void all_tests(double* test_time_arr, int filenum, char *dir1, char *dir2, int n
         {
             vector<GEOSGeometry *> *geoms2 = get_polygons((string(dir2) + "/" + to_string(filenum)).c_str());
             
-            test_time_arr[ 0] += select_test("Create",            &create_tree,  geoms, geoms2, n_repeats);
-            test_time_arr[ 1] += select_test("Iterate",           &iterate_tree, geoms, geoms2, n_repeats);
-            test_time_arr[ 2] += select_test("Query",             &query,        geoms, geoms2, n_repeats);
-            test_time_arr[ 3] += select_test("Intersect",         &intersect,    geoms, geoms2, n_repeats);
-            test_time_arr[ 4] += select_test("Overlap",           &overlap,      geoms, geoms2, n_repeats);
-            test_time_arr[ 5] += select_test("Touch",             &touch,        geoms, geoms2, n_repeats);
-            test_time_arr[ 6] += select_test("Cross",             &cross,        geoms, geoms2, n_repeats);
-            test_time_arr[ 7] += select_test("Contain",           &contain,      geoms, geoms2, n_repeats);
-            test_time_arr[ 8] += select_test("Equal",             &equal,        geoms, geoms2, n_repeats);
-            test_time_arr[ 9] += select_test("Equal Exact (0.3)", &equal_exact,  geoms, geoms2, n_repeats);
-            test_time_arr[10] += select_test("Cover",             &cover,        geoms, geoms2, n_repeats);
-            test_time_arr[11] += select_test("Covered By",        &covered_by,   geoms, geoms2, n_repeats);
-            // test_time_arr[12] += create_time + iterate_time + query_time + intersect_time + overlap_time + touch_time + cross_time + contain_time + equal_time + equal_exact_time + cover_time + covered_by_time;
+            if (intersect_only) {
+                test_time_arr[ 3] += select_test("Intersect",         &intersect,    geoms, geoms2, n_repeats);
+            } else {
+                test_time_arr[ 0] += select_test("Create",            &create_tree,  geoms, geoms2, n_repeats);
+                test_time_arr[ 1] += select_test("Iterate",           &iterate_tree, geoms, geoms2, n_repeats);
+                test_time_arr[ 2] += select_test("Query",             &query,        geoms, geoms2, n_repeats);
+                test_time_arr[ 3] += select_test("Intersect",         &intersect,    geoms, geoms2, n_repeats);
+                test_time_arr[ 4] += select_test("Overlap",           &overlap,      geoms, geoms2, n_repeats);
+                test_time_arr[ 5] += select_test("Touch",             &touch,        geoms, geoms2, n_repeats);
+                test_time_arr[ 6] += select_test("Cross",             &cross,        geoms, geoms2, n_repeats);
+                test_time_arr[ 7] += select_test("Contain",           &contain,      geoms, geoms2, n_repeats);
+                test_time_arr[ 8] += select_test("Equal",             &equal,        geoms, geoms2, n_repeats);
+                test_time_arr[ 9] += select_test("Equal Exact (0.3)", &equal_exact,  geoms, geoms2, n_repeats);
+                test_time_arr[10] += select_test("Cover",             &cover,        geoms, geoms2, n_repeats);
+                test_time_arr[11] += select_test("Covered By",        &covered_by,   geoms, geoms2, n_repeats);
+                // test_time_arr[12] += create_time + iterate_time + query_time + intersect_time + overlap_time + touch_time + cross_time + contain_time + equal_time + equal_exact_time + cover_time + covered_by_time;
+            }
 
             destroy_polygons(geoms2);
         }
@@ -617,7 +621,7 @@ void all_tests(double* test_time_arr, int filenum, char *dir1, char *dir2, int n
     test_time_arr[12] += time/(double)n_repeats; // This time, like the others, reflects the average of the n duplications
 }
 
-double all_files_round_robin(char *dir1, char *dir2, int partitions, int n_repeats, int limit_procs, bool print_categories)
+double all_files_round_robin(char *dir1, char *dir2, int partitions, int n_repeats, int limit_procs, bool print_categories, bool intersect_only)
 {
     // Fixed round robin over partition files
     // Also can be used for sequential (non-parallel) test, if limit_procs == 1
@@ -642,7 +646,7 @@ double all_files_round_robin(char *dir1, char *dir2, int partitions, int n_repea
     if (processRank < limit_procs) {
         for (int n=0; n<n_repeats; n++) { // over-ride the n built-in to all_tests, so that we're doing it the same way the load-balancing function has to
             for (int filenum = processRank; filenum < partitions; filenum += limit_procs) {
-                all_tests(test_time_arr, filenum, dir1, dir2, 1);
+                all_tests(test_time_arr, filenum, dir1, dir2, 1, intersect_only);
                 if (processRank == limit_procs-1) {
                     printf("[CURRENT FILENUM: %d]\r", filenum);
                     fflush(stdout);
@@ -710,7 +714,7 @@ double all_files_round_robin(char *dir1, char *dir2, int partitions, int n_repea
     return total_time;
 }
 
-double all_files_load_balancing(char *dir1, char*dir2, int partitions, int n_repeats, int limit_procs, bool report)
+double all_files_load_balancing(char *dir1, char*dir2, int partitions, int n_repeats, int limit_procs, bool report, bool intersect_only)
 {
     // Allocates work as workers finish
     // NOTE: limit_procs includes the root, so really there will be limit_procs-1 workers.
@@ -741,7 +745,7 @@ double all_files_load_balancing(char *dir1, char*dir2, int partitions, int n_rep
             // Workers start work automatically
             int tasks_done = 0;
             if (processRank < partitions && processRank < limit_procs) {
-                all_tests(test_time_arr, processRank, dir1, dir2, n);
+                all_tests(test_time_arr, processRank, dir1, dir2, n, intersect_only);
                 // cout << "WORKER> Partition " << processRank << " from " << processRank << endl;
                 tasks_done++;
             }
@@ -753,7 +757,7 @@ double all_files_load_balancing(char *dir1, char*dir2, int partitions, int n_rep
                     MPI_Recv(&filenum, 1, MPI_INT, root, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
                     if (status.MPI_TAG == TERMINATION_TAG) { break; }
                     else {
-                        all_tests(test_time_arr, filenum, dir1, dir2, n);
+                        all_tests(test_time_arr, filenum, dir1, dir2, n, intersect_only);
                         tasks_done++;
                         // cout << "WORKER> Partition " << filenum << " from " << processRank << endl;
                         MPI_Send(NULL, 0, MPI_INT, root, WORK_TAG, MPI_COMM_WORLD);
