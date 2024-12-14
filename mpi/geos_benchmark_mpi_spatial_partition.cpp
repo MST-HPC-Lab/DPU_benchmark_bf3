@@ -644,12 +644,12 @@ double all_files_round_robin(char *dir1, char *dir2, int n_repeats, int limit_pr
         for (int n=0; n<n_repeats; n++) { // over-ride the n built-in to all_tests, so that we're doing it the same way the load-balancing function has to
             for (int filenum = processRank; filenum < numberOfPartitions; filenum += limit_procs) {
                 all_tests(test_time_arr, filenum, dir1, dir2, 1);
-                if (processRank == root) {
+                if (processRank == limit_procs-1) {
                     printf("\rCURRENT FILENUM: %d", filenum);
                     fflush(stdout);
                 }
             }
-            cout << endl;
+            if (processRank == limit_procs-1) cout << endl;
         }
         for (int i=0; i<13; i++) test_time_arr[i] = test_time_arr[i] / (double)n_repeats;
     }
