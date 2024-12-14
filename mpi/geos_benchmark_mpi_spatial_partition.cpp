@@ -877,7 +877,7 @@ int main(int argc, char **argv)
 
     // Scalability Tests
     // Figure out how many times we can cut the cores in half
-    int data_points = 1;
+    int data_points = 0; // We'd start at 1 to go all the way down to 1, but we can't, because then there would be a master and no workers.
     int processes = numProcs;
     int partitions = numberOfPartitions;
     double seq_time_fraction = seq_time;
