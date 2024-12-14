@@ -657,7 +657,7 @@ double all_files_round_robin(char *dir1, char *dir2, int n_repeats, int limit_pr
     MPI_Reduce(test_time_arr, comb_time_arr_sum, 13, MPI_DOUBLE, MPI_SUM, root, MPI_COMM_WORLD);
     MPI_Reduce(&(test_time_arr[12]), &comb_time_max, 1, MPI_DOUBLE, MPI_MAX, root, MPI_COMM_WORLD);
     if (processRank >= limit_procs) { // This is a hack to prevent the 0s from unused procs from being the min.
-        MPI_Reduce(&I, comb_time_min, 1, MPI_DOUBLE, MPI_MIN, root, MPI_COMM_WORLD);}
+        MPI_Reduce(&I, &comb_time_min, 1, MPI_DOUBLE, MPI_MIN, root, MPI_COMM_WORLD);}
     else MPI_Reduce(&(test_time_arr[12]), &comb_time_min, 1, MPI_DOUBLE, MPI_MIN, root, MPI_COMM_WORLD);
     reduction_time += MPI_Wtime();
 
@@ -737,7 +737,7 @@ double all_files_load_balancing(char *dir1, char*dir2, int n_repeats, int limit_
             // Workers start work automatically
             int tasks_done = 0;
             if (processRank < numberOfPartitions) {
-                all_tests(test_time_arr, processRank, argv[1], argv[2], n);
+                all_tests(test_time_arr, processRank, dir1, dir2, n);
                 // cout << "WORKER> Partition " << processRank << " from " << processRank << endl;
                 tasks_done++;
             }
