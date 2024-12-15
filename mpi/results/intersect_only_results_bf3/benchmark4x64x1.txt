@@ -1,0 +1,89 @@
+
+
+==================================================================
+----------------------- BENCHMARK RESULTS ------------------------
+------------------------------------------------------------------
+Processes:  4  Partitions: 64  Duplication (n): 1
+Directory1: ../Data/spatial_partition/sports/64_parts_sports
+Directory2: ../Data/spatial_partition/cemetery/64_parts_cemetery
+NOTE: All polygons are discarded and re-read between test suites.
+==================================================================
+-------------------------- ROUND ROBIN ---------------------------
+Workers: 1  Duplication: 1
+------------------------------------------------------------------
+Create Time:             0
+Iterate Time:            0
+Query Time:              0
+Intersect Time:          1.37607
+Overlap Time:            0
+Touch Time:              0
+Cross Time:              0
+Contain Time:            0
+Equal Time:              0
+Equal Exact (0.3) Time:  0
+Cover Time:              0
+Covered By Time:         0
+------------------------------------------------------------------
+Reduction Time:      0.000112545
+Sequential Time:     22.2696
+Avg Worker Time:     22.2696
+Bottleneck Range:    0
+Min Worker Time:     22.2696
+Max Worker Time:     22.2696
+==================================================================
+-------------------------- ROUND ROBIN ---------------------------
+Workers: 4  Duplication: 1
+------------------------------------------------------------------
+Reduction Time:      3.2739e-05
+Sequential Time:     22.0633
+Avg Worker Time:     5.51583
+Bottleneck Range:    5.74222
+Min Worker Time:     3.02887
+Max Worker Time:     8.77109
+------------------------------------------------------------------
+TOTAL PARALLEL Time: 8.77113
+==================================================================
+-------------------------- ROUND ROBIN ---------------------------
+Workers: 3  Duplication: 1
+------------------------------------------------------------------
+Reduction Time:      1.8184e-05
+Sequential Time:     21.79
+Avg Worker Time:     7.26334
+Bottleneck Range:    15.9095
+Min Worker Time:     0.791811
+Max Worker Time:     16.7013
+------------------------------------------------------------------
+TOTAL PARALLEL Time: 4.29696
+==================================================================
+------------------------ LOAD-BALANCING --------------------------
+Workers: 4  Duplication: 1
+------------------------------------------------------------------
+Reduction Time:      4.2517e-05
+Sequential Time:     inf
+Avg Worker Time:     inf
+Bottleneck Range:    inf
+Min Worker Time:     1.79769e+308
+Max Worker Time:     inf
+------------------------------------------------------------------
+TOTAL PARALLEL Time: 10.545
+==================================================================
+--------------------- PARALLELISM REPORT -------------------------
+Sequential Time:                  22.271 
+Round Robin Parallel Time:        8.77113
+     Speedup:                     2.53913
+     Efficiency:                  0.634782
+     Cost:                        35.0845
+*Round Robin Parallel-1 Time:     4.29696
+     Speedup:                     5.18297
+     Efficiency:                  1.72766
+     Cost:                        12.8909
+*Load-Balancing Par. Time:        10.545 
+     Bottleneck Speedup (uses *): 0.407487
+     Speedup:                     2.11199
+     Efficiency:                  0.527999
+     Cost:                        42.1801
+==================================================================
+OVERALL TESTS RUNTIME:            45.8845
+==================================================================
+
+

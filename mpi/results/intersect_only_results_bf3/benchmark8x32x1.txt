@@ -1,0 +1,97 @@
+
+
+==================================================================
+----------------------- BENCHMARK RESULTS ------------------------
+------------------------------------------------------------------
+Processes:  8  Partitions: 32  Duplication (n): 1
+Directory1: ../Data/spatial_partition/sports/64_parts_sports
+Directory2: ../Data/spatial_partition/cemetery/64_parts_cemetery
+NOTE: All polygons are discarded and re-read between test suites.
+==================================================================
+[CURRENT FILENUM: 0][CURRENT FILENUM: 7][CURRENT FILENUM: 1][CURRENT FILENUM: 2][CURRENT FILENUM: 3][CURRENT FILENUM: 4][CURRENT FILENUM: 5][CURRENT FILENUM: 6][CURRENT FILENUM: 7][CURRENT FILENUM: 8][CURRENT FILENUM: 9][CURRENT FILENUM: 10][CURRENT FILENUM: 11][CURRENT FILENUM: 15][CURRENT FILENUM: 23][CURRENT FILENUM: 31][CURRENT FILENUM: 6][CURRENT FILENUM: 13][CURRENT FILENUM: 20][CURRENT FILENUM: 27][CURRENT FILENUM: 12][CURRENT FILENUM: 13][CURRENT FILENUM: 14][CURRENT FILENUM: 15][CURRENT FILENUM: 16][CURRENT FILENUM: 17][CURRENT FILENUM: 18][CURRENT FILENUM: 19][CURRENT FILENUM: 20][CURRENT FILENUM: 21][CURRENT FILENUM: 22][CURRENT FILENUM: 23][CURRENT FILENUM: 24][CURRENT FILENUM: 25][CURRENT FILENUM: 26][CURRENT FILENUM: 27][CURRENT FILENUM: 28][CURRENT FILENUM: 29][CURRENT FILENUM: 30][CURRENT FILENUM: 31]-------------------------- ROUND ROBIN ---------------------------
+Workers: 1  Duplication: 1
+------------------------------------------------------------------
+Create Time:             0
+Iterate Time:            0
+Query Time:              0
+Intersect Time:          0.113318
+Overlap Time:            0
+Touch Time:              0
+Cross Time:              0
+Contain Time:            0
+Equal Time:              0
+Equal Exact (0.3) Time:  0
+Cover Time:              0
+Covered By Time:         0
+------------------------------------------------------------------
+Reduction Time:      0.000479666
+Sequential Time:     1.82011
+Avg Worker Time:     1.82011
+Bottleneck Range:    0
+Min Worker Time:     1.82011
+Max Worker Time:     1.82011
+==================================================================
+-------------------------- ROUND ROBIN ---------------------------
+Workers: 8  Duplication: 1
+------------------------------------------------------------------
+Reduction Time:      2.0053e-05
+Sequential Time:     1.8202
+Avg Worker Time:     0.227525
+Bottleneck Range:    0.665082
+Min Worker Time:     0.000688418
+Max Worker Time:     0.665771
+------------------------------------------------------------------
+TOTAL PARALLEL Time: 0.0692235
+==================================================================
+-------------------------- ROUND ROBIN ---------------------------
+Workers: 7  Duplication: 1
+------------------------------------------------------------------
+Reduction Time:      2.7424e-05
+Sequential Time:     1.79315
+Avg Worker Time:     0.256164
+Bottleneck Range:    0.756845
+Min Worker Time:     0.000744809
+Max Worker Time:     0.75759
+------------------------------------------------------------------
+TOTAL PARALLEL Time: 0.330267
+==================================================================
+
+[CURRENT FILENUM: 8][CURRENT FILENUM: 9][CURRENT FILENUM: 10][CURRENT FILENUM: 11][CURRENT FILENUM: 12][CURRENT FILENUM: 13][CURRENT FILENUM: 14][CURRENT FILENUM: 15][CURRENT FILENUM: 16][CURRENT FILENUM: 17][CURRENT FILENUM: 18][CURRENT FILENUM: 19][CURRENT FILENUM: 20][CURRENT FILENUM: 21][CURRENT FILENUM: 22][CURRENT FILENUM: 23][CURRENT FILENUM: 24][CURRENT FILENUM: 25][CURRENT FILENUM: 26][CURRENT FILENUM: 27][CURRENT FILENUM: 28][CURRENT FILENUM: 29][CURRENT FILENUM: 30][CURRENT FILENUM: 31][WORKER 5 COMPLETED 3 TASKS]
+[WORKER 6 COMPLETED 5 TASKS]
+[WORKER 4 COMPLETED 4 TASKS]
+[WORKER 7 COMPLETED 3 TASKS]
+[WORKER 1 COMPLETED 2 TASKS]
+[WORKER 2 COMPLETED 2 TASKS]
+[WORKER 3 COMPLETED 12 TASKS]
+------------------------ LOAD-BALANCING --------------------------
+Workers: 8  Duplication: 1
+------------------------------------------------------------------
+Reduction Time:      5.6827e-05
+Sequential Time:     inf
+Avg Worker Time:     inf
+Bottleneck Range:    inf
+Min Worker Time:     1.79769e+308
+Max Worker Time:     inf
+------------------------------------------------------------------
+TOTAL PARALLEL Time: 0.630736
+==================================================================
+--------------------- PARALLELISM REPORT -------------------------
+Sequential Time:                  1.8214
+Round Robin Parallel Time:        0.0692235
+     Speedup:                     26.3118
+     Efficiency:                  3.28898
+     Cost:                        0.553788
+*Round Robin Parallel-1 Time:     0.330267
+     Speedup:                     5.51493
+     Efficiency:                  0.787847
+     Cost:                        2.31187
+*Load-Balancing Par. Time:        0.630736
+     Bottleneck Speedup (uses *): 0.523622
+     Speedup:                     2.88774
+     Efficiency:                  0.360967
+     Cost:                        5.04589
+==================================================================
+OVERALL TESTS RUNTIME:            2.85215
+==================================================================
+
+

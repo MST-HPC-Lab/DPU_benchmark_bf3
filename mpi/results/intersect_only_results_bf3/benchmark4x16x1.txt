@@ -1,0 +1,93 @@
+
+
+==================================================================
+----------------------- BENCHMARK RESULTS ------------------------
+------------------------------------------------------------------
+Processes:  4  Partitions: 16  Duplication (n): 1
+Directory1: ../Data/spatial_partition/sports/64_parts_sports
+Directory2: ../Data/spatial_partition/cemetery/64_parts_cemetery
+NOTE: All polygons are discarded and re-read between test suites.
+==================================================================
+[CURRENT FILENUM: 3][CURRENT FILENUM: 7][CURRENT FILENUM: 0][CURRENT FILENUM: 1][CURRENT FILENUM: 2][CURRENT FILENUM: 3][CURRENT FILENUM: 4][CURRENT FILENUM: 5][CURRENT FILENUM: 11][CURRENT FILENUM: 6][CURRENT FILENUM: 7][CURRENT FILENUM: 8][CURRENT FILENUM: 9][CURRENT FILENUM: 10][CURRENT FILENUM: 11][CURRENT FILENUM: 15][CURRENT FILENUM: 2][CURRENT FILENUM: 5][CURRENT FILENUM: 8][CURRENT FILENUM: 11][CURRENT FILENUM: 12][CURRENT FILENUM: 13][CURRENT FILENUM: 14][CURRENT FILENUM: 14][CURRENT FILENUM: 15]-------------------------- ROUND ROBIN ---------------------------
+Workers: 1  Duplication: 1
+------------------------------------------------------------------
+Create Time:             0
+Iterate Time:            0
+Query Time:              0
+Intersect Time:          0.063564
+Overlap Time:            0
+Touch Time:              0
+Cross Time:              0
+Contain Time:            0
+Equal Time:              0
+Equal Exact (0.3) Time:  0
+Cover Time:              0
+Covered By Time:         0
+------------------------------------------------------------------
+Reduction Time:      0.000121903
+Sequential Time:     0.856113
+Avg Worker Time:     0.856113
+Bottleneck Range:    0
+Min Worker Time:     0.856113
+Max Worker Time:     0.856113
+==================================================================
+-------------------------- ROUND ROBIN ---------------------------
+Workers: 4  Duplication: 1
+------------------------------------------------------------------
+Reduction Time:      4.2124e-05
+Sequential Time:     0.861107
+Avg Worker Time:     0.215277
+Bottleneck Range:    0.409593
+Min Worker Time:     0.0235772
+Max Worker Time:     0.43317
+------------------------------------------------------------------
+TOTAL PARALLEL Time: 0.433213
+==================================================================
+-------------------------- ROUND ROBIN ---------------------------
+Workers: 3  Duplication: 1
+------------------------------------------------------------------
+Reduction Time:      1.9453e-05
+Sequential Time:     0.836319
+Avg Worker Time:     0.278773
+Bottleneck Range:    0.524039
+Min Worker Time:     0.0270797
+Max Worker Time:     0.551119
+------------------------------------------------------------------
+TOTAL PARALLEL Time: 0.551141
+==================================================================
+
+[CURRENT FILENUM: 4][CURRENT FILENUM: 5][CURRENT FILENUM: 6][CURRENT FILENUM: 7][CURRENT FILENUM: 8][CURRENT FILENUM: 9][CURRENT FILENUM: 10][CURRENT FILENUM: 11][CURRENT FILENUM: 12][CURRENT FILENUM: 13][CURRENT FILENUM: 14][CURRENT FILENUM: 15][WORKER 3 COMPLETED 5 TASKS]
+[WORKER 2 COMPLETED 3 TASKS]
+[WORKER 1 COMPLETED 7 TASKS]
+------------------------ LOAD-BALANCING --------------------------
+Workers: 4  Duplication: 1
+------------------------------------------------------------------
+Reduction Time:      4.8761e-05
+Sequential Time:     inf
+Avg Worker Time:     inf
+Bottleneck Range:    inf
+Min Worker Time:     1.79769e+308
+Max Worker Time:     inf
+------------------------------------------------------------------
+TOTAL PARALLEL Time: 0.395614
+==================================================================
+--------------------- PARALLELISM REPORT -------------------------
+Sequential Time:                  0.856488
+Round Robin Parallel Time:        0.433213
+     Speedup:                     1.97706
+     Efficiency:                  0.494264
+     Cost:                        1.73285
+*Round Robin Parallel-1 Time:     0.551141
+     Speedup:                     1.55403
+     Efficiency:                  0.518009
+     Cost:                        1.65342
+*Load-Balancing Par. Time:        0.395614
+     Bottleneck Speedup (uses *): 1.39313
+     Speedup:                     2.16496
+     Efficiency:                  0.541239
+     Cost:                        1.58246
+==================================================================
+OVERALL TESTS RUNTIME:            2.2368
+==================================================================
+
+

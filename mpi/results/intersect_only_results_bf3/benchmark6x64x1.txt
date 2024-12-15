@@ -1,0 +1,62 @@
+
+
+==================================================================
+----------------------- BENCHMARK RESULTS ------------------------
+------------------------------------------------------------------
+Processes:  6  Partitions: 64  Duplication (n): 1
+Directory1: ../Data/spatial_partition/sports/64_parts_sports
+Directory2: ../Data/spatial_partition/cemetery/64_parts_cemetery
+NOTE: All polygons are discarded and re-read between test suites.
+==================================================================
+[CURRENT FILENUM: 0][CURRENT FILENUM: 5][CURRENT FILENUM: 1][CURRENT FILENUM: 2][CURRENT FILENUM: 3][CURRENT FILENUM: 4][CURRENT FILENUM: 5][CURRENT FILENUM: 11][CURRENT FILENUM: 17][CURRENT FILENUM: 6][CURRENT FILENUM: 7][CURRENT FILENUM: 8][CURRENT FILENUM: 9][CURRENT FILENUM: 23][CURRENT FILENUM: 10][CURRENT FILENUM: 11][CURRENT FILENUM: 4][CURRENT FILENUM: 9][CURRENT FILENUM: 12][CURRENT FILENUM: 13][CURRENT FILENUM: 29][CURRENT FILENUM: 14][CURRENT FILENUM: 19][CURRENT FILENUM: 24][CURRENT FILENUM: 14][CURRENT FILENUM: 15][CURRENT FILENUM: 16][CURRENT FILENUM: 17][CURRENT FILENUM: 18][CURRENT FILENUM: 19][CURRENT FILENUM: 20][CURRENT FILENUM: 21][CURRENT FILENUM: 22][CURRENT FILENUM: 23][CURRENT FILENUM: 24][CURRENT FILENUM: 25][CURRENT FILENUM: 26][CURRENT FILENUM: 27][CURRENT FILENUM: 28][CURRENT FILENUM: 29][CURRENT FILENUM: 34][CURRENT FILENUM: 29][CURRENT FILENUM: 30][CURRENT FILENUM: 31][CURRENT FILENUM: 32][CURRENT FILENUM: 33][CURRENT FILENUM: 34][CURRENT FILENUM: 35][CURRENT FILENUM: 39][CURRENT FILENUM: 44][CURRENT FILENUM: 49][CURRENT FILENUM: 41][CURRENT FILENUM: 47][CURRENT FILENUM: 53][CURRENT FILENUM: 59][CURRENT FILENUM: 54][CURRENT FILENUM: 59][CURRENT FILENUM: 35][CURRENT FILENUM: 36][CURRENT FILENUM: 37][CURRENT FILENUM: 38][CURRENT FILENUM: 39][CURRENT FILENUM: 40][CURRENT FILENUM: 41][CURRENT FILENUM: 42][CURRENT FILENUM: 43][CURRENT FILENUM: 44][CURRENT FILENUM: 45][CURRENT FILENUM: 46][CURRENT FILENUM: 47][CURRENT FILENUM: 48][CURRENT FILENUM: 49][CURRENT FILENUM: 50][CURRENT FILENUM: 51][CURRENT FILENUM: 52][CURRENT FILENUM: 53][CURRENT FILENUM: 54][CURRENT FILENUM: 55][CURRENT FILENUM: 56][CURRENT FILENUM: 57][CURRENT FILENUM: 58][CURRENT FILENUM: 59][CURRENT FILENUM: 60][CURRENT FILENUM: 61][CURRENT FILENUM: 62][CURRENT FILENUM: 63]-------------------------- ROUND ROBIN ---------------------------
+Workers: 1  Duplication: 1
+------------------------------------------------------------------
+Create Time:             0.881698
+Iterate Time:            0.879058
+Query Time:              1.35207
+Intersect Time:          1.39596
+Overlap Time:            1.54854
+Touch Time:              1.50531
+Cross Time:              1.38113
+Contain Time:            1.40837
+Equal Time:              1.38537
+Equal Exact (0.3) Time:  1.37329
+Cover Time:              1.41386
+Covered By Time:         1.39684
+------------------------------------------------------------------
+Reduction Time:      9.2301e-05
+Sequential Time:     36.9673
+Avg Worker Time:     36.9673
+Bottleneck Range:    0
+Min Worker Time:     36.9673
+Max Worker Time:     36.9673
+==================================================================
+-------------------------- ROUND ROBIN ---------------------------
+Workers: 6  Duplication: 1
+------------------------------------------------------------------
+Reduction Time:      2.6261e-05
+Sequential Time:     36.4087
+Avg Worker Time:     6.06811
+Bottleneck Range:    23.2711
+Min Worker Time:     0.569986
+Max Worker Time:     23.8411
+------------------------------------------------------------------
+TOTAL PARALLEL Time: 1.90458
+==================================================================
+-------------------------- ROUND ROBIN ---------------------------
+Workers: 5  Duplication: 1
+------------------------------------------------------------------
+Reduction Time:      2.7942e-05
+Sequential Time:     36.57
+Avg Worker Time:     7.314
+Bottleneck Range:    13.4099
+Min Worker Time:     1.49668
+Max Worker Time:     14.9065
+------------------------------------------------------------------
+TOTAL PARALLEL Time: 11.4811
+==================================================================
+
+[CURRENT FILENUM: 6][CURRENT FILENUM: 7][CURRENT FILENUM: 8][CURRENT FILENUM: 9][CURRENT FILENUM: 10][CURRENT FILENUM: 11][CURRENT FILENUM: 12][CURRENT FILENUM: 13][CURRENT FILENUM: 14][CURRENT FILENUM: 15][CURRENT FILENUM: 16][CURRENT FILENUM: 17][CURRENT FILENUM: 18][CURRENT FILENUM: 19][CURRENT FILENUM: 20][CURRENT FILENUM: 21][CURRENT FILENUM: 22][CURRENT FILENUM: 23][CURRENT FILENUM: 24][CURRENT FILENUM: 25][CURRENT FILENUM: 26][CURRENT FILENUM: 27][CURRENT FILENUM: 28][CURRENT FILENUM: 29][CURRENT FILENUM: 30][CURRENT FILENUM: 31][CURRENT FILENUM: 32][CURRENT FILENUM: 33][CURRENT FILENUM: 34][CURRENT FILENUM: 35][CURRENT FILENUM: 36][CURRENT FILENUM: 37][CURRENT FILENUM: 38][CURRENT FILENUM: 39][CURRENT FILENUM: 40][CURRENT FILENUM: 41][CURRENT FILENUM: 42][CURRENT FILENUM: 43][CURRENT FILENUM: 44][CURRENT FILENUM: 45][CURRENT FILENUM: 46][CURRENT FILENUM: 47][CURRENT FILENUM: 48][CURRENT FILENUM: 49][CURRENT FILENUM: 50][CURRENT FILENUM: 51][CURRENT FILENUM: 52][CURRENT FILENUM: 53][CURRENT FILENUM: 54][CURRENT FILENUM: 55][CURRENT FILENUM: 56][CURRENT FILENUM: 57][CURRENT FILENUM: 58][CURRENT FILENUM: 59][CURRENT FILENUM: 60][CURRENT FILENUM: 61][CURRENT FILENUM: 62][CURRENT FILENUM: 63][WORKER 5 COMPLETED 22 TASKS]
+[WORKER 2 COMPLETED 9 TASKS]
+[WORKER 1 COMPLETED 11 TASKS]
+[WORKER 4 COMPLETED 12 TASKS]

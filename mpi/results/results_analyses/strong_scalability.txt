@@ -1,0 +1,61 @@
+--------------------- PARALLELISM REPORT ----------------------------------------------
+Num Procs. (-1 Worker for L.B.)   HOST 2   HOST 4   HOST 8   HOST 16  BF3 2    BF3 4 BF3 8    BF3 16 
+Num Partitions                    64       64       64       64       64       64    64       64 
+Sequential (Summed) Time:         52.9317  53.1069  65.5753  69.932   88.6066  None  88.6151  None 
+Round Robin Parallel Time:        39.3298  21.6023  22.0495  21.7889  62.5302  None  29.9113  None 
+     Speedup:                     1.34584  2.45839  2.974    3.20952  1.41702  None  2.9626   None 
+     Efficiency:                  0.67292  0.61459  0.37175  0.20059  0.70851  None  0.37032  None 
+     Cost:                        78.6595  86.4093  176.396  348.623  125.06   None  239.29   None 
+*Round Robin Parallel-1 Time:     56.619   40.0195  28.5321  23.2107  88.4665  None  37.6748  None 
+     Speedup:                     0.93487  1.32702  2.2983   3.01292  1.00158  None  2.3521   None 
+     Efficiency:                  0.93487  0.44234  0.32832  0.20086  1.00158  None  0.33601  None 
+     Cost:                        56.619   120.059  199.724  348.161  88.4665  None  263.724  None 
+*Load-Balancing Par. Time:        52.9092  24.0418  20.123   11.1171  89.6512  None  26.5081  None 
+     Bottleneck Speedup (uses *): 1.07012  1.66458  1.41788  2.08784  0.98678  None  1.42126  None 
+     Speedup:                     1.00042  2.20894  3.25872  6.29049  0.98834  None  3.34295  None 
+     Efficiency:                  0.50021  0.55223  0.40734  0.39315  0.49417  None  0.41786  None 
+     Cost:                        105.818  96.1672  160.984  177.873  179.302  None  212.064  None 
+OVERALL TESTS RUNTIME:            201.79   138.771  136.28   126.049  329.255  None  182.71   None 
+NOTE: All times are multiplied by 4, because of the duplication factor.                
+
+
+time_seqH  = [52.9317,  53.1069,  65.5753,  69.932 ] 
+time_rrH   = [39.3298,  21.6023,  22.0495,  21.7889]
+time_rr1H  = [56.619 ,  40.0195,  28.5321,  23.2107]
+time_lbH   = [52.9092,  24.0418,  20.123 ,  11.1171]
+time_seqBF = [88.6066,  None   ,  88.6151,  None   ]
+time_rrBF  = [62.5302,  None   ,  29.9113,  None   ]
+time_rr1BF = [88.4665,  None   ,  37.6748,  None   ]
+time_lbBF  = [89.6512,  None   ,  26.5081,  None   ]
+
+speedup_rrH   = [1.34584,  2.45839,  2.974  ,  3.20952]
+speedup_rr1H  = [0.93487,  1.32702,  2.2983 ,  3.01292]
+speedup_lbH   = [1.00042,  2.20894,  3.25872,  6.29049]
+speedup_rrBF  = [1.41702,  None   ,  2.9626 ,  None   ]
+speedup_rr1BF = [1.00158,  None   ,  2.3521 ,  None   ]
+speedup_lbBF  = [0.98834,  None   ,  3.34295,  None   ]
+
+speedup_bnH   = [52.9092,  24.0418,  20.123,   11.1171]
+speedup_bnBF  = [89.6512,  None   ,  26.5081,  None   ]
+
+strong_scalability_rrH  = speedup_rrH[2]  / speedup_rrH[0]
+strong_scalability_lbH  = speedup_lbH[2]  / speedup_lbH[0]
+strong_scalability_rrBF = speedup_rrBF[2] / speedup_rrBF[0]
+strong_scalability_lbBF = speedup_lbBF[2] / speedup_lbBF[0]
+
+efficiency_seq   = [1,        1,        1,        1      ]
+efficiency_rrH   = [0.67292,  0.61459,  0.37175,  0.20059]
+efficiency_rr1H  = [0.93487,  0.44234,  0.32832,  0.20086]
+efficiency_lbH   = [0.50021,  0.55223,  0.40734,  0.39315]
+efficiency_rrBF  = [0.70851,  None   ,  0.37032,  None   ]
+efficiency_rr1BF = [1.00158,  None   ,  0.33601,  None   ]
+efficiency_lbBF  = [0.49417,  None   ,  0.41786,  None   ]
+
+cost_seqH  = [52.9317,  53.1069,  65.5753,  69.932 ]
+cost_rrH   = [78.6595,  86.4093,  176.396,  348.623]
+cost_rr1H  = [56.619 ,  120.059,  199.724,  348.161]
+cost_lbH   = [105.818,  96.1672,  160.984,  177.873]
+cost_seqBF = [88.6066,  None   ,  88.6151,  None   ]
+cost_rrBF  = [125.06 ,  None   ,  239.29 ,  None   ]
+cost_rr1BF = [88.4665,  None   ,  263.724,  None   ]
+cost_lbBF  = [179.302,  None   ,  212.064,  None   ]

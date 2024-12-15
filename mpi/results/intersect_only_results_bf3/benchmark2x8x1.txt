@@ -1,0 +1,89 @@
+
+
+==================================================================
+----------------------- BENCHMARK RESULTS ------------------------
+------------------------------------------------------------------
+Processes:  2  Partitions: 8  Duplication (n): 1
+Directory1: ../Data/spatial_partition/sports/64_parts_sports
+Directory2: ../Data/spatial_partition/cemetery/64_parts_cemetery
+NOTE: All polygons are discarded and re-read between test suites.
+==================================================================
+[CURRENT FILENUM: 1][CURRENT FILENUM: 3][CURRENT FILENUM: 5][CURRENT FILENUM: 7][CURRENT FILENUM: 0][CURRENT FILENUM: 1][CURRENT FILENUM: 2][CURRENT FILENUM: 3][CURRENT FILENUM: 4][CURRENT FILENUM: 5][CURRENT FILENUM: 6][CURRENT FILENUM: 7]-------------------------- ROUND ROBIN ---------------------------
+Workers: 1  Duplication: 1
+------------------------------------------------------------------
+Create Time:             0
+Iterate Time:            0
+Query Time:              0
+Intersect Time:          0.000544
+Overlap Time:            0
+Touch Time:              0
+Cross Time:              0
+Contain Time:            0
+Equal Time:              0
+Equal Exact (0.3) Time:  0
+Cover Time:              0
+Covered By Time:         0
+------------------------------------------------------------------
+Reduction Time:      0.000131452
+Sequential Time:     0.00747356
+Avg Worker Time:     0.00747356
+Bottleneck Range:    0
+Min Worker Time:     0.00747356
+Max Worker Time:     0.00747356
+==================================================================
+-------------------------- ROUND ROBIN ---------------------------
+Workers: 2  Duplication: 1
+------------------------------------------------------------------
+Reduction Time:      8.43e-05
+Sequential Time:     0.00669824
+Avg Worker Time:     0.00334912
+Bottleneck Range:    0.00640107
+Min Worker Time:     0.000148586
+Max Worker Time:     0.00654965
+------------------------------------------------------------------
+TOTAL PARALLEL Time: 0.00663521
+==================================================================
+[CURRENT FILENUM: 0][CURRENT FILENUM: 1][CURRENT FILENUM: 2][CURRENT FILENUM: 3][CURRENT FILENUM: 4][CURRENT FILENUM: 5][CURRENT FILENUM: 6][CURRENT FILENUM: 7]-------------------------- ROUND ROBIN ---------------------------
+Workers: 1  Duplication: 1
+------------------------------------------------------------------
+Reduction Time:      1.6184e-05
+Sequential Time:     0.006945
+Avg Worker Time:     0.006945
+Bottleneck Range:    0
+Min Worker Time:     0.006945
+Max Worker Time:     0.006945
+==================================================================
+
+[CURRENT FILENUM: 2][CURRENT FILENUM: 3][CURRENT FILENUM: 4][CURRENT FILENUM: 5][CURRENT FILENUM: 6][CURRENT FILENUM: 7][WORKER 1 COMPLETED 7 TASKS]
+------------------------ LOAD-BALANCING --------------------------
+Workers: 2  Duplication: 1
+------------------------------------------------------------------
+Reduction Time:      1.7008e-05
+Sequential Time:     inf
+Avg Worker Time:     inf
+Bottleneck Range:    inf
+Min Worker Time:     1.79769e+308
+Max Worker Time:     inf
+------------------------------------------------------------------
+TOTAL PARALLEL Time: 0.00666217
+==================================================================
+--------------------- PARALLELISM REPORT -------------------------
+Sequential Time:                  0.00767796
+Round Robin Parallel Time:        0.00663521
+     Speedup:                     1.15715
+     Efficiency:                  0.578577
+     Cost:                        0.0132704
+*Round Robin Parallel-1 Time:     0.00702384
+     Speedup:                     1.09313
+     Efficiency:                  1.09313
+     Cost:                        0.00702384
+*Load-Balancing Par. Time:        0.00666217
+     Bottleneck Speedup (uses *): 1.05429
+     Speedup:                     1.15247
+     Efficiency:                  0.576235
+     Cost:                        0.0133243
+==================================================================
+OVERALL TESTS RUNTIME:            0.0282839
+==================================================================
+
+

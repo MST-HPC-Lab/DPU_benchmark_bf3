@@ -1,0 +1,97 @@
+
+
+==================================================================
+----------------------- BENCHMARK RESULTS ------------------------
+------------------------------------------------------------------
+Processes:  8  Partitions: 64  Duplication (n): 1
+Directory1: ../Data/spatial_partition/sports/64_parts_sports
+Directory2: ../Data/spatial_partition/cemetery/64_parts_cemetery
+NOTE: All polygons are discarded and re-read between test suites.
+==================================================================
+[CURRENT FILENUM: 0][CURRENT FILENUM: 7][CURRENT FILENUM: 1][CURRENT FILENUM: 2][CURRENT FILENUM: 3][CURRENT FILENUM: 4][CURRENT FILENUM: 5][CURRENT FILENUM: 6][CURRENT FILENUM: 7][CURRENT FILENUM: 8][CURRENT FILENUM: 9][CURRENT FILENUM: 10][CURRENT FILENUM: 11][CURRENT FILENUM: 15][CURRENT FILENUM: 23][CURRENT FILENUM: 31][CURRENT FILENUM: 12][CURRENT FILENUM: 13][CURRENT FILENUM: 14][CURRENT FILENUM: 15][CURRENT FILENUM: 16][CURRENT FILENUM: 17][CURRENT FILENUM: 18][CURRENT FILENUM: 19][CURRENT FILENUM: 20][CURRENT FILENUM: 21][CURRENT FILENUM: 22][CURRENT FILENUM: 23][CURRENT FILENUM: 24][CURRENT FILENUM: 25][CURRENT FILENUM: 26][CURRENT FILENUM: 27][CURRENT FILENUM: 28][CURRENT FILENUM: 39][CURRENT FILENUM: 47][CURRENT FILENUM: 55][CURRENT FILENUM: 63][CURRENT FILENUM: 29][CURRENT FILENUM: 30][CURRENT FILENUM: 31][CURRENT FILENUM: 32][CURRENT FILENUM: 33][CURRENT FILENUM: 34][CURRENT FILENUM: 6][CURRENT FILENUM: 13][CURRENT FILENUM: 20][CURRENT FILENUM: 27][CURRENT FILENUM: 34][CURRENT FILENUM: 35][CURRENT FILENUM: 36][CURRENT FILENUM: 37][CURRENT FILENUM: 41][CURRENT FILENUM: 48][CURRENT FILENUM: 55][CURRENT FILENUM: 62][CURRENT FILENUM: 38][CURRENT FILENUM: 39][CURRENT FILENUM: 40][CURRENT FILENUM: 41][CURRENT FILENUM: 42][CURRENT FILENUM: 43][CURRENT FILENUM: 44][CURRENT FILENUM: 45][CURRENT FILENUM: 46][CURRENT FILENUM: 47][CURRENT FILENUM: 48][CURRENT FILENUM: 49][CURRENT FILENUM: 50][CURRENT FILENUM: 51][CURRENT FILENUM: 52][CURRENT FILENUM: 53][CURRENT FILENUM: 54][CURRENT FILENUM: 55][CURRENT FILENUM: 56][CURRENT FILENUM: 57][CURRENT FILENUM: 58][CURRENT FILENUM: 59][CURRENT FILENUM: 60][CURRENT FILENUM: 61][CURRENT FILENUM: 62][CURRENT FILENUM: 63]-------------------------- ROUND ROBIN ---------------------------
+Workers: 1  Duplication: 1
+------------------------------------------------------------------
+Create Time:             0
+Iterate Time:            0
+Query Time:              0
+Intersect Time:          1.37154
+Overlap Time:            0
+Touch Time:              0
+Cross Time:              0
+Contain Time:            0
+Equal Time:              0
+Equal Exact (0.3) Time:  0
+Cover Time:              0
+Covered By Time:         0
+------------------------------------------------------------------
+Reduction Time:      0.000107215
+Sequential Time:     22.2787
+Avg Worker Time:     22.2787
+Bottleneck Range:    0
+Min Worker Time:     22.2787
+Max Worker Time:     22.2787
+==================================================================
+-------------------------- ROUND ROBIN ---------------------------
+Workers: 8  Duplication: 1
+------------------------------------------------------------------
+Reduction Time:      2.4455e-05
+Sequential Time:     22.1733
+Avg Worker Time:     2.77166
+Bottleneck Range:    6.5918
+Min Worker Time:     0.901053
+Max Worker Time:     7.49285
+------------------------------------------------------------------
+TOTAL PARALLEL Time: 7.49288
+==================================================================
+-------------------------- ROUND ROBIN ---------------------------
+Workers: 7  Duplication: 1
+------------------------------------------------------------------
+Reduction Time:      3.1118e-05
+Sequential Time:     21.9252
+Avg Worker Time:     3.13218
+Bottleneck Range:    8.80884
+Min Worker Time:     0.608626
+Max Worker Time:     9.41746
+------------------------------------------------------------------
+TOTAL PARALLEL Time: 9.4175
+==================================================================
+
+[CURRENT FILENUM: 8][CURRENT FILENUM: 9][CURRENT FILENUM: 10][CURRENT FILENUM: 11][CURRENT FILENUM: 12][CURRENT FILENUM: 13][CURRENT FILENUM: 14][CURRENT FILENUM: 15][CURRENT FILENUM: 16][CURRENT FILENUM: 17][CURRENT FILENUM: 18][CURRENT FILENUM: 19][CURRENT FILENUM: 20][CURRENT FILENUM: 21][CURRENT FILENUM: 22][CURRENT FILENUM: 23][CURRENT FILENUM: 24][CURRENT FILENUM: 25][CURRENT FILENUM: 26][CURRENT FILENUM: 27][CURRENT FILENUM: 28][CURRENT FILENUM: 29][CURRENT FILENUM: 30][CURRENT FILENUM: 31][CURRENT FILENUM: 32][CURRENT FILENUM: 33][CURRENT FILENUM: 34][CURRENT FILENUM: 35][CURRENT FILENUM: 36][CURRENT FILENUM: 37][CURRENT FILENUM: 38][CURRENT FILENUM: 39][CURRENT FILENUM: 40][CURRENT FILENUM: 41][CURRENT FILENUM: 42][CURRENT FILENUM: 43][CURRENT FILENUM: 44][CURRENT FILENUM: 45][CURRENT FILENUM: 46][CURRENT FILENUM: 47][CURRENT FILENUM: 48][CURRENT FILENUM: 49][CURRENT FILENUM: 50][CURRENT FILENUM: 51][CURRENT FILENUM: 52][CURRENT FILENUM: 53][CURRENT FILENUM: 54][CURRENT FILENUM: 55][CURRENT FILENUM: 56][CURRENT FILENUM: 57][CURRENT FILENUM: 58][CURRENT FILENUM: 59][CURRENT FILENUM: 60][CURRENT FILENUM: 61][CURRENT FILENUM: 62][CURRENT FILENUM: 63][WORKER 1 COMPLETED 12 TASKS]
+[WORKER 4 COMPLETED 14 TASKS]
+[WORKER 6 COMPLETED 3 TASKS]
+[WORKER 7 COMPLETED 5 TASKS]
+[WORKER 3 COMPLETED 6 TASKS]
+[WORKER 2 COMPLETED 15 TASKS]
+[WORKER 5 COMPLETED 8 TASKS]
+------------------------ LOAD-BALANCING --------------------------
+Workers: 8  Duplication: 1
+------------------------------------------------------------------
+Reduction Time:      7.0639e-05
+Sequential Time:     inf
+Avg Worker Time:     inf
+Bottleneck Range:    inf
+Min Worker Time:     1.79769e+308
+Max Worker Time:     inf
+------------------------------------------------------------------
+TOTAL PARALLEL Time: 7.81889
+==================================================================
+--------------------- PARALLELISM REPORT -------------------------
+Sequential Time:                  22.2801
+Round Robin Parallel Time:        7.49288
+     Speedup:                     2.97351
+     Efficiency:                  0.371688
+     Cost:                        59.943
+*Round Robin Parallel-1 Time:     9.4175
+     Speedup:                     2.36582
+     Efficiency:                  0.337974
+     Cost:                        65.9225
+*Load-Balancing Par. Time:        7.81889
+     Bottleneck Speedup (uses *): 1.20446
+     Speedup:                     2.84953
+     Efficiency:                  0.356191
+     Cost:                        62.5511
+==================================================================
+OVERALL TESTS RUNTIME:            47.0097
+==================================================================
+
+
