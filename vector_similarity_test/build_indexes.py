@@ -264,6 +264,10 @@ def test_suite(r=5): # r = number of repeats to get more accurate average timing
     print("Fastest Search:", indexes[fasts_i])
 
 
+
+if __name__ == "__main__":
+    test_suite()
+
 """
 from datasketch import MinHash
 m = MinHash()
