@@ -147,12 +147,12 @@ def test_suite(r=5): # r = number of repeats to get more accurate average timing
     fasts_lsh_nbits = lsh_nbits[fasts_i]
     fasts_lsh_time = lsh_stimes[fasts_i]
 
-    print("LSH recalls:", lsh_results)
+    print("LSH recalls:", np.array(lsh_results))
     print(f"LSH best {recall_str}:", top_lsh_accuracy)
     print("LSH best n_bits:", top_lsh_nbits)
 
-    print(f"LSH build time range: {fastb_lsh_time}-{slowb_lsh_time}, Fastest: {fastb_lsh_nbits}, n_bits")
-    print("LSH search times:", lsh_stimes)
+    print(f"LSH build time range: {fastb_lsh_time}-{slowb_lsh_time}, Fastest: {fastb_lsh_nbits} n_bits")
+    print("LSH search times:", np.array(lsh_stimes))
     print(f"LSH fastest search: {fasts_lsh_nbits} n_bits, Time: {fasts_lsh_time}, Speedup: {bf_stime/fasts_lsh_time}")
 
 
@@ -189,13 +189,13 @@ def test_suite(r=5): # r = number of repeats to get more accurate average timing
     fasts_pq_subq = pq_subquantizers[fasts_i[1]]
     fasts_pq_time = pq_stimes[fasts_i]
 
-    print("PQ recalls:", pq_results)
+    print("PQ recalls:", np.array(pq_results))
     print(f"PQ best {recall_str}:", top_pq_accuracy)
     print("PQ best n_bits:", top_pq_nbits)
     print("PQ best subqantizer:", top_pq_subq)
 
     print(f"PQ build time range: {fastb_pq_time}-{slowb_pq_time}, Fastest: {fastb_pq_nbits} n_bits, {fastb_pq_subq} subquantizers")
-    print("PQ search times:", pq_stimes)
+    print("PQ search times:", np.array(pq_stimes))
     print(f"PQ fastest search: {fasts_pq_nbits} n_bits, {fasts_pq_subq} subquantizers; Time: {fasts_pq_time}, Speedup: {bf_stime/fasts_pq_time}")
 
 
@@ -238,14 +238,14 @@ def test_suite(r=5): # r = number of repeats to get more accurate average timing
     fasts_ivfpq_csize = ivfpq_codesize[fasts_i[2]]
     fasts_ivfpq_time = ivfpq_stimes[fasts_i]
 
-    print("IVFPQ recalls:", ivfpq_results)
+    print("IVFPQ recalls:", np.array(ivfpq_results))
     print(f"IVFPQ best {recall_str}:", top_ivfpq_accuracy)
     print("IVFPQ best n_bits:", top_ivfpq_nbits)
     print("IVFPQ best ncentroids:", top_ivfpq_ncentr)
     print("IVFPQ best code_size:", top_ivfpq_csize)
 
     print(f"IVFPQ build time range: {fastb_ivfpq_time}-{slowb_ivfpq_time}, Fastest: {fastb_ivfpq_nbits} n_bits, {fastb_ivfpq_ncentr} ncentroids, {fastb_ivfpq_csize} codesize")
-    print("IVFPQ search times:", ivfpq_stimes)
+    print("IVFPQ search times:", np.array(ivfpq_stimes))
     print(f"IVFPQ fastest search: {fasts_ivfpq_nbits} n_bits, {fasts_ivfpq_ncentr} ncentroids, {fasts_ivfpq_csize} codesize; Time: {fasts_ivfpq_time}, Speedup: {bf_stime/fasts_ivfpq_time}")
 
 
