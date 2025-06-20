@@ -167,6 +167,8 @@ def test_suite(r=5): # r = number of repeats to get more accurate average timing
     pq_stimes = []
     for n in pq_nbits:
         pq_results.append([])
+        pq_btimes.append([])
+        pq_stimes.append([])
         print("--- PQ n_bits:", n)
         for m in pq_subquantizers:
             print("--- --- PQ Subquantizers:", m)
@@ -213,9 +215,13 @@ def test_suite(r=5): # r = number of repeats to get more accurate average timing
     ivfpq_stimes = []
     for n in pq_nbits:
         ivfpq_results.append([])
+        ivfpq_btimes.append([])
+        ivfpq_stimes.append([])
         print("--- IVF PQ n_bits:", n)
         for m in ivfpq_ncentroids:
             ivfpq_results[-1].append([])
+            ivfpq_btimes[-1].append([])
+            ivfpq_stimes[-1].append([])
             print("--- --- IVF PQ ncentroids:", m)
             for p in ivfpq_codesize:
                 print("--- --- --- IVF PQ codesize:", p)
