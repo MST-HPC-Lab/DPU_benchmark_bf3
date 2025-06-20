@@ -173,9 +173,9 @@ def test_suite(r=5): # r = number of repeats to get more accurate average timing
         for m in pq_subquantizers:
             print("--- --- PQ Subquantizers:", m)
             # pq_build(m, n)
-            pq_btimes.append(np.mean(repeat(lambda: pq_build(m, n),  number=1, repeat=r)))
+            pq_btimes[-1].append(np.mean(repeat(lambda: pq_build(m, n),  number=1, repeat=r)))
             pq_results[-1].append(search(PQ, k))
-            pq_stimes.append(np.mean(repeat(lambda: search(PQ, k, measure_accuracy=False),  number=1, repeat=r)))
+            pq_stimes[-1].append(np.mean(repeat(lambda: search(PQ, k, measure_accuracy=False),  number=1, repeat=r)))
     pq_results = np.array(pq_results)
     top_i = np.argmax(pq_results)
     top_i = np.unravel_index(top_i, pq_results.shape)
@@ -226,9 +226,9 @@ def test_suite(r=5): # r = number of repeats to get more accurate average timing
             for p in ivfpq_codesize:
                 print("--- --- --- IVF PQ codesize:", p)
                 # ivfpq_build(m, p, n)
-                ivfpq_btimes.append(np.mean(repeat(lambda: ivfpq_build(m, p, n),  number=1, repeat=r)))
+                ivfpq_btimes[-1][-1].append(np.mean(repeat(lambda: ivfpq_build(m, p, n),  number=1, repeat=r)))
                 ivfpq_results[-1][-1].append(search(IVFPQ, k))
-                ivfpq_stimes.append(np.mean(repeat(lambda: search(IVFPQ, k, measure_accuracy=False),  number=1, repeat=r)))
+                ivfpq_stimes[-1][-1].append(np.mean(repeat(lambda: search(IVFPQ, k, measure_accuracy=False),  number=1, repeat=r)))
     ivfpq_results = np.array(ivfpq_results)
     top_i = np.argmax(ivfpq_results)
     top_i = np.unravel_index(top_i, ivfpq_results.shape)
