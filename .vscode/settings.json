@@ -2,5 +2,6 @@
     "files.associations": {
         "xstring": "cpp",
         "string": "cpp"
-    }
+    },
+    "cmake.sourceDirectory": "C:/Users/Nathan/Documents/Puri Research/DPU_benchmark_bf3/derda_grpc_full"
 }
