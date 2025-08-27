@@ -43,8 +43,10 @@ def brute_force_build():
     FL2 = faiss.IndexFlatL2(d)
     FL2.add(x_train)
 
+truth_I = None
+truth_D = None
 def brute_force_search(k=k, measure_accuracy=False):
-    global truth_D, truth_I
+    global FL2, truth_D, truth_I
     truth_D, truth_I = FL2.search(x_query, k) # D: Distances, I: Indices
     if measure_accuracy:
         return 1.0 # Accuracy is perfect because we're treating this as ground truth
@@ -68,6 +70,7 @@ ivfpq_codesize = 40
 # LSH Index
 LSH = None
 def lsh_build(n_bits):
+    global LSH;
     LSH = faiss.IndexLSH (d, n_bits)
     # LSH.train (x_train) # LSH Technically doesn't require training
     LSH.add (x_train) # NOTE: Can add other indexed data than what it's trained on
@@ -75,6 +78,7 @@ def lsh_build(n_bits):
 # PQ Index
 PQ = None
 def pq_build(subquantizers, n_bits):
+    global PQ;
     PQ = faiss.IndexPQ(d, subquantizers, n_bits)
     PQ.train(x_train)
     PQ.add(x_train)
@@ -82,6 +86,7 @@ def pq_build(subquantizers, n_bits):
 # IVF PQ Index
 IVFPQ = None
 def ivfpq_build(ncentroids, code_size, n_bits):
+    global IVFPQ;
     # ncentroids = Number of Voronoi cells
     # code_size = Number of sub-vectors (dimension partitions) for product quantization
     coarse_quantizer = faiss.IndexFlatL2(d)
