@@ -108,7 +108,7 @@ def test_suite(r=1): # r = number of repeats to get more accurate average timing
 
     # LSH -------------------------------------
     print("---------------------- LSH ----------------------")
-    global lsh_nbits;
+    global LSH, lsh_nbits;
     print("LSH n_bits:", lsh_nbits)
     lsh_btime = np.mean(repeat(lambda: lsh_build(lsh_nbits),  number=1, repeat=r))
     lsh_result = search(LSH, k)
@@ -123,7 +123,7 @@ def test_suite(r=1): # r = number of repeats to get more accurate average timing
 
     # PQ -------------------------------------
     print("---------------------- PQ ----------------------")
-    global pq_nbits, pq_subquantizers;
+    global PQ, pq_nbits, pq_subquantizers;
     print("PQ n_bits:", pq_nbits)
     print("PQ Subquantizers:", pq_subquantizers)
     pq_btime = np.mean(repeat(lambda: pq_build(pq_subquantizers, pq_nbits),  number=1, repeat=r))
@@ -139,7 +139,7 @@ def test_suite(r=1): # r = number of repeats to get more accurate average timing
 
     # IVF PQ -------------------------------------
     print("---------------------- IVF PQ ----------------------")
-    global ivfpq_ncentroids, ivfpq_codesize;
+    global IVFPQ, ivfpq_ncentroids, ivfpq_codesize;
     print("IVF PQ n_bits:", pq_nbits)
     print("IVF PQ ncentroids:", ivfpq_ncentroids)
     print("IVF PQ codesize:", ivfpq_codesize)
