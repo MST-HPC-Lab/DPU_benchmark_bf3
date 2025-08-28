@@ -1,0 +1,33 @@
+(All times averaged out of 1 repeats)
+---------------------- Brute Force ----------------------
+Brute Force Accuracy: 1.0
+Brute Force Build  Time: 0.34396840492263436
+Brute Force Search Time: 2.4667546518612653
+---------------------- LSH ----------------------
+LSH n_bits: 1600
+LSH recall: 1.0
+LSH build time: 1.804864268982783
+LSH search time: 1.93578220019117
+LSH search Speedup compared to brute force: 1.2742934879851973
+LSH build  Speedup compared to brute force: 0.19057854423396287
+---------------------- PQ ----------------------
+PQ n_bits: 12
+PQ Subquantizers: 40
+PQ recall: 1.0
+PQ build time: 120.70471298904158
+PQ search time: 58.85539365909062
+PQ search Speedup: 0.04191212560992289
+PQ build  Speedup: 0.002849668388291203
+---------------------- IVF PQ ----------------------
+IVF PQ n_bits: 12
+IVF PQ ncentroids: 8
+IVF PQ codesize: 40
+IVFPQ recall: 1.0
+IVFPQ build time: 123.92576851998456
+IVFPQ search time: 36.044930034084246
+IVFPQ search Speedup: 0.06843555111713884
+IVFPQ build  Speedup: 0.002775600337448504
+---------------------- ALL ----------------------
+Most Accurate: LSH
+Fastest Build: LSH
+Fastest Search: LSH
