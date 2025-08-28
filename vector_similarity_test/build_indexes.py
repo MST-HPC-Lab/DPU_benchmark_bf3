@@ -8,7 +8,7 @@ from timeit import repeat
 # colnames = ["VOCAB"] + [str(i) for i in range(200)]
 df = pd.read_csv("../Data/glove.6B.200d.txt", sep=" ", quoting=3, header=None)
 d = 200
-k = 10
+k = 1
 
 # Split into vocab column and data
 vocab = df.iloc[:,0]
