@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-# DATA : All data comes from bf3host_log_k10_multi.txt
+# DATA : All data comes from bf3host_log_k10_multi.txt, run on glove.6B.200d.txt
 host_LSH_k10_recall   =   np.array([0.1814, 0.2716, 0.3422, 0.4014, 0.4389])
 host_LSH_k10_time     =   np.array([0.09369638, 0.07801421, 0.10790243, 0.16929569, 0.24661489]) # All these are Search times, not build
 
@@ -40,7 +40,7 @@ host_IVFPQ_k10_time   = np.array([0.05645957, 0.06282316, 0.12887639, 0.13357753
 #   HOWEVER, instead we will use queries per second (1000 / times)
 
 # GRAPHS :
-plt.title("Time Cost of Recall Across Methods (varying parameters)")
+plt.title("Time Cost of Recall Across Methods (Host; varying parameters)")
 plt.grid(color='0.8')
 # plt.scatter(host_IVFPQ_k10_recall, host_IVFPQ_k10_time, color='orange')
 # plt.scatter(host_PQ_k10_recall, host_PQ_k10_time, color='teal')
@@ -58,14 +58,14 @@ plt.savefig("results/recall_vs_speed.png")
 plt.close()
 
 # Logarithmic Graph:
-plt.title("Time Cost of Recall Across Methods (varying parameters)")
+plt.title("Time Cost of Recall Across Methods (Host; varying parameters)")
 plt.grid(color='0.8')
 plt.loglog(host_IVFPQ_k10_recall, 1000/host_IVFPQ_k10_time, 'o', color='orange')
 plt.loglog(host_PQ_k10_recall, 1000/host_PQ_k10_time, 'o', color='teal')
 plt.loglog(host_LSH_k10_recall, 1000/host_LSH_k10_time, 'o', color='purple')
 plt.ylabel("Queries per Second (1/s)")
 plt.xlabel("10-Recall@10")
-plt.xlim(0, 1.1)
+# plt.xlim(0, 1.1)
 plt.legend(["IVFPQ", "PQ", "LSH"])
 # plt.show()#block=False)
 plt.savefig("results/recall_vs_speed_logarithmic.png")

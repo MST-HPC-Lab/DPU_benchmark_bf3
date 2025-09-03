@@ -239,8 +239,8 @@ if __name__ == "__main__":
     train_i = [i for i in range(400000) if (i+199)%200] # len is ~398000
     x_query = df.iloc[test_i]
     x_train = df.iloc[train_i]
-    print("Train Size:", len(test_i))
-    print("Test  Size:", len(train_i))
+    print("Train Size:", len(train_i))
+    print("Test  Size:", len(test_i))
 
     # # Presets based on 200 dimensions and best results with k=10
     # lsh_nbits = 8*d
@@ -265,7 +265,7 @@ if __name__ == "__main__":
     results = []
     for k in [1, 2, 3, 5, 7, 10, 25, 50, 75, 100]:
         print(f"Searching with k={k}...\r", end='')
-        results.append(test_search(k=10, r=3, verbose=False))
+        results.append(test_search(k=k, r=3, verbose=False))
     bf_time, lsh_recall, lsh_time, pq_recall, pq_time, ivfpq_recall, ivfpq_time = zip(*results)
     print("Brute Force Time:", bf_time)
     print("LSH Recall:", lsh_recall)
