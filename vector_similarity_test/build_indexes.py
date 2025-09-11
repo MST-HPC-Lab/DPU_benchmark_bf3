@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import faiss
 from timeit import repeat
-
+import hnswlib
 
 
 # Recall Measurement functions
@@ -43,6 +43,15 @@ def search(index, k, measure_accuracy=True):
     if measure_accuracy:
         global truth_I;
         return batch_recall(I, truth_I, k)
+#hnsw search
+def hnsw_search(k, measure_accuracy=True):
+    global HNSW, truth_I, x_query
+    labels, distances = HNSW.knn_query(x_query, k=k)
+
+    if measure_accuracy:
+        return batch_recall(labels, truth_I, k)
+    
+    return labels, distances
 
 #------------------------------------------
 
@@ -73,6 +82,15 @@ def ivfpq_build(ncentroids, code_size, n_bits):
     IVFPQ.train(x_train)
     IVFPQ.add(x_train)
     IVFPQ.nprobe = 5
+
+# HNSW Index
+HNSW = None
+def hnsw_build(data, dim, ef_construction=200, M=16, ef_search=100):
+    global HNSW
+    HNSW = hnswlib.Index(space='l2', dim=dim)
+    HNSW.init_index(max_elements=data.shape[0], ef_construction=ef_construction, M=M)
+    HNSW.add_items(data)
+    HNSW.set_ef(ef_search)
 
 #------------------------------------------
 
@@ -162,7 +180,7 @@ def test_build():
     lsh_build(lsh_nbits)
     pq_build(pq_subquantizers, pq_nbits)
     ivfpq_build(ivfpq_ncentroids, ivfpq_codesize, pq_nbits)
-
+    hnsw_build(x_train.to_numpy(), d)
 
 # To time the search only
 def test_search(k=1, r=1, verbose=True):
@@ -215,7 +233,16 @@ def test_search(k=1, r=1, verbose=True):
     if verbose: print("IVFPQ search time:", ivfpq_stime)
     if verbose: print(f"IVFPQ search Speedup: {bf_stime/ivfpq_stime}")
 
-    return [bf_stime, lsh_result, lsh_stime, pq_result, pq_stime, ivfpq_result, ivfpq_stime]
+     #HNSW
+    if verbose: print("---------------------- HNSW ----------------------")
+    hnsw_result = hnsw_search(k)
+    hnsw_stime = np.mean(repeat(lambda: hnsw_search(k, measure_accuracy=False), number=1, repeat=r))
+
+    if verbose: print("HNSW recall:", hnsw_result)
+    if verbose: print("HNSW avg search time:", hnsw_stime)
+    if verbose: print(f"HNSW search Speedup: {bf_stime/hnsw_stime}")
+
+    return [bf_stime, lsh_result, lsh_stime, pq_result, pq_stime, ivfpq_result, ivfpq_stime, hnsw_result, hnsw_stime]
 
 
 #===============================================================================
@@ -266,7 +293,7 @@ if __name__ == "__main__":
     for k in [1, 2, 3, 5, 7, 10, 25, 50, 75, 100]:
         print(f"Searching with k={k}...\r", end='')
         results.append(test_search(k=k, r=3, verbose=False))
-    bf_time, lsh_recall, lsh_time, pq_recall, pq_time, ivfpq_recall, ivfpq_time = zip(*results)
+    bf_time, lsh_recall, lsh_time, pq_recall, pq_time, ivfpq_recall, ivfpq_time, hnsw_recall, hnsw_time = zip(*results)
     print("Brute Force Time:", bf_time)
     print("LSH Recall:", lsh_recall)
     print("LSH Time:", lsh_time)
@@ -274,6 +301,8 @@ if __name__ == "__main__":
     print("PQ Time:", pq_time)
     print("IVFPQ Recall:", ivfpq_recall)
     print("IVFPQ Time:", ivfpq_time)
+    print("HNSW Recall:", hnsw_recall)
+    print("HNSW Time:", hnsw_time)
 
 """
 from datasketch import MinHash
