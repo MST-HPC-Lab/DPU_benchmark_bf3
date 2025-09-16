@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 import faiss
 from timeit import repeat
-
+import hnswlib
 
 # Load Data File
 # colnames = ["VOCAB"] + [str(i) for i in range(200)]
@@ -86,6 +86,25 @@ def ivfpq_build(ncentroids=40, code_size=8, n_bits=8):
     IVFPQ.train(x_train)
     IVFPQ.add(x_train)
     IVFPQ.nprobe = 5
+
+# HNSW Index
+HNSW = None
+def hnsw_build(data, dim, ef_construction=200, M=16, ef_search=100):
+    global HNSW
+    # hnswlib expects NumPy; convert on the fly to keep your current style
+    arr = data.to_numpy()
+    HNSW = hnswlib.Index(space='l2', dim=dim)
+    HNSW.init_index(max_elements=arr.shape[0], ef_construction=ef_construction, M=M)
+    HNSW.add_items(arr)
+    HNSW.set_ef(ef_search)
+
+def hnsw_search(k=k, measure_accuracy=True):
+    global HNSW, truth_I, x_query
+    labels, distances = HNSW.knn_query(x_query.to_numpy(), k=k)
+    if measure_accuracy:
+        return batch_recall(labels, truth_I, k)
+    return labels, distances
+
 
 #------------------------------------------
 
@@ -264,10 +283,24 @@ def test_suite(r=5): # r = number of repeats to get more accurate average timing
     print("IVFPQ search times:", ivfpq_stimes)
     print(f"IVFPQ fastest search: {fasts_ivfpq_nbits} n_bits, {fasts_ivfpq_ncentr} ncentroids, {fasts_ivfpq_csize} codesize; Time: {fasts_ivfpq_time}, Speedup: {bf_stime/fasts_ivfpq_time}")
 
+    # HNSW -------------------------------------
+    print("---------------------- HNSW ----------------------")
+    # time the build
+    hnsw_btime = np.mean(repeat(lambda: hnsw_build(x_train, d, ef_construction=200, M=16, ef_search=100), number=1, repeat=r))
+    # accuracy at current k
+    hnsw_result = hnsw_search(k)
+    # time the search
+    hnsw_stime = np.mean(repeat(lambda: hnsw_search(k, measure_accuracy=False), number=1, repeat=r))
+
+    print("HNSW recall:", hnsw_result)
+    print(f"HNSW build time: {hnsw_btime}")
+    print("HNSW search time:", hnsw_stime)
+    print(f"HNSW search Speedup: {bf_stime/hnsw_stime}")
+
 
     # All -------------------------------------
     print("---------------------- ALL ----------------------")
-    indexes = ["LSH", "PQ", "IVFPQ"]
+    indexes = ["LSH", "PQ", "IVFPQ", "HNSW"]
     best_times = [fasts_lsh_time, fasts_pq_time, fasts_ivfpq_time]
     best_timeb = [fastb_lsh_time, fastb_pq_time, fastb_ivfpq_time]
     best_accuracy = [top_lsh_accuracy, top_pq_accuracy, top_ivfpq_accuracy]
