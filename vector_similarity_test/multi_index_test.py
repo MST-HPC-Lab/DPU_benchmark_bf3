@@ -23,6 +23,9 @@ x_train = df.iloc[train_i]
 x_train_np = np.ascontiguousarray(x_train.to_numpy(dtype=np.float32))
 x_query_np = np.ascontiguousarray(x_query.to_numpy(dtype=np.float32))
 
+x_train = x_train_np
+x_query = x_query_np
+
 
 # Recall Measurement functions
 truth_D, truth_I = None, None
@@ -125,6 +128,9 @@ def hnsw_search(k=k, measure_accuracy=True):
 #top_ivfpq_ncentr = None
 #top_ivfpq_csize = None
 
+hnsw_M_list = [8,16,32] # Can add 4,12, 24, 48 maybe even 64 (higher M value means higher recall and faster query but takes more RAM and longer to build
+hnsw_efc_list = [100, 200, 400] # Can add 50, 300 and 800 ( higher ef consturction value means better graph quality but slower and takes more memory)
+hnsw_efs_list = [k, max(2*k, 50), 100, 200, 400] # Can add 20, 40, 60, 150, 300 , 600 and 800 ( this would mean higher recall but slower queries)
 def test_suite(r=5): # r = number of repeats to get more accurate average timings
    # global top_lsh_nbits;
    # global top_pq_nbits;
@@ -288,17 +294,88 @@ def test_suite(r=5): # r = number of repeats to get more accurate average timing
 
     # HNSW -------------------------------------
     print("---------------------- HNSW ----------------------")
-    # time the build
-    hnsw_btime = np.mean(repeat(lambda: hnsw_build(x_train, d, ef_construction=200, M=16, ef_search=100), number=1, repeat=r))
-    # accuracy at current k
-    hnsw_result = hnsw_search(k)
-    # time the search
-    hnsw_stime = np.mean(repeat(lambda: hnsw_search(k, measure_accuracy=False), number=1, repeat=r))
+    hnsw_recalls = []
+    hnsw_btimes  = []
+    hnsw_stimes  = []
 
-    print("HNSW recall:", hnsw_result)
-    print(f"HNSW build time: {hnsw_btime}")
-    print("HNSW search time:", hnsw_stime)
-    print(f"HNSW search Speedup: {bf_stime/hnsw_stime}")
+    for M in hnsw_M_list:
+        hnsw_recalls.append([])
+        hnsw_btimes.append([])
+        hnsw_stimes.append([])
+        print(f"--- HNSW M: {M}")
+        for efc in hnsw_efc_list:
+            hnsw_recalls[-1].append([])
+            hnsw_stimes[-1].append([])
+
+            # time the build (avg over r)
+            bt = np.mean(repeat(
+                lambda: hnsw_build(x_train, d, ef_construction=efc, M=M, ef_search=max(k, 100)),
+                number=1, repeat=r
+            ))
+            hnsw_btimes[-1].append(bt)
+            print(f"--- --- ef_construction: {efc}, build_time: {bt:.4f}s")
+
+            # build once for this (M, efc), then sweep ef_search
+            hnsw_build(x_train, d, ef_construction=efc, M=M, ef_search=max(k, 100))
+
+            row_recalls = []
+            row_stimes  = []
+            for efs in hnsw_efs_list:
+                efs_eff = max(efs, k)  # ensure ef_search ≥ k
+                HNSW.set_ef(efs_eff)
+
+                # recall vs brute-force truth
+                rc = hnsw_search(k)
+
+                # pure search timing
+                st = np.mean(repeat(lambda: hnsw_search(k, measure_accuracy=False),
+                                    number=1, repeat=r))
+
+                print(f"--- --- --- ef_search: {efs_eff}, recall: {rc:.4f}, search_time: {st:.6f}s")
+                row_recalls.append(rc)
+                row_stimes.append(st)
+
+            hnsw_recalls[-1][-1] = row_recalls
+            hnsw_stimes[-1][-1]  = row_stimes
+
+    hnsw_recalls = np.array(hnsw_recalls, dtype=float)
+    hnsw_btimes  = np.array(hnsw_btimes,  dtype=float)
+    hnsw_stimes  = np.array(hnsw_stimes,  dtype=float)
+
+    # best recall
+    best_i = np.unravel_index(np.argmax(hnsw_recalls), hnsw_recalls.shape)
+    top_hnsw_M   = hnsw_M_list[best_i[0]]
+    top_hnsw_efc = hnsw_efc_list[best_i[1]]
+    top_hnsw_efs = hnsw_efs_list[best_i[2]]
+    top_hnsw_acc = hnsw_recalls[best_i]
+
+    # fastest build
+    fastb_i = np.unravel_index(np.argmin(hnsw_btimes), hnsw_btimes.shape)
+    fastb_hnsw_M   = hnsw_M_list[fastb_i[0]]
+    fastb_hnsw_efc = hnsw_efc_list[fastb_i[1]]
+    fastb_hnsw_time = hnsw_btimes[fastb_i]
+    slowb_hnsw_time = np.max(hnsw_btimes)
+
+    # fastest search
+    fasts_i = np.unravel_index(np.argmin(hnsw_stimes), hnsw_stimes.shape)
+    fasts_hnsw_M   = hnsw_M_list[fasts_i[0]]
+    fasts_hnsw_efc = hnsw_efc_list[fasts_i[1]]
+    fasts_hnsw_efs = hnsw_efs_list[fasts_i[2]]
+    fasts_hnsw_time = hnsw_stimes[fasts_i]
+    fasts_hnsw_speedup = bf_stime / fasts_hnsw_time
+
+    print("HNSW ef_search values:", hnsw_efs_list)
+    print("HNSW build times (s):")
+    print(hnsw_btimes)
+    print("HNSW recalls:")
+    print(hnsw_recalls)
+    print("HNSW search times (s):")
+    print(hnsw_stimes)
+
+    print(f"HNSW best {recall_str}: {top_hnsw_acc}  (M={top_hnsw_M}, ef_construction={top_hnsw_efc}, ef_search={top_hnsw_efs})")
+    print(f"HNSW build time range: {fastb_hnsw_time}-{slowb_hnsw_time}, Fastest build: M={fastb_hnsw_M}, ef_construction={fastb_hnsw_efc}")
+    print(f"HNSW fastest search: M={fasts_hnsw_M}, ef_construction={fasts_hnsw_efc}, ef_search={fasts_hnsw_efs}; "
+          f"Time: {fasts_hnsw_time}, Speedup vs BF: {fasts_hnsw_speedup}")
 
 
     # All -------------------------------------
