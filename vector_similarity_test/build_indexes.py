@@ -251,8 +251,8 @@ def test_search(k=1, r=1, verbose=True):
 if __name__ == "__main__":
     # Load Data File
     # colnames = ["VOCAB"] + [str(i) for i in range(200)]
-    filename = "../Data/glove.6B.200d.txt"
-    df = pd.read_csv(filename, sep=" ", quoting=3, header=None)
+    filename = "../Data/cc.en.300.vec" # glove: ../Data/glove.6b.200d.txt
+    df = pd.read_csv(filename, sep=" ", quoting=3, skiprows=1, header=None) #added skiprow so that it skips the header row in fast text file
 
     # Split into vocab column and data
     vocab = df.iloc[:,0]
@@ -262,8 +262,8 @@ if __name__ == "__main__":
     print("Dimensions:", d)
 
     # Testing vs. Training Split
-    test_i = [i for i in range(199,400000,200)] # len is ~2000
-    train_i = [i for i in range(400000) if (i+199)%200] # len is ~398000
+    test_i = [i for i in range(199,2000000,200)] # len is ~2000, len of fastext vocab 2 million
+    train_i = [i for i in range(2000000) if (i+199)%200] # len is ~398000
     x_query = df.iloc[test_i]
     x_train = df.iloc[train_i]
     print("Train Size:", len(train_i))
