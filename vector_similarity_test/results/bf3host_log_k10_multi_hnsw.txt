@@ -1,0 +1,95 @@
+(All times averaged out of 5 repeats)
+---------------------- Brute Force ----------------------
+Brute Force Accuracy: 1.0
+Brute Force Build  Time: 0.0745053555816412
+Brute Force Search Time: 0.241687276866287
+---------------------- HNSW ----------------------
+--- HNSW M: 8
+--- --- ef_construction: 100, build_time: 10.9606s
+--- --- --- ef_search: 10, recall: 0.3393, search_time: 0.004405s
+--- --- --- ef_search: 50, recall: 0.4700, search_time: 0.007302s
+--- --- --- ef_search: 100, recall: 0.5238, search_time: 0.011043s
+--- --- --- ef_search: 200, recall: 0.5611, search_time: 0.017876s
+--- --- --- ef_search: 400, recall: 0.5973, search_time: 0.031692s
+--- --- ef_construction: 200, build_time: 6.4393s
+--- --- --- ef_search: 10, recall: 0.3481, search_time: 0.002610s
+--- --- --- ef_search: 50, recall: 0.5100, search_time: 0.005227s
+--- --- --- ef_search: 100, recall: 0.5755, search_time: 0.008451s
+--- --- --- ef_search: 200, recall: 0.6238, search_time: 0.014455s
+--- --- --- ef_search: 400, recall: 0.6682, search_time: 0.027087s
+--- --- ef_construction: 400, build_time: 11.2495s
+--- --- --- ef_search: 10, recall: 0.3756, search_time: 0.002817s
+--- --- --- ef_search: 50, recall: 0.5427, search_time: 0.005793s
+--- --- --- ef_search: 100, recall: 0.6182, search_time: 0.009846s
+--- --- --- ef_search: 200, recall: 0.6811, search_time: 0.017552s
+--- --- --- ef_search: 400, recall: 0.7238, search_time: 0.031320s
+--- HNSW M: 16
+--- --- ef_construction: 100, build_time: 29.8994s
+--- --- --- ef_search: 10, recall: 0.3879, search_time: 0.005347s
+--- --- --- ef_search: 50, recall: 0.5414, search_time: 0.010849s
+--- --- --- ef_search: 100, recall: 0.5877, search_time: 0.015201s
+--- --- --- ef_search: 200, recall: 0.6317, search_time: 0.024679s
+--- --- --- ef_search: 400, recall: 0.6654, search_time: 0.043348s
+--- --- ef_construction: 200, build_time: 22.4618s
+--- --- --- ef_search: 10, recall: 0.4159, search_time: 0.004127s
+--- --- --- ef_search: 50, recall: 0.5862, search_time: 0.009497s
+--- --- --- ef_search: 100, recall: 0.6416, search_time: 0.015642s
+--- --- --- ef_search: 200, recall: 0.6881, search_time: 0.026321s
+--- --- --- ef_search: 400, recall: 0.7232, search_time: 0.047196s
+--- --- ef_construction: 400, build_time: 18.2248s
+--- --- --- ef_search: 10, recall: 0.4344, search_time: 0.003631s
+--- --- --- ef_search: 50, recall: 0.6317, search_time: 0.009054s
+--- --- --- ef_search: 100, recall: 0.6943, search_time: 0.015768s
+--- --- --- ef_search: 200, recall: 0.7395, search_time: 0.027112s
+--- --- --- ef_search: 400, recall: 0.7736, search_time: 0.051340s
+--- HNSW M: 32
+--- --- ef_construction: 100, build_time: 66.5295s
+--- --- --- ef_search: 10, recall: 0.4311, search_time: 0.007496s
+--- --- --- ef_search: 50, recall: 0.5771, search_time: 0.013101s
+--- --- --- ef_search: 100, recall: 0.6285, search_time: 0.017290s
+--- --- --- ef_search: 200, recall: 0.6724, search_time: 0.028967s
+--- --- --- ef_search: 400, recall: 0.7027, search_time: 0.051407s
+--- --- ef_construction: 200, build_time: 66.5090s
+--- --- --- ef_search: 10, recall: 0.4704, search_time: 0.007427s
+--- --- --- ef_search: 50, recall: 0.6350, search_time: 0.015117s
+--- --- --- ef_search: 100, recall: 0.6847, search_time: 0.022219s
+--- --- --- ef_search: 200, recall: 0.7278, search_time: 0.037979s
+--- --- --- ef_search: 400, recall: 0.7567, search_time: 0.069635s
+--- --- ef_construction: 400, build_time: 57.4890s
+--- --- --- ef_search: 10, recall: 0.5010, search_time: 0.006128s
+--- --- --- ef_search: 50, recall: 0.6686, search_time: 0.015434s
+--- --- --- ef_search: 100, recall: 0.7225, search_time: 0.025600s
+--- --- --- ef_search: 200, recall: 0.7690, search_time: 0.043484s
+--- --- --- ef_search: 400, recall: 0.7974, search_time: 0.077461s
+HNSW ef_search values: [10, 50, 100, 200, 400]
+HNSW build times (s):
+[[10.9605697   6.43934994 11.24946278]
+ [29.8994257  22.46181382 18.22480345]
+ [66.52952616 66.50903831 57.48904499]]
+HNSW recalls:
+[[[0.3393 0.47   0.5238 0.5611 0.5973]
+  [0.3481 0.51   0.5755 0.6238 0.6682]
+  [0.3756 0.5427 0.6182 0.6811 0.7238]]
+
+ [[0.3879 0.5414 0.5877 0.6317 0.6654]
+  [0.4159 0.5862 0.6416 0.6881 0.7232]
+  [0.4344 0.6317 0.6943 0.7395 0.7736]]
+
+ [[0.4311 0.5771 0.6285 0.6724 0.7027]
+  [0.4704 0.635  0.6847 0.7278 0.7567]
+  [0.501  0.6686 0.7225 0.769  0.7974]]]
+HNSW search times (s):
+[[[0.00440523 0.00730198 0.01104281 0.01787551 0.03169211]
+  [0.00261001 0.0052271  0.00845109 0.01445478 0.02708711]
+  [0.0028165  0.00579303 0.00984604 0.01755209 0.03132006]]
+
+ [[0.00534694 0.01084924 0.01520071 0.02467889 0.04334835]
+  [0.00412655 0.00949688 0.01564161 0.02632121 0.04719561]
+  [0.00363066 0.00905407 0.01576778 0.0271121  0.05134012]]
+
+ [[0.00749607 0.01310064 0.01729034 0.02896699 0.05140728]
+  [0.00742654 0.01511715 0.02221897 0.03797912 0.06963505]
+  [0.00612769 0.01543398 0.02560011 0.0434842  0.0774608 ]]]
+HNSW best 10-recall@10: 0.7974  (M=32, ef_construction=400, ef_search=400)
+HNSW build time range: 6.439349942468107-66.52952616261318, Fastest build: M=8, ef_construction=200
+HNSW fastest search: M=8, ef_construction=200, ef_search=10; Time: 0.0026100070215761663, Speedup vs BF: 92.60024010216402
