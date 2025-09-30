@@ -251,7 +251,7 @@ def test_search(k=1, r=1, verbose=True):
 if __name__ == "__main__":
     # Load Data File
     # colnames = ["VOCAB"] + [str(i) for i in range(200)]
-    filename = "../Data/glove.6b.200d.txt" # ../Data/cc.en.300.vec
+    filename = "../Data/glove.6B.200d.txt" # ../Data/cc.en.300.vec
     df = pd.read_csv(filename, sep=" ", quoting=3, header=None)
     # df = pd.read_csv(filename, sep=" ", quoting=3, skiprows=1, header=None) #added skiprow so that it skips the header row in fast text file
 
