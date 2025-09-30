@@ -180,7 +180,7 @@ def test_build():
     lsh_build(lsh_nbits)
     pq_build(pq_subquantizers, pq_nbits)
     ivfpq_build(ivfpq_ncentroids, ivfpq_codesize, pq_nbits)
-    hnsw_build(x_train.to_numpy(), d)
+    hnsw_build(x_train.to_numpy(), d, HNSW_M, HNSW_efconstruction, HNSW_efsearch)
 
 # To time the search only
 def test_search(k=1, r=1, verbose=True):
