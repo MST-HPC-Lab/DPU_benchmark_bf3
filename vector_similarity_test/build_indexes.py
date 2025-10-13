@@ -281,13 +281,13 @@ if __name__ == "__main__":
 
     # Presets based on 200 dimensions and more efficient results, fastest that is still perfect with k=1, though it ends up being poor with k=10
     lsh_nbits = 1600 # 2 * d
-    pq_nbits = 12
+    pq_nbits = 8
     pq_subquantizers = 40
     ivfpq_ncentroids = 5
     ivfpq_codesize = 40
     HNSW_M = 32
     HNSW_efconstruction = 256
-    HNSW_efsearch = 256
+    HNSW_efsearch = 128
 
     # Run Full Test
     # test_suite(k=1, r=1)
