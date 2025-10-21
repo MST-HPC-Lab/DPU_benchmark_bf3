@@ -251,8 +251,8 @@ def test_search(k=1, r=1, verbose=True):
 if __name__ == "__main__":
     # Load Data File
     # colnames = ["VOCAB"] + [str(i) for i in range(200)]
-    filename = "../Data/glove.6B.200d.txt" # ../Data/cc.en.300.vec
-    df = pd.read_csv(filename, sep=" ", quoting=3, header=None)
+    filename = "../Data/cc.en.300.vec" # ../Data/glove.6b.200d.txt
+    df = pd.read_csv(filename, sep=" ", quoting=3, skiprows=1,  header=None)
     # df = pd.read_csv(filename, sep=" ", quoting=3, skiprows=1, header=None) #added skiprow so that it skips the header row in fast text file
 
     # Split into vocab column and data
@@ -262,11 +262,11 @@ if __name__ == "__main__":
     print(f'File: "{filename}"')
     print("Dimensions:", d)
 
-    # Testing vs. Training Split
-    test_i = [i for i in range(399,400000,400)]
-    # test_i = [i for i in range(199,2000000,200)]# len is ~2000, len of fastext vocab 2 million
-    train_i = [i for i in range(400000) if (i+399)%400]
-    # train_i = [i for i in range(2000000) if (i+199)%200]# len is ~398000
+   # Testing vs. Training Split
+   #test_i = [i for i in range(399,400000,400)]
+    test_i = [i for i in range(199,2000000,200)]# len is ~2000, len of fastext vocab 2 million
+   # train_i = [i for i in range(400000) if (i+399)%400]
+    train_i = [i for i in range(2000000) if (i+199)%200]# len is ~398000
     x_query = df.iloc[test_i]
     x_train = df.iloc[train_i]
     print("Train Size:", len(train_i))
@@ -280,14 +280,25 @@ if __name__ == "__main__":
     # ivfpq_codesize = 40
 
     # Presets based on 200 dimensions and more efficient results, fastest that is still perfect with k=1, though it ends up being poor with k=10
+    # lsh_nbits = 1600 # 2 * d
+    # pq_nbits = 8
+    # pq_subquantizers = 40
+    # ivfpq_ncentroids = 5
+    # ivfpq_codesize = 40
+    # HNSW_M = 32
+    # HNSW_efconstruction = 256
+    # HNSW_efsearch = 128
+
+    # Presets based on 300 dimensions 
     lsh_nbits = 1600 # 2 * d
     pq_nbits = 8
-    pq_subquantizers = 40
+    pq_subquantizers = 30
     ivfpq_ncentroids = 5
-    ivfpq_codesize = 40
+    ivfpq_codesize = 30
     HNSW_M = 32
     HNSW_efconstruction = 256
     HNSW_efsearch = 128
+
 
     # Run Full Test
     # test_suite(k=1, r=1)
