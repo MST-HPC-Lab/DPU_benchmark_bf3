@@ -1,3 +1,4 @@
+import argparse
 import pandas as pd
 import numpy as np
 import faiss
@@ -249,24 +250,43 @@ def test_search(k=1, r=1, verbose=True):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--num_vecs", type=int, default=None)
+    parser.add_argument("--dim", type=int, default=None)
+    parser.add_argument("--file", type=str, default="cc.en.300.vec")
+    args = parser.parse_args()
     # Load Data File
     # colnames = ["VOCAB"] + [str(i) for i in range(200)]
-    filename = "../Data/cc.en.300.vec" # ../Data/glove.6b.200d.txt
+    filename = f"../Data/{args.file}" # ../Data/glove.6b.200d.txt
     df = pd.read_csv(filename, sep=" ", quoting=3, skiprows=1,  header=None)
     # df = pd.read_csv(filename, sep=" ", quoting=3, skiprows=1, header=None) #added skiprow so that it skips the header row in fast text file
 
     # Split into vocab column and data
     vocab = df.iloc[:,0]
     df = df.drop(0, axis=1)
-    d = len(df.iloc[0])
+    # limiting number of vectors
+    if args.num_vecs is not None:
+        df = df.iloc[:args.num_vecs]
+    # limiting dimensionality
+    if args.dim is not None:
+        df = df.iloc[:, :args.dim]
+    d = df.shape[1]
+    dim_to_subspaces = {128:32, 200:40, 300:30, 1000:40}
+
+    if d in dim_to_subspaces:
+        pq_subquantizers = dim_to_subspaces[d]
+        ivfpq_codesize   = dim_to_subspaces[d]
+    else:
+        print ("Value not found in dictionary")
     print(f'File: "{filename}"')
     print("Dimensions:", d)
 
-   # Testing vs. Training Split
-   #test_i = [i for i in range(399,400000,400)]
-    test_i = [i for i in range(199,2000000,200)]# len is ~2000, len of fastext vocab 2 million
-   # train_i = [i for i in range(400000) if (i+399)%400]
-    train_i = [i for i in range(2000000) if (i+199)%200]# len is ~398000
+    #Testing vs. Training Split
+    N = len(df)
+    #test_i = [i for i in range(399,400000,400)]
+    test_i = [i for i in range(199,N, 200)]#len is ~2000, len of fastext vocab 2 million
+    #train_i = [i for i in range(400000) if (i+399)%400]
+    train_i = [i for i in range(N) if (i+199)%200]#len is ~398000
     x_query = df.iloc[test_i]
     x_train = df.iloc[train_i]
     print("Train Size:", len(train_i))
@@ -292,9 +312,9 @@ if __name__ == "__main__":
     # Presets based on 300 dimensions 
     lsh_nbits = 1600 # 2 * d
     pq_nbits = 8
-    pq_subquantizers = 30
+    # pq_subquantizers = 30
     ivfpq_ncentroids = 5
-    ivfpq_codesize = 30
+    # ivfpq_codesize = 30
     HNSW_M = 32
     HNSW_efconstruction = 256
     HNSW_efsearch = 128
