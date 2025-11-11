@@ -1,6 +1,7 @@
 Data/*
 !Data/*.py
 !Data/*.md
+vector_similarity_test/indices/*
 
 derda_grpc_full/*
 
