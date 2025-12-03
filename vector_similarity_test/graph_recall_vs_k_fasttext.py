@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import numpy as np
 
 
@@ -87,27 +88,34 @@ plt.savefig("results/fasttext_recall_vs_k.png")
 plt.close()
 
 
+plt.figure(figsize=(8,6))
 plt.title("fasttext cc.en.300.vec: How Recall Time Varies with k\n(other parameters chosen so that recall is 100% when k=1)")
 plt.grid(color='0.8')
-# plt.scatter(host_IVFPQ_k10_recall, host_IVFPQ_k10_time, color='orange')
-# plt.scatter(host_PQ_k10_recall, host_PQ_k10_time, color='teal')
-# plt.scatter(host_LSH_k10_recall, host_LSH_k10_time, color='purple')
-# plt.ylabel("Time (ms)")
-plt.plot(k, fast_host_bf_time    ,       color='k')
-plt.plot(k, fast_host_lsh_time   ,       color='purple')
-plt.plot(k,fast_host_pq_time    ,       color='teal')
-plt.plot(k, fast_host_ivfpq_time ,       color='orange')
-plt.plot(k, fast_host_hnsw_time ,       color='navy')
-plt.plot(k, fast_bf3_bf_time     , 'o:', color='k')
+
+# plot lines without markers to match the recall plot's simple style
+plt.plot(k, fast_host_bf_time    , color='k',    linewidth=1.0)
+plt.plot(k, fast_host_lsh_time   , color='purple',linewidth=1.0)
+plt.plot(k, fast_host_pq_time    , color='teal', linewidth=1.0)
+plt.plot(k, fast_host_ivfpq_time , color='orange',linewidth=1.0)
+plt.plot(k, fast_host_hnsw_time  , color='navy', linewidth=1.0)
+
+plt.plot(k, fast_bf3_bf_time     , 'o:', color='k')     # optional BF3 markers
 plt.plot(k, fast_bf3_lsh_time    , 'o:', color='purple')
 plt.plot(k, fast_bf3_pq_time     , 'o:', color='teal')
 plt.plot(k, fast_bf3_ivfpq_time  , 'o:', color='orange')
-plt.plot(k, fast_bf3_hnsw_time  , 'o:', color='navy')
+plt.plot(k, fast_bf3_hnsw_time   , 'o:', color='navy')
+
 plt.xscale('log')
+ax = plt.gca()
+ax.set_xticks(k)
+ax.get_xaxis().set_major_formatter(ticker.ScalarFormatter())
+ax.get_xaxis().set_minor_formatter(ticker.NullFormatter())
+
 plt.ylabel("Time (sec)")
 plt.xlabel("k")
-plt.ylim(bottom=0)
-plt.legend(["Host Flat", "Host LSH", "Host PQ", "Host IVFPQ", "Host HNSW", "BF3 Flat", "BF3 LSH", "BF3 PQ", "BF3 IVFPQ", "BF3 HNSW"])
-# plt.show()#block=False)
-plt.savefig("results/fasttext_recalltime_vs_k.png")
+plt.ylim(bottom=0)   # you had this in the original
+plt.legend(["Host Flat","Host LSH","Host PQ","Host IVFPQ","Host HNSW",
+            "BF3 Flat","BF3 LSH","BF3 PQ","BF3 IVFPQ","BF3 HNSW"], fontsize='small')
+plt.tight_layout()
+plt.savefig("results/fasttext_recalltime_vs_k.png", dpi=300)
 plt.close()
