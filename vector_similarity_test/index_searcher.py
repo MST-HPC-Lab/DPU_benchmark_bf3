@@ -1,3 +1,4 @@
+# index_searcher.py
 import argparse
 import pandas as pd
 import numpy as np
@@ -5,32 +6,26 @@ import faiss
 from timeit import repeat
 import hnswlib
 import json
+import os
 
 from index_builder import (
-    # Recall Measurement functions
     recall_at_k, batch_recall,
-    # Flat Index (Brute Force)
     brute_force_build, brute_force_search,
-    # Search function is used for all other indexes
     search, hnsw_search,
-    # LSH Index
-    lsh_build,
-    # PQ Index
-    pq_build,
-    # IVF PQ Index
-    ivfpq_build,
-    # HNSW Index
-    hnsw_build,
-    # To build without timing it
-    test_build,
-    # To time the search only
-    test_search,
+    lsh_build, pq_build, ivfpq_build, hnsw_build,
+    test_build, test_search,
 )
 
-import index_builder as ib  # set/load globals here
-
+import index_builder as ib
+from mem_utils import MemoryMonitor
+os.makedirs("results", exist_ok=True)
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--mem_out", type=str, default=None, help="Path to write memory CSV for query session")
+    parser.add_argument("--interval", type=float, default=0.5, help="Memory sampling interval seconds")
+    args = parser.parse_args()
+
     # load saved artifacts from builder
     with open("indices/meta.json", "r") as f:
         meta = json.load(f)
@@ -59,11 +54,20 @@ if __name__ == "__main__":
     ib.HNSW.load_index("indices/hnsw.bin")
     ib.HNSW.set_ef(ib.HNSW_efsearch)
 
-    print("Indexes loaded. Running searches...")
+    outpath = args.mem_out if args.mem_out else None
 
-    results = []
-    for k in [1, 2, 3, 5, 7, 10, 25, 50, 75, 100]:
-        results.append(test_search(k=k, r=3, verbose=False))
+    with MemoryMonitor(role='query', outpath=outpath, interval=args.interval) as mem:
+        mem.log('after_load_indices')
+        print("Indexes loaded. Running searches...")
+
+        results = []
+        for k in [1, 2, 3, 5, 7, 10, 25, 50, 75, 100]:
+            mem.log(f"before_test_search_k{k}")
+            results.append(test_search(k=k, r=3, verbose=False))
+            mem.log(f"after_test_search_k{k}")
+
+        mem.log('queries_finished')
+
     bf_time, lsh_recall, lsh_time, pq_recall, pq_time, ivfpq_recall, ivfpq_time, hnsw_recall, hnsw_time = zip(*results)
 
     print("Brute Force Time:", bf_time)
