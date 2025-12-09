@@ -311,7 +311,10 @@ if __name__ == "__main__":
                     "ivfpq_ncentroids": int(ivfpq_ncentroids),
                     "HNSW_M": int(HNSW_M),
                     "HNSW_efconstruction": int(HNSW_efconstruction),
-                    "HNSW_efsearch": int(HNSW_efsearch)
+                    "HNSW_efsearch": int(HNSW_efsearch),
+                    "source_file": args.file,
+                    "source_path": filename,
+                    "num_vecs": int(N),
                 }, f)
 
         mem.log('after_save_indices')
