@@ -287,36 +287,38 @@ if __name__ == "__main__":
 
     outpath = args.mem_out if args.mem_out else None
 
+    ####
     # automatic memory monitoring for the whole build + save step
-    with MemoryMonitor(role='build', outpath=outpath, interval=1.0) as mem:
-        mem.log('build_start')
-        test_build(mem=mem)
+    # with MemoryMonitor(role='build', outpath=outpath, interval=1.0) as mem:
+    # mem.log('build_start')
+    test_build()#mem=mem)
 
-        if not args.no_save:
-            os.makedirs("indices", exist_ok=True)
-            faiss.write_index(FL2,   "indices/flat.index")
-            faiss.write_index(LSH,   "indices/lsh.index")
-            faiss.write_index(PQ,    "indices/pq.index")
-            faiss.write_index(IVFPQ, "indices/ivfpq.index")
-            HNSW.save_index("indices/hnsw.bin")
-            np.save("indices/x_query.npy", x_query.to_numpy())
-            np.save("indices/x_train.npy", x_train.to_numpy())
-            with open("indices/meta.json", "w") as f:
-                json.dump({
-                    "d": int(d),
-                    "lsh_nbits": int(lsh_nbits),
-                    "pq_nbits": int(pq_nbits),
-                    "pq_subquantizers": int(pq_subquantizers),
-                    "ivfpq_codesize": int(ivfpq_codesize),
-                    "ivfpq_ncentroids": int(ivfpq_ncentroids),
-                    "HNSW_M": int(HNSW_M),
-                    "HNSW_efconstruction": int(HNSW_efconstruction),
-                    "HNSW_efsearch": int(HNSW_efsearch),
-                    "source_file": args.file,
-                    "source_path": filename,
-                    "num_vecs": int(N),
-                }, f)
+    if not args.no_save:
+        os.makedirs("indices", exist_ok=True)
+        faiss.write_index(FL2,   "indices/flat.index")
+        faiss.write_index(LSH,   "indices/lsh.index")
+        faiss.write_index(PQ,    "indices/pq.index")
+        faiss.write_index(IVFPQ, "indices/ivfpq.index")
+        HNSW.save_index("indices/hnsw.bin")
+        np.save("indices/x_query.npy", x_query.to_numpy())
+        np.save("indices/x_train.npy", x_train.to_numpy())
+        with open("indices/meta.json", "w") as f:
+            json.dump({
+                "d": int(d),
+                "lsh_nbits": int(lsh_nbits),
+                "pq_nbits": int(pq_nbits),
+                "pq_subquantizers": int(pq_subquantizers),
+                "ivfpq_codesize": int(ivfpq_codesize),
+                "ivfpq_ncentroids": int(ivfpq_ncentroids),
+                "HNSW_M": int(HNSW_M),
+                "HNSW_efconstruction": int(HNSW_efconstruction),
+                "HNSW_efsearch": int(HNSW_efsearch),
+                "source_file": args.file,
+                "source_path": filename,
+                "num_vecs": int(N),
+            }, f)
 
-        mem.log('after_save_indices')
+    # mem.log('after_save_indices')
+    ####
 
     print("Build complete.")

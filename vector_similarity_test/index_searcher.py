@@ -75,17 +75,19 @@ if __name__ == "__main__":
 
     outpath = args.mem_out if args.mem_out else None
 
-    with MemoryMonitor(role="query", outpath=outpath, interval=args.interval) as mem:
-        mem.log("after_load_indices")
-        print("Indexes loaded. Running searches...")
+    ####
+    # with MemoryMonitor(role="query", outpath=outpath, interval=args.interval) as mem:
+    # mem.log("after_load_indices")
+    print("Indexes loaded. Running searches...")
 
-        results = []
-        for k in [1, 2, 3, 5, 7, 10, 25, 50, 75, 100]:
-            mem.log(f"before_test_search_k{k}")
-            results.append(test_search(k=k, r=3, verbose=False))
-            mem.log(f"after_test_search_k{k}")
+    results = []
+    for k in [1, 2, 3, 5, 7, 10, 25, 50, 75, 100]:
+        # mem.log(f"before_test_search_k{k}")
+        results.append(test_search(k=k, r=3, verbose=False))
+        # mem.log(f"after_test_search_k{k}")
 
-        mem.log("queries_finished")
+    # mem.log("queries_finished")
+    ####
 
     bf_time, lsh_recall, lsh_time, pq_recall, pq_time, ivfpq_recall, ivfpq_time, hnsw_recall, hnsw_time = zip(*results)
 
