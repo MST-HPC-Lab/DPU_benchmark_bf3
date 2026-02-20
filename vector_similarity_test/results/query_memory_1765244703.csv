@@ -1,0 +1,26 @@
+timestamp,stage,rss_mb
+2025-12-08 19:45:03,monitor_started,118.496
+2025-12-08 19:45:03,sample,118.500
+2025-12-08 19:45:03,after_load_indices,118.500
+2025-12-08 19:45:03,before_test_search_k1,118.500
+2025-12-08 19:45:03,after_test_search_k1,120.102
+2025-12-08 19:45:03,before_test_search_k2,120.102
+2025-12-08 19:45:03,after_test_search_k2,120.109
+2025-12-08 19:45:03,before_test_search_k3,120.109
+2025-12-08 19:45:03,after_test_search_k3,120.117
+2025-12-08 19:45:03,before_test_search_k5,120.117
+2025-12-08 19:45:03,after_test_search_k5,120.125
+2025-12-08 19:45:03,before_test_search_k7,120.125
+2025-12-08 19:45:03,after_test_search_k7,120.133
+2025-12-08 19:45:03,before_test_search_k10,120.133
+2025-12-08 19:45:03,after_test_search_k10,120.137
+2025-12-08 19:45:03,before_test_search_k25,120.137
+2025-12-08 19:45:03,after_test_search_k25,120.137
+2025-12-08 19:45:03,before_test_search_k50,120.137
+2025-12-08 19:45:03,after_test_search_k50,120.141
+2025-12-08 19:45:03,before_test_search_k75,120.141
+2025-12-08 19:45:03,after_test_search_k75,120.141
+2025-12-08 19:45:03,before_test_search_k100,120.141
+2025-12-08 19:45:04,after_test_search_k100,120.645
+2025-12-08 19:45:04,queries_finished,120.645
+2025-12-08 19:45:04,monitor_stopped,120.766
