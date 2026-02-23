@@ -13,3 +13,4 @@ derda_grpc_full/*
 
 *.zip
 *.out
+*.pyc
