@@ -1,1 +1,3 @@
 vector_similarity_test/indices/
+__pycache__/
+*.pyc
