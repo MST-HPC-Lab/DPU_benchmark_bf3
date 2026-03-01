@@ -106,16 +106,39 @@ def ivfpq_build(ncentroids, code_size, n_bits):
 
 
 # Build Only (no timing)
+#Sophia edit: refactored to allow building only a subset of indices, and to save outputs in a specified subdirectory of indices/
+def test_build(only=None, mem=None):
+    #Build selected indices
+    #only: None or list of ["flat", "lsh", "pq", "ivfpq", "hnsw"]
 
-def test_build(mem=None):
+    if only is None:
+        only = ["flat", "lsh", "pq", "ivfpq", "hnsw"]
 
-    brute_force_build()
-    lsh_build(lsh_nbits)
-    pq_build(pq_subquantizers, pq_nbits)
-    ivfpq_build(ivfpq_ncentroids, ivfpq_codesize, pq_nbits)
+    only = set(only)
+
+    if "flat" in only:
+        brute_force_build()
+
+    if "lsh" in only:
+        lsh_build(lsh_nbits)
+
+    if "pq" in only:
+        pq_build(pq_subquantizers, pq_nbits)
+
+    if "ivfpq" in only:
+        ivfpq_build(ivfpq_ncentroids, ivfpq_codesize, pq_nbits)
+
+    if "hnsw" in only:
+        # SOPHIA EDIT: ensure correct numpy data passed
+        hnsw_build(x_train, d, HNSW_efconstruction, HNSW_M, HNSW_efsearch)
+
+#    brute_force_build()
+#   lsh_build(lsh_nbits)
+#    pq_build(pq_subquantizers, pq_nbits)
+#    ivfpq_build(ivfpq_ncentroids, ivfpq_codesize, pq_nbits)
 
     # SOPHIA EDIT: ensure correct numpy data passed
-    hnsw_build(x_train, d, HNSW_efconstruction, HNSW_M, HNSW_efsearch)
+#    hnsw_build(x_train, d, HNSW_efconstruction, HNSW_M, HNSW_efsearch)
 
 
 # MAIN
@@ -133,6 +156,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--mem_out", type=str, default=None)
     parser.add_argument("--no_save", action="store_true")
+    parser.add_argument("--only", nargs="+", default=None, help = "Build only selected indices: flat lsh pq ivfpq hnsw")
     args = parser.parse_args()
 
     filename = f"../Data/{args.file}"
@@ -181,7 +205,7 @@ if __name__ == "__main__":
 
     print("Building...\r", end='')
 
-    test_build()
+    test_build(only=args.only)
 
     if not args.no_save:
 
@@ -189,11 +213,29 @@ if __name__ == "__main__":
         base_dir = os.path.join("indices", args.out_folder)
         os.makedirs(base_dir, exist_ok=True)
 
-        faiss.write_index(FL2,   os.path.join(base_dir, "flat.index"))
-        faiss.write_index(LSH,   os.path.join(base_dir, "lsh.index"))
-        faiss.write_index(PQ,    os.path.join(base_dir, "pq.index"))
-        faiss.write_index(IVFPQ, os.path.join(base_dir, "ivfpq.index"))
-        faiss.write_index(HNSW,  os.path.join(base_dir, "hnsw.index"))
+        #Sophia EDIT: allow saving only a subset of indices, based on --only argument
+        built = set(args.only) if args.only is not None else {"flat", "lsh", "pq", "ivfpq", "hnsw"}
+
+        if "flat" in built and FL2 is not None:
+            faiss.write_index(FL2, os.path.join(base_dir, "flat.index"))
+    
+        if "lsh" in built and LSH is not None:
+            faiss.write_index(LSH, os.path.join(base_dir, "lsh.index"))
+        
+        if "pq" in built and PQ is not None:
+            faiss.write_index(PQ, os.path.join(base_dir, "pq.index"))
+
+        if "ivfpq" in built and IVFPQ is not None:
+            faiss.write_index(IVFPQ, os.path.join(base_dir, "ivfpq.index"))
+
+        if "hnsw" in built and HNSW is not None:
+            faiss.write_index(HNSW, os.path.join(base_dir, "hnsw.index"))
+
+#        faiss.write_index(FL2,   os.path.join(base_dir, "flat.index"))
+#        faiss.write_index(LSH,   os.path.join(base_dir, "lsh.index"))
+#        faiss.write_index(PQ,    os.path.join(base_dir, "pq.index"))
+#        faiss.write_index(IVFPQ, os.path.join(base_dir, "ivfpq.index"))
+#        faiss.write_index(HNSW,  os.path.join(base_dir, "hnsw.index"))
 
         np.save(os.path.join(base_dir, "x_query.npy"), x_query)
         np.save(os.path.join(base_dir, "x_train.npy"), x_train)
