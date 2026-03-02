@@ -72,7 +72,8 @@ plt.xlabel("k")
 plt.ylim(0, 1.1)
 plt.legend(["LSH", "PQ", "IVFPQ", "HNSW"]) #["Host LSH", "Host PQ", "Host IVFPQ", "BF3 LSH", "BF3 PQ", "BF3 IVFPQ"]
 # plt.show()#block=False)
-plt.savefig("results/recall_vs_k.png")
+#plt.savefig("results/recall_vs_k.png")
+plt.savefig("recall_vs_k.png")
 plt.close()
 
 
@@ -98,5 +99,6 @@ plt.xlabel("k")
 plt.ylim(bottom=0)
 plt.legend(["Host Flat", "Host LSH", "Host PQ", "Host IVFPQ", "Host HNSW", "BF3 Flat", "BF3 LSH", "BF3 PQ", "BF3 IVFPQ", "BF3 HNSW"])
 # plt.show()#block=False)
-plt.savefig("results/recalltime_vs_k.png")
+#plt.savefig("results/recalltime_vs_k.png")
+plt.savefig("recalltime_vs_k.png")
 plt.close()
