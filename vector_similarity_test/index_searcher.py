@@ -9,6 +9,8 @@ from timeit import repeat
 import json
 import os
 
+REPLICATIONS = 5
+
 #sophia edit: refactored to load indices built by index_builder.py, and to run searches with timing and recall measurement, but without rebuilding indices (since that can be time consuming and we want to separate build vs. search time in our measurements)
 from index_builder import (
     recall_at_k, batch_recall,
@@ -109,30 +111,30 @@ if __name__ == "__main__":
     for k in k_values:
 
         #Brute Force
-        bf_time = np.mean(repeat(lambda: brute_force_search(k), repeat=3, number=1))
+        bf_time = np.mean(repeat(lambda: brute_force_search(k), repeat=REPLICATIONS, number=1))
         bf_times.append(bf_time)
 
         #LSH
         lsh_recall = search(ib.LSH, k)
-        lsh_time = np.mean(repeat(lambda: search(ib.LSH, k, measure_accuracy=False), repeat=3, number=1))
+        lsh_time = np.mean(repeat(lambda: search(ib.LSH, k, measure_accuracy=False), repeat=REPLICATIONS, number=1))
         lsh_recalls.append(lsh_recall)
         lsh_times.append(lsh_time)
 
         #PQ
         pq_recall = search(ib.PQ, k)
-        pq_time = np.mean(repeat(lambda: search(ib.PQ, k, measure_accuracy=False), repeat=3, number=1))
+        pq_time = np.mean(repeat(lambda: search(ib.PQ, k, measure_accuracy=False), repeat=REPLICATIONS, number=1))
         pq_recalls.append(pq_recall)
         pq_times.append(pq_time)
 
         #IVFPQ
         ivfpq_recall = search(ib.IVFPQ, k)
-        ivfpq_time = np.mean(repeat(lambda: search(ib.IVFPQ, k, measure_accuracy=False), repeat=3, number=1))
+        ivfpq_time = np.mean(repeat(lambda: search(ib.IVFPQ, k, measure_accuracy=False), repeat=REPLICATIONS, number=1))
         ivfpq_recalls.append(ivfpq_recall)
         ivfpq_times.append(ivfpq_time)
 
         #HNSW
         hnsw_recall = hnsw_search(k)
-        hnsw_time = np.mean(repeat(lambda: hnsw_search(k, measure_accuracy=False), repeat=3, number=1))
+        hnsw_time = np.mean(repeat(lambda: hnsw_search(k, measure_accuracy=False), repeat=REPLICATIONS, number=1))
         hnsw_recalls.append(hnsw_recall)
         hnsw_times.append(hnsw_time) 
 
