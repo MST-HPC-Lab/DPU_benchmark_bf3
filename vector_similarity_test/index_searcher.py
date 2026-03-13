@@ -45,7 +45,16 @@ if __name__ == "__main__":
         default="indices",
         help="Directory containing indices and meta.json (default: indices)",
     )
+    parser.add_argument(
+        "--only",
+        nargs="+",
+        default=None,
+        help="Run only selected indices: flat lsh pq ivfpq hnsw"
+    )
     args = parser.parse_args()
+
+    only = set(args.only) if args.only is not None else {"flat", "lsh", "pq", "ivfpq", "hnsw"}
+
 
     indices_dir = args.indices_dir
 
@@ -75,10 +84,27 @@ if __name__ == "__main__":
 
     # Load FAISS indices
 
-    ib.FL2   = faiss.read_index(os.path.join(indices_dir, "flat.index"))
-    ib.LSH   = faiss.read_index(os.path.join(indices_dir, "lsh.index"))
-    ib.PQ    = faiss.read_index(os.path.join(indices_dir, "pq.index"))
-    ib.IVFPQ = faiss.read_index(os.path.join(indices_dir, "ivfpq.index"))
+    ib.FL2 = faiss.read_index(os.path.join(indices_dir, "flat.index"))
+
+    if "lsh" in only:
+        ib.LSH = faiss.read_index(os.path.join(indices_dir, "lsh.index"))
+    
+    if "pq" in only:
+        ib.PQ = faiss.read_index(os.path.join(indices_dir, "pq.index"))
+
+    if "ivfpq" in only:
+        ib.IVFPQ = faiss.read_index(os.path.join(indices_dir, "ivfpq.index"))
+
+    if "hnsw" in only:
+        ib.HNSW = faiss.read_index(os.path.join(indices_dir, "hnsw.index"))
+        ib.HNSW.hnsw.efSearch = max(int(ib.HNSW_efsearch),1)
+        
+
+
+#    ib.FL2   = faiss.read_index(os.path.join(indices_dir, "flat.index"))
+#    ib.LSH   = faiss.read_index(os.path.join(indices_dir, "lsh.index"))
+#    ib.PQ    = faiss.read_index(os.path.join(indices_dir, "pq.index"))
+#    ib.IVFPQ = faiss.read_index(os.path.join(indices_dir, "ivfpq.index"))
 
     # OLD HNSWLIB LOAD (COMMENTED OUT — DO NOT DELETE)
     # ib.HNSW = hnswlib.Index(space='l2', dim=ib.d)
@@ -86,10 +112,10 @@ if __name__ == "__main__":
     # ib.HNSW.set_ef(ib.HNSW_efsearch)
 
     # SOPHIA EDIT: Load FAISS HNSW index
-    ib.HNSW = faiss.read_index(os.path.join(indices_dir, "hnsw.index"))
+    #ib.HNSW = faiss.read_index(os.path.join(indices_dir, "hnsw.index"))
 
     # Set efSearch after loading (important for FAISS)
-    ib.HNSW.hnsw.efSearch = max(int(ib.HNSW_efsearch), 1)
+    #ib.HNSW.hnsw.efSearch = max(int(ib.HNSW_efsearch), 1)
 
     outpath = args.mem_out if args.mem_out else None
 
@@ -111,32 +137,37 @@ if __name__ == "__main__":
     for k in k_values:
 
         #Brute Force
-        bf_time = np.mean(repeat(lambda: brute_force_search(k), repeat=REPLICATIONS, number=1))
-        bf_times.append(bf_time)
+        if "flat" in only:
+            bf_time = np.mean(repeat(lambda: brute_force_search(k), repeat=REPLICATIONS, number=1))
+            bf_times.append(bf_time)
 
         #LSH
-        lsh_recall = search(ib.LSH, k)
-        lsh_time = np.mean(repeat(lambda: search(ib.LSH, k, measure_accuracy=False), repeat=REPLICATIONS, number=1))
-        lsh_recalls.append(lsh_recall)
-        lsh_times.append(lsh_time)
+        if "lsh" in only:
+            lsh_recall = search(ib.LSH, k)
+            lsh_time = np.mean(repeat(lambda: search(ib.LSH, k, measure_accuracy=False), repeat=REPLICATIONS, number=1))
+            lsh_recalls.append(lsh_recall)
+            lsh_times.append(lsh_time)
 
         #PQ
-        pq_recall = search(ib.PQ, k)
-        pq_time = np.mean(repeat(lambda: search(ib.PQ, k, measure_accuracy=False), repeat=REPLICATIONS, number=1))
-        pq_recalls.append(pq_recall)
-        pq_times.append(pq_time)
+        if "pq" in only:
+            pq_recall = search(ib.PQ, k)
+            pq_time = np.mean(repeat(lambda: search(ib.PQ, k, measure_accuracy=False), repeat=REPLICATIONS, number=1))
+            pq_recalls.append(pq_recall)
+            pq_times.append(pq_time)
 
         #IVFPQ
-        ivfpq_recall = search(ib.IVFPQ, k)
-        ivfpq_time = np.mean(repeat(lambda: search(ib.IVFPQ, k, measure_accuracy=False), repeat=REPLICATIONS, number=1))
-        ivfpq_recalls.append(ivfpq_recall)
-        ivfpq_times.append(ivfpq_time)
+        if "ivfpq" in only:
+            ivfpq_recall = search(ib.IVFPQ, k)
+            ivfpq_time = np.mean(repeat(lambda: search(ib.IVFPQ, k, measure_accuracy=False), repeat=REPLICATIONS, number=1))
+            ivfpq_recalls.append(ivfpq_recall)
+            ivfpq_times.append(ivfpq_time)
 
         #HNSW
-        hnsw_recall = hnsw_search(k)
-        hnsw_time = np.mean(repeat(lambda: hnsw_search(k, measure_accuracy=False), repeat=REPLICATIONS, number=1))
-        hnsw_recalls.append(hnsw_recall)
-        hnsw_times.append(hnsw_time) 
+        if "hnsw" in only:
+            hnsw_recall = hnsw_search(k)
+            hnsw_time = np.mean(repeat(lambda: hnsw_search(k, measure_accuracy=False), repeat=REPLICATIONS, number=1))
+            hnsw_recalls.append(hnsw_recall)
+            hnsw_times.append(hnsw_time) 
 
 #    results = []
 #    for k in [1, 2, 3, 5, 7, 10, 25, 50, 75, 100]:
