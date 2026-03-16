@@ -100,7 +100,6 @@ if __name__ == "__main__":
         ib.HNSW.hnsw.efSearch = max(int(ib.HNSW_efsearch),1)
         
 
-
 #    ib.FL2   = faiss.read_index(os.path.join(indices_dir, "flat.index"))
 #    ib.LSH   = faiss.read_index(os.path.join(indices_dir, "lsh.index"))
 #    ib.PQ    = faiss.read_index(os.path.join(indices_dir, "pq.index"))
