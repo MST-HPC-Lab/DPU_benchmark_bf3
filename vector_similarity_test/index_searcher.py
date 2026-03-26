@@ -11,6 +11,10 @@ import os
 
 REPLICATIONS = 5
 
+def avg_time(fn, reps=REPLICATIONS):
+    fn()  # warm-up run, not counted
+    return np.mean(repeat(fn, repeat=reps, number=1))
+
 #sophia edit: refactored to load indices built by index_builder.py, and to run searches with timing and recall measurement, but without rebuilding indices (since that can be time consuming and we want to separate build vs. search time in our measurements)
 from index_builder import (
     recall_at_k, batch_recall,
@@ -103,9 +107,9 @@ if __name__ == "__main__":
 #    ib.FL2   = faiss.read_index(os.path.join(indices_dir, "flat.index"))
 #    ib.LSH   = faiss.read_index(os.path.join(indices_dir, "lsh.index"))
 #    ib.PQ    = faiss.read_index(os.path.join(indices_dir, "pq.index"))
-#    ib.IVFPQ = faiss.read_index(os.path.join(indices_dir, "ivfpq.index"))
+#    ib.IVFPQ = faiss.read_index(os.path.join(indices_dir, "ivfpq.index")) 
 
-    # OLD HNSWLIB LOAD (COMMENTED OUT — DO NOT DELETE)
+    # OLD HNSWLIB LOAD (COMMENTED OUT — DO NOT DELETE) 
     # ib.HNSW = hnswlib.Index(space='l2', dim=ib.d)
     # ib.HNSW.load_index(os.path.join(indices_dir, "hnsw.bin"))
     # ib.HNSW.set_ef(ib.HNSW_efsearch)
@@ -134,37 +138,44 @@ if __name__ == "__main__":
     hnsw_recalls, hnsw_times = [], []
 
     for k in k_values:
+         
+        brute_force_search(k) 
 
         #Brute Force
         if "flat" in only:
-            bf_time = np.mean(repeat(lambda: brute_force_search(k), repeat=REPLICATIONS, number=1))
+            bf_time = avg_time(lambda: brute_force_search(k))
+            #bf_time = np.mean(repeat(lambda: brute_force_search(k), repeat=REPLICATIONS, number=1))
             bf_times.append(bf_time)
 
         #LSH
         if "lsh" in only:
             lsh_recall = search(ib.LSH, k)
-            lsh_time = np.mean(repeat(lambda: search(ib.LSH, k, measure_accuracy=False), repeat=REPLICATIONS, number=1))
+            lsh_time = avg_time(lambda: search(ib.LSH, k, measure_accuracy=False))
+            #lsh_time = np.mean(repeat(lambda: search(ib.LSH, k, measure_accuracy=False), repeat=REPLICATIONS, number=1))
             lsh_recalls.append(lsh_recall)
             lsh_times.append(lsh_time)
 
         #PQ
         if "pq" in only:
             pq_recall = search(ib.PQ, k)
-            pq_time = np.mean(repeat(lambda: search(ib.PQ, k, measure_accuracy=False), repeat=REPLICATIONS, number=1))
+            pq_time = avg_time(lambda: search(ib.PQ, k, measure_accuracy=False))
+            #pq_time = np.mean(repeat(lambda: search(ib.PQ, k, measure_accuracy=False), repeat=REPLICATIONS, number=1))
             pq_recalls.append(pq_recall)
             pq_times.append(pq_time)
 
         #IVFPQ
         if "ivfpq" in only:
             ivfpq_recall = search(ib.IVFPQ, k)
-            ivfpq_time = np.mean(repeat(lambda: search(ib.IVFPQ, k, measure_accuracy=False), repeat=REPLICATIONS, number=1))
+            ivfpq_time = avg_time(lambda: search(ib.IVFPQ, k, measure_accuracy=False))
+            #ivfpq_time = np.mean(repeat(lambda: search(ib.IVFPQ, k, measure_accuracy=False), repeat=REPLICATIONS, number=1))
             ivfpq_recalls.append(ivfpq_recall)
             ivfpq_times.append(ivfpq_time)
 
         #HNSW
         if "hnsw" in only:
             hnsw_recall = hnsw_search(k)
-            hnsw_time = np.mean(repeat(lambda: hnsw_search(k, measure_accuracy=False), repeat=REPLICATIONS, number=1))
+            hnsw_time = avg_time(lambda: hnsw_search(k, measure_accuracy=False))
+            #hnsw_time = np.mean(repeat(lambda: hnsw_search(k, measure_accuracy=False), repeat=REPLICATIONS, number=1))
             hnsw_recalls.append(hnsw_recall)
             hnsw_times.append(hnsw_time) 
 
