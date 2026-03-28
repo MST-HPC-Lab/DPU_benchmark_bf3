@@ -192,10 +192,10 @@ plt.title("Recall vs Time (GloVe Dataset, Host)")
 plt.grid(color='0.8')
 
 # Plot each algorithm
-plt.scatter(host_lsh_time, host_lsh_recall, 'o-', color='purple', label='LSH', linewidth=2)
-plt.scatter(host_pq_time, host_pq_recall, 'o-', color='teal', label='PQ', linewidth=2)
-plt.scatter(host_ivfpq_time, host_ivfpq_recall, 'o-', color='orange', label='IVFPQ', linewidth=2)
-plt.scatter(host_hnsw_time, host_hnsw_recall, 'o-', color='navy', label='HNSW', linewidth=2)
+plt.scatter(host_lsh_time, host_lsh_recall, color='purple', label='LSH', s=60)
+plt.scatter(host_pq_time, host_pq_recall, color='teal', label='PQ', s=60)
+plt.scatter(host_ivfpq_time, host_ivfpq_recall, color='orange', label='IVFPQ', s=60)
+plt.scatter(host_hnsw_time, host_hnsw_recall, color='navy', label='HNSW', s=60)
 
 plt.xlabel("Time (sec)")
 plt.ylabel("Recall")
@@ -217,10 +217,10 @@ plt.title("Recall vs Time (GloVe Dataset, BF3)")
 plt.grid(color='0.8')
 
 # Plot each algorithm
-plt.scatter(bf3_lsh_time, bf3_lsh_recall, 'o-', color='purple', label='LSH', linewidth=2)
-plt.scatter(bf3_pq_time, bf3_pq_recall, 'o-', color='teal', label='PQ', linewidth=2)
-plt.scatter(bf3_ivfpq_time, bf3_ivfpq_recall, 'o-', color='orange', label='IVFPQ', linewidth=2)
-plt.scatter(bf3_hnsw_time, bf3_hnsw_recall, 'o-', color='navy', label='HNSW', linewidth=2)
+plt.scatter(bf3_lsh_time, bf3_lsh_recall, color='purple', label='LSH', s=60)
+plt.scatter(bf3_pq_time, bf3_pq_recall, color='teal', label='PQ', s=60)
+plt.scatter(bf3_ivfpq_time, bf3_ivfpq_recall, color='orange', label='IVFPQ', s=60)
+plt.scatter(bf3_hnsw_time, bf3_hnsw_recall, color='navy', label='HNSW', s=60)
 
 plt.xlabel("Time (sec)")
 plt.ylabel("Recall")
