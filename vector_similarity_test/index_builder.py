@@ -201,7 +201,8 @@ if __name__ == "__main__":
     ivfpq_ncentroids = 5
     HNSW_M = 32
     HNSW_efconstruction = 256
-    HNSW_efsearch = 128
+    #HNSW_efsearch = 128
+    HNSW_efsearch = 512
 
     print("Building...\r", end='')
 

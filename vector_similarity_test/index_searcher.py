@@ -12,7 +12,9 @@ import os
 REPLICATIONS = 5
 
 def avg_time(fn, reps=REPLICATIONS):
-    fn()  # warm-up run, not counted
+    for _ in range(2):
+        fn()
+    #fn()
     return np.mean(repeat(fn, repeat=reps, number=1))
 
 #sophia edit: refactored to load indices built by index_builder.py, and to run searches with timing and recall measurement, but without rebuilding indices (since that can be time consuming and we want to separate build vs. search time in our measurements)
@@ -137,9 +139,13 @@ if __name__ == "__main__":
     ivfpq_recalls, ivfpq_times = [], []
     hnsw_recalls, hnsw_times = [], []
 
+
+    max_k = max(k_values)
+    brute_force_search(max_k) 
+ 
     for k in k_values:
          
-        brute_force_search(k) 
+       # brute_force_search(k) 
 
         #Brute Force
         if "flat" in only:
