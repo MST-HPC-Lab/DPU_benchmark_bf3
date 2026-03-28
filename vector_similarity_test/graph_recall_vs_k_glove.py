@@ -176,6 +176,7 @@ plt.xscale('log')
 plt.ylabel("Time (sec)")
 plt.xlabel("k")
 plt.ylim(bottom=0)
+plt.yscale('log')
 plt.legend(loc='best')
 #plt.legend(["Host Flat", "Host LSH", "Host PQ", "Host IVFPQ", "Host HNSW", "BF3 Flat", "BF3 LSH", "BF3 PQ", "BF3 IVFPQ", "BF3 HNSW"])
 # plt.show()#block=False)
@@ -191,15 +192,18 @@ plt.title("Recall vs Time (GloVe Dataset, Host)")
 plt.grid(color='0.8')
 
 # Plot each algorithm
-plt.plot(host_lsh_time, host_lsh_recall, 'o-', color='purple', label='LSH', linewidth=2)
-plt.plot(host_pq_time, host_pq_recall, 'o-', color='teal', label='PQ', linewidth=2)
-plt.plot(host_ivfpq_time, host_ivfpq_recall, 'o-', color='orange', label='IVFPQ', linewidth=2)
-plt.plot(host_hnsw_time, host_hnsw_recall, 'o-', color='navy', label='HNSW', linewidth=2)
+plt.scatter(host_lsh_time, host_lsh_recall, 'o-', color='purple', label='LSH', linewidth=2)
+plt.scatter(host_pq_time, host_pq_recall, 'o-', color='teal', label='PQ', linewidth=2)
+plt.scatter(host_ivfpq_time, host_ivfpq_recall, 'o-', color='orange', label='IVFPQ', linewidth=2)
+plt.scatter(host_hnsw_time, host_hnsw_recall, 'o-', color='navy', label='HNSW', linewidth=2)
 
 plt.xlabel("Time (sec)")
 plt.ylabel("Recall")
-plt.xlim(left=0)
-plt.ylim(0, 1.05)
+plt.xlim(0, 2.5)
+plt.ylim(0.3, 1.05) 
+
+for i in range(len(k)):
+    plt.text(host_hnsw_time[i], host_hnsw_recall[i], str(k[i]), fontsize=8)
 
 plt.legend(loc='best')
 plt.savefig("glove_recall_vs_time_host.png", dpi=300, bbox_inches='tight')
@@ -213,15 +217,18 @@ plt.title("Recall vs Time (GloVe Dataset, BF3)")
 plt.grid(color='0.8')
 
 # Plot each algorithm
-plt.plot(bf3_lsh_time, bf3_lsh_recall, 'o-', color='purple', label='LSH', linewidth=2)
-plt.plot(bf3_pq_time, bf3_pq_recall, 'o-', color='teal', label='PQ', linewidth=2)
-plt.plot(bf3_ivfpq_time, bf3_ivfpq_recall, 'o-', color='orange', label='IVFPQ', linewidth=2)
-plt.plot(bf3_hnsw_time, bf3_hnsw_recall, 'o-', color='navy', label='HNSW', linewidth=2)
+plt.scatter(bf3_lsh_time, bf3_lsh_recall, 'o-', color='purple', label='LSH', linewidth=2)
+plt.scatter(bf3_pq_time, bf3_pq_recall, 'o-', color='teal', label='PQ', linewidth=2)
+plt.scatter(bf3_ivfpq_time, bf3_ivfpq_recall, 'o-', color='orange', label='IVFPQ', linewidth=2)
+plt.scatter(bf3_hnsw_time, bf3_hnsw_recall, 'o-', color='navy', label='HNSW', linewidth=2)
 
 plt.xlabel("Time (sec)")
 plt.ylabel("Recall")
-plt.xlim(left=0)
-plt.ylim(0, 1.05)
+plt.xlim(0, 2.5)
+plt.ylim(0.3, 1.05)
+
+for i in range(len(k)):
+    plt.text(bf3_hnsw_time[i], bf3_hnsw_recall[i], str(k[i]), fontsize=8)
 
 plt.legend(loc='best')
 plt.savefig("glove_recall_vs_time_bf3.png", dpi=300, bbox_inches='tight')
