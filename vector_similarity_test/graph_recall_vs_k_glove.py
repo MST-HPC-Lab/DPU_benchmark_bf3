@@ -2,13 +2,17 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib
 
-matplotlib.rcParams['font.family'] = 'serif'
-matplotlib.rcParams['font.serif'] = ['Times New Roman']
+matplotlib.rcParams['font.family'] = 'DejaVu Serif'
 
 matplotlib.rcParams['font.size'] = 12
 matplotlib.rcParams['axes.titlesize'] = 14
 matplotlib.rcParams['axes.labelsize'] = 12
 matplotlib.rcParams['legend.fontsize'] = 10
+
+matplotlib.rcParams['xtick.labelsize'] = 11
+matplotlib.rcParams['ytick.labelsize'] = 11
+matplotlib.rcParams['axes.linewidth'] = 1.2
+matplotlib.rcParams['legend.frameon'] = False
 
 # DATA :
 k = np.array([1, 2, 3, 5, 7, 10, 25, 50, 75, 100])
