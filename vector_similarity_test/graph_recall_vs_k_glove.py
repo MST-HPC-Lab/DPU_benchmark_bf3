@@ -2,17 +2,37 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib
 
+def apply_legend(outside=True, ncol=1):
+    if outside:
+        plt.legend(
+            loc='center left',
+            bbox_to_anchor=(1, 0.5),
+            frameon=True,
+            fancybox=True,
+            framealpha=1,
+            ncol=ncol
+        )
+        plt.tight_layout(rect=[0, 0, 0.8, 1])
+    else:
+        plt.legend(
+            loc='best',
+            frameon=True,
+            fancybox=True,
+            framealpha=1,
+            ncol=ncol
+        )
+
 matplotlib.rcParams['font.family'] = 'DejaVu Serif'
 
 matplotlib.rcParams['font.size'] = 12
 matplotlib.rcParams['axes.titlesize'] = 14
 matplotlib.rcParams['axes.labelsize'] = 12
-matplotlib.rcParams['legend.fontsize'] = 10
+matplotlib.rcParams['legend.fontsize'] = 7
 
 matplotlib.rcParams['xtick.labelsize'] = 11
 matplotlib.rcParams['ytick.labelsize'] = 11
 matplotlib.rcParams['axes.linewidth'] = 1.2
-matplotlib.rcParams['legend.frameon'] = False
+matplotlib.rcParams['legend.frameon'] = True
 
 # DATA :
 k = np.array([1, 2, 3, 5, 7, 10, 25, 50, 75, 100])
@@ -128,7 +148,7 @@ plt.xscale('log')
 plt.ylabel("Recall@k")
 plt.xlabel("k")
 plt.ylim(0, 1.1)
-plt.legend(loc='best')
+apply_legend()
 #plt.legend(["LSH", "PQ", "IVFPQ", "HNSW"]) #["Host LSH", "Host PQ", "Host IVFPQ", "BF3 LSH", "BF3 PQ", "BF3 IVFPQ"]
 # plt.show()#block=False)
 #plt.savefig("results/recall_vs_k.png")
@@ -180,7 +200,7 @@ plt.xlabel("k")
 #plt.ylim(bottom=0)
 plt.ylim(0.1, 30)
 plt.yscale('log')
-plt.legend(loc='best', ncol = 2, fontsize=9)
+apply_legend(ncol=2)
 #plt.legend(["Host Flat", "Host LSH", "Host PQ", "Host IVFPQ", "Host HNSW", "BF3 Flat", "BF3 LSH", "BF3 PQ", "BF3 IVFPQ", "BF3 HNSW"])
 # plt.show()#block=False)
 #plt.savefig("results/recalltime_vs_k.png")
@@ -209,7 +229,7 @@ plt.ylim(0.35, 1.01)
 plt.xlabel("Time (sec)")
 plt.ylabel("Recall")
 
-plt.legend(loc='best')
+apply_legend()
 plt.tight_layout()
 plt.savefig("glove_recall_vs_time_host_scatter.png", dpi=300, bbox_inches='tight')
 plt.close()
@@ -234,7 +254,7 @@ plt.ylim(0.35, 1.01)
 plt.xlabel("Time (sec)")
 plt.ylabel("Recall")
 
-plt.legend(loc='best')
+apply_legend()
 plt.tight_layout()
 plt.savefig("glove_recall_vs_time_bf3_scatter.png", dpi=300, bbox_inches='tight')
 plt.close()
