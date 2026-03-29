@@ -6,7 +6,7 @@ def apply_legend(outside=True, ncol=1):
     if outside:
         plt.legend(
             loc='lower right',
-            bbox_to_anchor=(1.02, 0),
+            bbox_to_anchor=(5, 0),
             frameon=True,
             fancybox=True,
             framealpha=1,
