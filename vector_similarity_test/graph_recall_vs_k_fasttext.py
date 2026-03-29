@@ -174,61 +174,41 @@ plt.savefig("fasttext_time_vs_k_host_vs_bf3.png", dpi=300, bbox_inches='tight')
 plt.close()
 
 
-#3. Recall vs. Time (Host)
+#3. Recall vs. Time (Host) — SCATTER
 plt.figure(figsize=(6,4))
 plt.title("Recall vs Time (FastText Dataset, Host)")
 plt.grid(True, linestyle='--', alpha=0.6)
 
-def sort_by_time(time, recall):
-    idx = np.argsort(time)
-    return time[idx], recall[idx]
+plt.scatter(fast_host_lsh_time, fast_host_lsh_recall, color='purple', label='LSH', s=60)
+plt.scatter(fast_host_pq_time, fast_host_pq_recall, color='teal', label='PQ', s=60)
+plt.scatter(fast_host_ivfpq_time, fast_host_ivfpq_recall, color='orange', label='IVFPQ', s=60)
+plt.scatter(fast_host_hnsw_time, fast_host_hnsw_recall, color='navy', label='HNSW', s=60)
 
-lsh_t, lsh_r = sort_by_time(fast_host_lsh_time, fast_host_lsh_recall)
-pq_t, pq_r = sort_by_time(fast_host_pq_time, fast_host_pq_recall)
-ivfpq_t, ivfpq_r = sort_by_time(fast_host_ivfpq_time, fast_host_ivfpq_recall)
-hnsw_t, hnsw_r = sort_by_time(fast_host_hnsw_time, fast_host_hnsw_recall)
-
-plt.plot(lsh_t, lsh_r, '-o', color='purple', label='LSH', linewidth=2)
-plt.plot(pq_t, pq_r, '-o', color='teal', label='PQ', linewidth=2)
-plt.plot(ivfpq_t, ivfpq_r, '-o', color='orange', label='IVFPQ', linewidth=2)
-plt.plot(hnsw_t, hnsw_r, '-o', color='navy', label='HNSW', linewidth=2)
-
-all_times = np.concatenate([lsh_t, pq_t, ivfpq_t, hnsw_t])
+all_times = np.concatenate([fast_host_lsh_time, fast_host_pq_time, fast_host_ivfpq_time, fast_host_hnsw_time])
 plt.xlim(all_times.min()*0.9, all_times.max()*1.1)
 plt.ylim(0.35, 1.01)
-
 plt.xlabel("Time (sec)")
 plt.ylabel("Recall")
-
 plt.legend(loc='best')
-
-plt.savefig("fasttext_recall_vs_time_host.png", dpi=300, bbox_inches='tight')
+plt.savefig("fasttext_recall_vs_time_host_scatter.png", dpi=300, bbox_inches='tight')
 plt.close()
 
 
-#4. Recall vs. Time (BF3)
+#4. Recall vs. Time (BF3) — SCATTER
 plt.figure(figsize=(6,4))
 plt.title("Recall vs Time (FastText Dataset, BF3)")
 plt.grid(True, linestyle='--', alpha=0.6)
 
-lsh_t, lsh_r = sort_by_time(fast_bf3_lsh_time, fast_bf3_lsh_recall)
-pq_t, pq_r = sort_by_time(fast_bf3_pq_time, fast_bf3_pq_recall)
-ivfpq_t, ivfpq_r = sort_by_time(fast_bf3_ivfpq_time, fast_bf3_ivfpq_recall)
-hnsw_t, hnsw_r = sort_by_time(fast_bf3_hnsw_time, fast_bf3_hnsw_recall)
+plt.scatter(fast_bf3_lsh_time, fast_bf3_lsh_recall, color='purple', label='LSH', s=60)
+plt.scatter(fast_bf3_pq_time, fast_bf3_pq_recall, color='teal', label='PQ', s=60)
+plt.scatter(fast_bf3_ivfpq_time, fast_bf3_ivfpq_recall, color='orange', label='IVFPQ', s=60)
+plt.scatter(fast_bf3_hnsw_time, fast_bf3_hnsw_recall, color='navy', label='HNSW', s=60)
 
-plt.plot(lsh_t, lsh_r, '-o', color='purple', label='LSH', linewidth=2)
-plt.plot(pq_t, pq_r, '-o', color='teal', label='PQ', linewidth=2)
-plt.plot(ivfpq_t, ivfpq_r, '-o', color='orange', label='IVFPQ', linewidth=2)
-plt.plot(hnsw_t, hnsw_r, '-o', color='navy', label='HNSW', linewidth=2)
-
-all_times = np.concatenate([lsh_t, pq_t, ivfpq_t, hnsw_t])
+all_times = np.concatenate([fast_bf3_lsh_time, fast_bf3_pq_time, fast_bf3_ivfpq_time, fast_bf3_hnsw_time])
 plt.xlim(all_times.min()*0.9, all_times.max()*1.1)
 plt.ylim(0.35, 1.01)
-
 plt.xlabel("Time (sec)")
 plt.ylabel("Recall")
-
 plt.legend(loc='best')
-
-plt.savefig("fasttext_recall_vs_time_bf3.png", dpi=300, bbox_inches='tight')
+plt.savefig("fasttext_recall_vs_time_bf3_scatter.png", dpi=300, bbox_inches='tight')
 plt.close()
