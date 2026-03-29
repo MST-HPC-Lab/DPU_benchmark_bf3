@@ -175,7 +175,8 @@ plt.plot(k, bf3_hnsw_time, 'o:', color='navy', label='BF3 HNSW',linewidth=2)
 plt.xscale('log')
 plt.ylabel("Time (sec)")
 plt.xlabel("k")
-plt.ylim(bottom=0)
+#plt.ylim(bottom=0)
+plt.ylim(0.1, 30)
 plt.yscale('log')
 plt.legend(loc='best')
 #plt.legend(["Host Flat", "Host LSH", "Host PQ", "Host IVFPQ", "Host HNSW", "BF3 Flat", "BF3 LSH", "BF3 PQ", "BF3 IVFPQ", "BF3 HNSW"])
@@ -189,23 +190,24 @@ plt.close()
 #3. Recall vs. Time (Host)
 plt.figure(figsize=(6, 4))
 plt.title("Recall vs Time (GloVe Dataset, Host)")
-plt.grid(color='0.8')
+plt.grid(True, linestyle='--', alpha=0.6)
 
 # Plot each algorithm
-plt.scatter(host_lsh_time, host_lsh_recall, color='purple', label='LSH', s=60)
-plt.scatter(host_pq_time, host_pq_recall, color='teal', label='PQ', s=60)
-plt.scatter(host_ivfpq_time, host_ivfpq_recall, color='orange', label='IVFPQ', s=60)
-plt.scatter(host_hnsw_time, host_hnsw_recall, color='navy', label='HNSW', s=60)
+plt.plot(host_lsh_time, host_lsh_recall, '-o', color='purple', label='LSH', linewidth=2)
+plt.plot(host_pq_time, host_pq_recall, '-o', color='teal', label='PQ', linewidth=2)
+plt.plot(host_ivfpq_time, host_ivfpq_recall, '-o', color='orange', label='IVFPQ', linewidth=2)
+plt.plot(host_hnsw_time, host_hnsw_recall, '-o', color='navy', label='HNSW', linewidth=2)
+
+# Dynamic axis scaling
+all_host_times = np.concatenate([host_lsh_time, host_pq_time, host_ivfpq_time, host_hnsw_time])
+plt.xlim(all_host_times.min() * 0.9, all_host_times.max() * 1.1)
+plt.ylim(0.35, 1.01)
 
 plt.xlabel("Time (sec)")
 plt.ylabel("Recall")
-plt.xlim(0, 2.5)
-plt.ylim(0.3, 1.05) 
-
-for i in range(len(k)):
-    plt.text(host_hnsw_time[i], host_hnsw_recall[i], str(k[i]), fontsize=8)
 
 plt.legend(loc='best')
+plt.tight_layout()
 plt.savefig("glove_recall_vs_time_host.png", dpi=300, bbox_inches='tight')
 plt.close()
 
@@ -214,22 +216,23 @@ plt.close()
 #4. Recall vs. Time (BF3)
 plt.figure(figsize=(6, 4))
 plt.title("Recall vs Time (GloVe Dataset, BF3)")
-plt.grid(color='0.8')
+plt.grid(True, linestyle='--', alpha=0.6)
 
 # Plot each algorithm
-plt.scatter(bf3_lsh_time, bf3_lsh_recall, color='purple', label='LSH', s=60)
-plt.scatter(bf3_pq_time, bf3_pq_recall, color='teal', label='PQ', s=60)
-plt.scatter(bf3_ivfpq_time, bf3_ivfpq_recall, color='orange', label='IVFPQ', s=60)
-plt.scatter(bf3_hnsw_time, bf3_hnsw_recall, color='navy', label='HNSW', s=60)
+plt.plot(bf3_lsh_time, bf3_lsh_recall, '-o', color='purple', label='LSH', linewidth=2)
+plt.plot(bf3_pq_time, bf3_pq_recall, '-o', color='teal', label='PQ', linewidth=2)
+plt.plot(bf3_ivfpq_time, bf3_ivfpq_recall, '-o', color='orange', label='IVFPQ', linewidth=2)
+plt.plot(bf3_hnsw_time, bf3_hnsw_recall, '-o', color='navy', label='HNSW', linewidth=2)
+
+# Dynamic axis scaling
+all_bf3_times = np.concatenate([bf3_lsh_time, bf3_pq_time, bf3_ivfpq_time, bf3_hnsw_time])
+plt.xlim(all_bf3_times.min() * 0.9, all_bf3_times.max() * 1.1)
+plt.ylim(0.35, 1.01)
 
 plt.xlabel("Time (sec)")
 plt.ylabel("Recall")
-plt.xlim(0, 2.5)
-plt.ylim(0.3, 1.05)
-
-for i in range(len(k)):
-    plt.text(bf3_hnsw_time[i], bf3_hnsw_recall[i], str(k[i]), fontsize=8)
 
 plt.legend(loc='best')
+plt.tight_layout()
 plt.savefig("glove_recall_vs_time_bf3.png", dpi=300, bbox_inches='tight')
 plt.close()
