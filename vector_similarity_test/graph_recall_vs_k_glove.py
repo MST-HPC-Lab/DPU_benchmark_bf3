@@ -135,7 +135,7 @@ plt.legend(
     frameon=True,
     fancybox=True,
     framealpha=1,
-    ncol=2
+    ncol=1
 )
 
 plt.tight_layout(rect=[0, 0, 0.8, 1])
