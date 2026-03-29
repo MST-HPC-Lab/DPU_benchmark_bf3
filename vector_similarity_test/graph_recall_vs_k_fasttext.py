@@ -5,8 +5,8 @@ import matplotlib
 def apply_legend(outside=True, ncol=1):
     if outside:
         plt.legend(
-            loc='center left',
-            bbox_to_anchor=(1, 0.5),
+            loc='lower right',
+            bbox_to_anchor=(1, 0),
             frameon=True,
             fancybox=True,
             framealpha=1,
