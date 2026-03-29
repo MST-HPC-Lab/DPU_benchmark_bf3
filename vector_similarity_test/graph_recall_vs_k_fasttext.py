@@ -2,25 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib
 
-def apply_legend(outside=True, ncol=1):
-    if outside:
-        plt.legend(
-            loc='lower right',
-            bbox_to_anchor=(2, 0),
-            frameon=True,
-            fancybox=True,
-            framealpha=1,
-            ncol=ncol
-        )
-        plt.tight_layout(rect=[0, 0, 0.8, 1])
-    else:
-        plt.legend(
-            loc='best',
-            frameon=True,
-            fancybox=True,
-            framealpha=1,
-            ncol=ncol
-        )
 
 matplotlib.rcParams['font.family'] = 'DejaVu Serif'
 
@@ -151,7 +132,17 @@ plt.xscale('log')
 plt.ylabel("Recall@k")
 plt.xlabel("k") 
 plt.ylim(0, 1.1) 
-apply_legend()
+plt.legend(
+    loc='lower left',
+    bbox_to_anchor=(1.2, 0),
+    fontsize=7,
+    frameon=True,
+    fancybox=True,
+    framealpha=1,
+    ncol=2
+)
+
+plt.tight_layout(rect=[0, 0, 0.8, 1])
 #plt.legend(["LSH", "PQ", "IVFPQ", "HNSW"]) #["Host LSH", "Host PQ", "Host IVFPQ", "BF3 LSH", "BF3 PQ", "BF3 IVFPQ"]
 # plt.show()#block=False)
 #plt.savefig("results/fasttext_recall_vs_k.png")
@@ -195,7 +186,17 @@ plt.xscale('log')
 plt.yscale('log')
 plt.ylabel("Time (sec)")
 plt.xlabel("k")
-apply_legend(ncol=2)
+plt.legend(
+    loc='lower left',
+    bbox_to_anchor=(1.2, 0),
+    fontsize=7,
+    frameon=True,
+    fancybox=True,
+    framealpha=1,
+    ncol=2
+)
+
+plt.tight_layout(rect=[0, 0, 0.8, 1])
 plt.ylim(0.3, max(fast_host_bf_time)*1.2)
 #plt.legend(["Host Flat","Host LSH","Host PQ","Host IVFPQ","Host HNSW","BF3 Flat","BF3 LSH","BF3 PQ","BF3 IVFPQ","BF3 HNSW"], fontsize='small')
 plt.tight_layout()
@@ -219,7 +220,17 @@ plt.xlim(all_times.min()*0.9, all_times.max()*1.1)
 plt.ylim(0.35, 1.01)
 plt.xlabel("Time (sec)")
 plt.ylabel("Recall")
-apply_legend()
+plt.legend(
+    loc='lower left',
+    bbox_to_anchor=(1.2, 0),
+    fontsize=7,
+    frameon=True,
+    fancybox=True,
+    framealpha=1,
+    ncol=1
+)
+
+plt.tight_layout(rect=[0, 0, 0.82, 1])
 plt.savefig("fasttext_recall_vs_time_host_scatter.png", dpi=300, bbox_inches='tight')
 plt.close()
 
@@ -239,6 +250,16 @@ plt.xlim(all_times.min()*0.9, all_times.max()*1.1)
 plt.ylim(0.35, 1.01)
 plt.xlabel("Time (sec)")
 plt.ylabel("Recall")
-apply_legend()
+plt.legend(
+    loc='lower left',
+    bbox_to_anchor=(1.2, 0),
+    fontsize=7,
+    frameon=True,
+    fancybox=True,
+    framealpha=1,
+    ncol=1
+)
+
+plt.tight_layout(rect=[0, 0, 0.82, 1])
 plt.savefig("fasttext_recall_vs_time_bf3_scatter.png", dpi=300, bbox_inches='tight')
 plt.close()
