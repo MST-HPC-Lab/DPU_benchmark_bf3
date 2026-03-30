@@ -134,7 +134,7 @@ plt.xlabel("k")
 plt.ylim(0, 1.1) 
 plt.legend(
     loc='lower left',
-    bbox_to_anchor=(1.2, 0),
+    bbox_to_anchor=(1.09, 0),
     fontsize=7,
     frameon=True,
     fancybox=True,
@@ -142,7 +142,7 @@ plt.legend(
     ncol=1
 )
 
-plt.tight_layout(rect=[0, 0, 0.9, 1])
+plt.tight_layout(rect=[0, 0, 0.99, 1])
 #plt.legend(["LSH", "PQ", "IVFPQ", "HNSW"]) #["Host LSH", "Host PQ", "Host IVFPQ", "BF3 LSH", "BF3 PQ", "BF3 IVFPQ"]
 # plt.show()#block=False)
 #plt.savefig("results/fasttext_recall_vs_k.png")
