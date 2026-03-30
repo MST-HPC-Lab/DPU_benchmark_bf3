@@ -200,7 +200,7 @@ plt.legend(
     ncol=1
 )
 
-plt.tight_layout(rect=[0, 0, 0.99, 1])
+plt.tight_layout(rect=[0, 0, 1.02, 1])
 #plt.legend(["Host Flat", "Host LSH", "Host PQ", "Host IVFPQ", "Host HNSW", "BF3 Flat", "BF3 LSH", "BF3 PQ", "BF3 IVFPQ", "BF3 HNSW"])
 # plt.show()#block=False)
 #plt.savefig("results/recalltime_vs_k.png")
