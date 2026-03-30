@@ -130,7 +130,7 @@ plt.xlabel("k")
 plt.ylim(0, 1.1)
 plt.legend(
     loc='lower left',
-    bbox_to_anchor=(1.2, 0),
+    bbox_to_anchor=(1.09, 0),
     fontsize=7,
     frameon=True,
     fancybox=True,
@@ -138,7 +138,7 @@ plt.legend(
     ncol=1
 )
 
-plt.tight_layout(rect=[0, 0, 0.8, 1])
+plt.tight_layout(rect=[0, 0, 0.99, 1])
 #plt.legend(["LSH", "PQ", "IVFPQ", "HNSW"]) #["Host LSH", "Host PQ", "Host IVFPQ", "BF3 LSH", "BF3 PQ", "BF3 IVFPQ"]
 # plt.show()#block=False)
 #plt.savefig("results/recall_vs_k.png")
@@ -266,7 +266,7 @@ plt.ylabel("Recall")
 
 plt.legend(
     loc='lower left',
-    bbox_to_anchor=(1.2, 0),
+    bbox_to_anchor=(1.09, 0),
     fontsize=7,
     frameon=True,
     fancybox=True,
@@ -274,7 +274,7 @@ plt.legend(
     ncol=1
 )
 
-plt.tight_layout(rect=[0, 0, 0.82, 1])
+plt.tight_layout(rect=[0, 0, 0.99, 1])
 plt.tight_layout()
 plt.savefig("glove_recall_vs_time_bf3_scatter.png", dpi=300, bbox_inches='tight')
 plt.close()

@@ -260,6 +260,6 @@ plt.legend(
     ncol=1
 )
 
-plt.tight_layout(rect=[0, 0, 0.9, 1])
+plt.tight_layout(rect=[0, 0, 0.99, 1])
 plt.savefig("fasttext_recall_vs_time_bf3_scatter.png", dpi=300, bbox_inches='tight')
 plt.close()
