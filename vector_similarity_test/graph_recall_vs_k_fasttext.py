@@ -204,7 +204,7 @@ plt.savefig("fasttext_time_vs_k_host_vs_bf3.png", dpi=300, bbox_inches='tight')
 #plt.savefig("results/fasttext_recalltime_vs_k.png", dpi=300)
 plt.close()
 
-
+'''
 #3. Recall vs. Time (Host) — SCATTER
 plt.figure(figsize=(6,4))
 plt.title("Recall vs Time (FastText Dataset, Host)")
@@ -263,3 +263,4 @@ plt.legend(
 plt.tight_layout(rect=[0, 0, 0.99, 1])
 plt.savefig("fasttext_recall_vs_time_bf3_scatter.png", dpi=300, bbox_inches='tight')
 plt.close()
+'''

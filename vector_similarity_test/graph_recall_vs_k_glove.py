@@ -188,7 +188,7 @@ plt.plot(k, bf3_hnsw_time, 'o:', color='navy', label='BF3 HNSW',linewidth=2)
 plt.ylabel("Time (sec)")
 plt.xlabel("k")
 #plt.ylim(bottom=0)
-plt.ylim(0.1, 30)
+plt.ylim(0.1, 3)
 #plt.yscale('log')
 plt.legend(
     loc='lower left',
@@ -209,7 +209,7 @@ plt.savefig("glove_time_vs_k_host_vs_bf3.png", dpi=300, bbox_inches='tight')
 plt.tight_layout()
 plt.close()
 
-
+'''
 #3. Recall vs. Time (Host) — SCATTER
 plt.figure(figsize=(6, 4))
 plt.title("Recall vs Time (GloVe Dataset, Host)")
@@ -278,3 +278,4 @@ plt.tight_layout(rect=[0, 0, 0.99, 1])
 plt.tight_layout()
 plt.savefig("glove_recall_vs_time_bf3_scatter.png", dpi=300, bbox_inches='tight')
 plt.close()
+'''
