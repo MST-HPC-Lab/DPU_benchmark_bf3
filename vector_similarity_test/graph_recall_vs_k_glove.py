@@ -156,7 +156,7 @@ plt.grid(True, linestyle='--', alpha=0.6)
 
 #Host (Solid Lines)
 #plt.plot(k, host_bf_time, color='black', label='Host Flat',linewidth=2)
-plt.plot(k, host_bf_time, color='black', linestyle='--', alpha=0.6, label='Host Flat')
+#plt.plot(k, host_bf_time, color='black', linestyle='--', alpha=0.6, label='Host Flat')
 plt.plot(k, host_lsh_time, color='purple', label='Host LSH',linewidth=2)
 plt.plot(k, host_pq_time, color='teal', label='Host PQ',linewidth=2)
 plt.plot(k, host_ivfpq_time, color='orange', label='Host IVFPQ',linewidth=2)
@@ -184,12 +184,12 @@ plt.plot(k, bf3_hnsw_time, 'o:', color='navy', label='BF3 HNSW',linewidth=2)
 #plt.plot(k, bf3_pq_time     , 'o:', color='teal')
 #plt.plot(k, bf3_ivfpq_time  , 'o:', color='orange')
 #plt.plot(k, bf3_hnsw_time  , 'o:', color='navy')
-plt.xscale('log')
+#plt.xscale('log')
 plt.ylabel("Time (sec)")
 plt.xlabel("k")
 #plt.ylim(bottom=0)
 plt.ylim(0.1, 30)
-plt.yscale('log')
+#plt.yscale('log')
 plt.legend(
     loc='lower left',
     bbox_to_anchor=(1.2, 0),
