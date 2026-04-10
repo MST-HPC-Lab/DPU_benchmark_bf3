@@ -7,7 +7,8 @@ from timeit import repeat
 
 
 # Load Data File
-df = pd.read_csv("../Data/glove.6B.200d.txt", sep=" ", quoting=3, header=None)
+# df = pd.read_csv("../Data/glove.6B.200d.txt", sep=" ", quoting=3, header=None)
+df = pd.read_csv("../Data/glove.6B.200d.txt", sep=" ", quoting=3, skiprows=1, header=None)
 
 d = 200
 k = 100
@@ -17,8 +18,12 @@ vocab = df.iloc[:, 0]
 df = df.drop(0, axis=1)
 
 # Testing vs. Training Split
-test_i = [i for i in range(399, 400000, 400)]
-train_i = [i for i in range(400000) if (i + 399) % 400]
+# test_i = [i for i in range(399, 400000, 400)]
+# train_i = [i for i in range(400000) if (i + 399) % 400]
+
+N = len(df)
+test_i = [i for i in range(199, N, 200)]
+train_i = [i for i in range(N) if (i + 199) % 200]
 
 x_query = df.iloc[test_i]
 x_train = df.iloc[train_i]
@@ -63,7 +68,8 @@ def search(index, k=k, measure_accuracy=True):
     D, I = index.search(x_query, k)
     if measure_accuracy:
         global truth_I
-        return batch_recall(I, truth_I)
+        # return batch_recall(I, truth_I)
+        return batch_recall(I, truth_I, k)
 
 
 # HNSW Index
@@ -83,7 +89,8 @@ def hnsw_build(data, dim, ef_construction=200, M=16, ef_search=100):
     HNSW = faiss.IndexHNSWFlat(dim, M)
     HNSW.hnsw.efConstruction = ef_construction
     HNSW.add(x_train_np)
-    HNSW.hnsw.efSearch = max(ef_search, k)
+    # HNSW.hnsw.efSearch = max(ef_search, k)
+    HNSW.hnsw.efSearch = max(int(ef_search), 1)
 
 
 def hnsw_search(k=k, measure_accuracy=True):
@@ -103,6 +110,13 @@ def hnsw_search(k=k, measure_accuracy=True):
 
     return I, D
 
+
+# Timing helper (ADDED)
+def avg_time(fn, reps=3):
+    fn()  # warm-up (not counted)
+    return np.mean(repeat(fn, number=1, repeat=reps))
+
+
 # HNSW Parameter Sweep
 hnsw_M_list = [8, 16, 32]
 hnsw_efc_list = [100, 200, 400]
@@ -117,8 +131,12 @@ def test_suite(r=3):
     # Brute Force Ground Truth
     print("Brute Force")
 
-    bf_btime = np.mean(repeat(lambda: brute_force_build(), number=1, repeat=r))
-    bf_stime = np.mean(repeat(lambda: brute_force_search(), number=1, repeat=r))
+    # bf_btime = np.mean(repeat(lambda: brute_force_build(), number=1, repeat=r))
+    bf_btime = avg_time(lambda: brute_force_build(), reps=r)
+
+    # bf_stime = np.mean(repeat(lambda: brute_force_search(), number=1, repeat=r))
+    brute_force_build()
+    bf_stime = avg_time(lambda: brute_force_search(k), reps=r)
 
     print("Brute Force Accuracy: 1.0")
     print("Brute Force Build Time:", bf_btime)
@@ -132,10 +150,11 @@ def test_suite(r=3):
 
         for efc in hnsw_efc_list:
 
-            bt = np.mean(repeat(
+            # bt = np.mean(repeat(
+            bt = avg_time(
                 lambda: hnsw_build(x_train, d, ef_construction=efc, M=M, ef_search=max(k, 100)),
-                number=1, repeat=r
-            ))
+                reps=r
+            )
 
             print(f"ef_construction: {efc}, build_time: {bt:.4f}s")
 
@@ -145,12 +164,16 @@ def test_suite(r=3):
 
                 HNSW.hnsw.efSearch = max(efs, k)
 
+                # refresh ground truth
+                brute_force_search(k)
+
                 rc = hnsw_search(k)
 
-                st = np.mean(repeat(
+                # st = np.mean(repeat(
+                st = avg_time(
                     lambda: hnsw_search(k, measure_accuracy=False),
-                    number=1, repeat=r
-                ))
+                    reps=r
+                )
 
                 print(f"ef_search: {efs}, recall: {rc:.4f}, search_time: {st:.6f}s")
 

@@ -11,8 +11,9 @@ import os
 
 REPLICATIONS = 5
 
+#warmup function to ensure fair timing (e.g. JIT compilation, caching effects)
 def avg_time(fn, reps=REPLICATIONS):
-    for _ in range(2):
+    for _ in range(2): #two extra runs to warm up caches 
         fn()
     #fn()
     return np.mean(repeat(fn, repeat=reps, number=1))
@@ -83,10 +84,10 @@ if __name__ == "__main__":
     # SOPHIA EDIT: Load numpy arrays directly (not DataFrames)
     # Builder now saves contiguous float32 numpy arrays.
     x_query_np = np.load(os.path.join(indices_dir, "x_query.npy"))
-    x_train_np = np.load(os.path.join(indices_dir, "x_train.npy"))
+    #x_train_np = np.load(os.path.join(indices_dir, "x_train.npy"))
 
     ib.x_query = x_query_np
-    ib.x_train = x_train_np
+    #ib.x_train = x_train_np
 
     # Load FAISS indices
 
