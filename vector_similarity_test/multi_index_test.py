@@ -158,8 +158,8 @@ def test_suite(r=3):
 
     # PQ
     print("\nPQ")
-    for m in [4, 8, 16]:
-
+    for m in [4, 5, 10, 20]:
+    
         bt = avg_time(lambda: pq_build(m), r)
         pq_build(m)
 
