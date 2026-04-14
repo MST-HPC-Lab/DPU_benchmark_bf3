@@ -199,10 +199,9 @@ if __name__ == "__main__":
     lsh_nbits = 1600
     pq_nbits = 8
     ivfpq_ncentroids = 5
-    HNSW_M = 32
-    HNSW_efconstruction = 256
-    #HNSW_efsearch = 128
-    HNSW_efsearch = 512
+    HNSW_M = 16
+    HNSW_efconstruction = 200
+    HNSW_efsearch = 128
 
     print("Building...\r", end='')
 

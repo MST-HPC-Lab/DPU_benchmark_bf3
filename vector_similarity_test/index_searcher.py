@@ -9,6 +9,9 @@ from timeit import repeat
 import json
 import os
 
+import faiss
+faiss.omp_set_num_threads(8)  
+
 REPLICATIONS = 5
 
 #warmup function to ensure fair timing (e.g. JIT compilation, caching effects)
@@ -141,16 +144,14 @@ if __name__ == "__main__":
     hnsw_recalls, hnsw_times = [], []
 
 
-    max_k = max(k_values)
-    brute_force_search(max_k) 
- 
     for k in k_values:
-         
-       # brute_force_search(k) 
+        #Always refresh the ground truth 
+        brute_force_search(k) 
 
         #Brute Force
         if "flat" in only:
-            bf_time = avg_time(lambda: brute_force_search(k))
+            #bf_time = avg_time(lambda: brute_force_search(k))
+            bf_time = avg_time(lambda: ib.FL2.search(ib.x_query, k))
             #bf_time = np.mean(repeat(lambda: brute_force_search(k), repeat=REPLICATIONS, number=1))
             bf_times.append(bf_time)
 
