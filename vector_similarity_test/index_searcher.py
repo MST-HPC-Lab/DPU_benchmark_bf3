@@ -1,4 +1,10 @@
 # index_searcher.py
+# Force thread counts BEFORE importing numpy/faiss
+os.environ["OMP_NUM_THREADS"] = "8"
+os.environ["OPENBLAS_NUM_THREADS"] = "8"
+os.environ["MKL_NUM_THREADS"] = "8"
+os.environ["VECLIB_MAXIMUM_THREADS"] = "8"
+os.environ["NUMEXPR_NUM_THREADS"] = "8"
 
 import argparse
 import pandas as pd
@@ -9,8 +15,9 @@ from timeit import repeat
 import json
 import os
 
-import faiss
-faiss.omp_set_num_threads(8)  
+#import faiss
+faiss.omp_set_num_threads(8) 
+print("FAISS threads:", faiss.omp_get_max_threads()) 
 
 REPLICATIONS = 5
 
