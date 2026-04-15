@@ -7,7 +7,7 @@ matplotlib.rcParams['font.family'] = 'DejaVu Serif'
 matplotlib.rcParams['font.size'] = 12
 matplotlib.rcParams['axes.titlesize'] = 14
 matplotlib.rcParams['axes.labelsize'] = 12
-matplotlib.rcParams['legend.fontsize'] = 7
+matplotlib.rcParams['legend.fontsize'] = 6
 
 matplotlib.rcParams['xtick.labelsize'] = 11
 matplotlib.rcParams['ytick.labelsize'] = 11
@@ -99,23 +99,23 @@ bf3_hnsw_time = np.array([0.21616909536533058, 0.2171331098303199, 0.21749883745
 
 # GRAPHS :
 #1. Recall vs. K (Host vs. BF3)
-plt.figure(figsize=(6,4))
+plt.figure(figsize=(9,4))
 plt.title("Recall vs. k (GloVe Dataset, Host vs. BF3)")
 #plt.title("glove.6B.200d.txt: How Recall Varies with k\n(other parameters chosen so that recall is 100% when k=1)")
 plt.grid(True, linestyle='--', alpha=0.6)
 
 #Host (Solid Lines)
 
-plt.plot(k, host_lsh_recall, color='purple', label='Host LSH', linewidth=2)
-plt.plot(k, host_pq_recall, color='teal', label='Host PQ', linewidth=2)
-plt.plot(k, host_ivfpq_recall, color='orange', label='Host IVFPQ', linewidth=2)
-plt.plot(k, host_hnsw_recall, color='navy', label='Host HNSW', linewidth=2)
+plt.plot(k, host_lsh_recall, color='purple', label='Host LSH', linewidth=1)
+plt.plot(k, host_pq_recall, color='teal', label='Host PQ', linewidth=1)
+plt.plot(k, host_ivfpq_recall, color='orange', label='Host IVFPQ', linewidth=1)
+plt.plot(k, host_hnsw_recall, color='navy', label='Host HNSW', linewidth=1)
 
 #BF3 (Dotted lines with markers)
-plt.plot(k, bf3_lsh_recall, 'o:', color='purple', label='BF3 LSH',linewidth=2)
-plt.plot(k, bf3_pq_recall, 'o:', color='teal', label='BF3 PQ', linewidth=2)
-plt.plot(k, bf3_ivfpq_recall, 'o:', color='orange', label='BF3 IVFPQ', linewidth=2)
-plt.plot(k, bf3_hnsw_recall, 'o:', color='navy', label='BF3 HNSW', linewidth=2)
+plt.plot(k, bf3_lsh_recall, 'o:', color='purple', label='BF3 LSH',linewidth=1)
+plt.plot(k, bf3_pq_recall, 'o:', color='teal', label='BF3 PQ', linewidth=1)
+plt.plot(k, bf3_ivfpq_recall, 'o:', color='orange', label='BF3 IVFPQ', linewidth=1)
+plt.plot(k, bf3_hnsw_recall, 'o:', color='navy', label='BF3 HNSW', linewidth=1)
 
 #plt.plot(k, host_lsh_recall   ,       color='purple')
 #plt.plot(k, host_pq_recall    ,       color='teal')
@@ -131,7 +131,7 @@ plt.xlabel("k")
 plt.ylim(0, 1.1)
 plt.legend(
     loc='lower left',
-    bbox_to_anchor=(1.09, 0),
+    bbox_to_anchor=(1.35, 0),
     fontsize=7,
     frameon=True,
     fancybox=True,
@@ -150,26 +150,26 @@ plt.close()
 
 
 #2. Time vs. K (Host vs. BF3)
-plt.figure(figsize=(6,4))
+plt.figure(figsize=(9,4))
 #plt.title("glove.6B.200d.txt: How Recall Time Varies with k\n(other parameters chosen so that recall is 100% when k=1)")
 plt.title("Time vs. k (GloVe Dataset, Host vs. BF3)") 
 plt.grid(True, linestyle='--', alpha=0.6)
 
 #Host (Solid Lines)
-plt.plot(k, host_bf_time, color='black', label='Host Flat',linewidth=2)
+plt.plot(k, host_bf_time, color='black', label='Host Flat',linewidth=1)
 #plt.plot(k, host_bf_time, color='black', linestyle='--', alpha=0.6, label='Host Flat')
-plt.plot(k, host_lsh_time, color='purple', label='Host LSH',linewidth=2)
-plt.plot(k, host_pq_time, color='teal', label='Host PQ',linewidth=2)
-plt.plot(k, host_ivfpq_time, color='orange', label='Host IVFPQ',linewidth=2)
-plt.plot(k, host_hnsw_time, color='navy', label='Host HNSW',linewidth=2)
+plt.plot(k, host_lsh_time, color='purple', label='Host LSH',linewidth=1)
+plt.plot(k, host_pq_time, color='teal', label='Host PQ',linewidth=1)
+plt.plot(k, host_ivfpq_time, color='orange', label='Host IVFPQ',linewidth=1)
+plt.plot(k, host_hnsw_time, color='navy', label='Host HNSW',linewidth=1)
 
 #BF3 (Dotted lines with markers)
-plt.plot(k, bf3_bf_time, 'o:', color='black', alpha=0.6, label='BF3 Flat')
+plt.plot(k, bf3_bf_time, 'o:', color='black', alpha=0.6, label='BF3 Flat',linewidth=1)
 #plt.plot(k, bf3_bf_time, 'o:', color='black', label='BF3 Flat',linewidth=2)
-plt.plot(k, bf3_lsh_time, 'o:', color='purple', label='BF3 LSH',linewidth=2)
-plt.plot(k, bf3_pq_time, 'o:', color='teal', label='BF3 PQ',linewidth=2)
-plt.plot(k, bf3_ivfpq_time, 'o:', color='orange', label='BF3 IVFPQ',linewidth=2)
-plt.plot(k, bf3_hnsw_time, 'o:', color='navy', label='BF3 HNSW',linewidth=2)
+plt.plot(k, bf3_lsh_time, 'o:', color='purple', label='BF3 LSH',linewidth=1)
+plt.plot(k, bf3_pq_time, 'o:', color='teal', label='BF3 PQ',linewidth=1)
+plt.plot(k, bf3_ivfpq_time, 'o:', color='orange', label='BF3 IVFPQ',linewidth=1)
+plt.plot(k, bf3_hnsw_time, 'o:', color='navy', label='BF3 HNSW',linewidth=1)
 
 # plt.scatter(host_IVFPQ_k10_recall, host_IVFPQ_k10_time, color='orange')
 # plt.scatter(host_PQ_k10_recall, host_PQ_k10_time, color='teal')
@@ -193,7 +193,7 @@ plt.ylim(0.1, 7)
 plt.yscale('log')
 plt.legend(
     loc='lower left',
-    bbox_to_anchor=(1.2, 0),
+    bbox_to_anchor=(1.35, 0),
     fontsize=7,
     frameon=True,
     fancybox=True,
