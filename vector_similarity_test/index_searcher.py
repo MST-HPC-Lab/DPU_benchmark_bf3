@@ -1,4 +1,6 @@
 # index_searcher.py
+import os
+
 # Force thread counts BEFORE importing numpy/faiss
 os.environ["OMP_NUM_THREADS"] = "8"
 os.environ["OPENBLAS_NUM_THREADS"] = "8"
@@ -13,7 +15,6 @@ import faiss
 from timeit import repeat
 # import hnswlib  # SOPHIA EDIT: removed hnswlib, switching to FAISS HNSW
 import json
-import os
 
 #import faiss
 faiss.omp_set_num_threads(8) 
@@ -140,7 +141,7 @@ if __name__ == "__main__":
     # with MemoryMonitor(role="query", outpath=outpath, interval=args.interval) as mem:
     #     mem.log("after_load_indices")
 
-    print("Indexes loaded. Running searches...")
+    print("Indexes loaded. Running searches...", flush=True)
 
     k_values = [1, 2, 3, 5, 7, 10, 25, 50, 75, 100]
 
@@ -150,50 +151,67 @@ if __name__ == "__main__":
     ivfpq_recalls, ivfpq_times = [], []
     hnsw_recalls, hnsw_times = [], []
 
+    print("k:", k_values, flush=True)
 
-    for k in k_values:
-        #Always refresh the ground truth 
-        brute_force_search(k) 
-
-        #Brute Force
-        if "flat" in only:
-            #bf_time = avg_time(lambda: brute_force_search(k))
+    #  Brute Force
+    if "flat" in only:
+        for k in k_values:
+            brute_force_search(k)  # keep truth current / consistent
             bf_time = avg_time(lambda: ib.FL2.search(ib.x_query, k))
-            #bf_time = np.mean(repeat(lambda: brute_force_search(k), repeat=REPLICATIONS, number=1))
             bf_times.append(bf_time)
 
-        #LSH
-        if "lsh" in only:
+        print("Brute Force Time:", bf_times, flush=True)
+
+    #  LSH
+    if "lsh" in only:
+        for k in k_values:
+            brute_force_search(k)
             lsh_recall = search(ib.LSH, k)
             lsh_time = avg_time(lambda: search(ib.LSH, k, measure_accuracy=False))
-            #lsh_time = np.mean(repeat(lambda: search(ib.LSH, k, measure_accuracy=False), repeat=REPLICATIONS, number=1))
             lsh_recalls.append(lsh_recall)
             lsh_times.append(lsh_time)
 
-        #PQ
-        if "pq" in only:
+        print("LSH Recall:", lsh_recalls, flush=True)
+        print("LSH Time:", lsh_times, flush=True)
+
+    # PQ 
+    if "pq" in only:
+        for k in k_values:
+            brute_force_search(k)
             pq_recall = search(ib.PQ, k)
             pq_time = avg_time(lambda: search(ib.PQ, k, measure_accuracy=False))
-            #pq_time = np.mean(repeat(lambda: search(ib.PQ, k, measure_accuracy=False), repeat=REPLICATIONS, number=1))
             pq_recalls.append(pq_recall)
             pq_times.append(pq_time)
 
-        #IVFPQ
-        if "ivfpq" in only:
+        print("PQ Recall:", pq_recalls, flush=True)
+        print("PQ Time:", pq_times, flush=True)
+
+    #  IVFPQ
+    if "ivfpq" in only:
+        for k in k_values:
+            brute_force_search(k)
             ivfpq_recall = search(ib.IVFPQ, k)
             ivfpq_time = avg_time(lambda: search(ib.IVFPQ, k, measure_accuracy=False))
-            #ivfpq_time = np.mean(repeat(lambda: search(ib.IVFPQ, k, measure_accuracy=False), repeat=REPLICATIONS, number=1))
             ivfpq_recalls.append(ivfpq_recall)
             ivfpq_times.append(ivfpq_time)
 
-        #HNSW
-        if "hnsw" in only:
+        print("IVFPQ Recall:", ivfpq_recalls, flush=True)
+        print("IVFPQ Time:", ivfpq_times, flush=True)
+
+    #  HNSW
+    if "hnsw" in only:
+        for k in k_values:
+            brute_force_search(k)
             hnsw_recall = hnsw_search(k)
             hnsw_time = avg_time(lambda: hnsw_search(k, measure_accuracy=False))
-            #hnsw_time = np.mean(repeat(lambda: hnsw_search(k, measure_accuracy=False), repeat=REPLICATIONS, number=1))
             hnsw_recalls.append(hnsw_recall)
-            hnsw_times.append(hnsw_time) 
+            hnsw_times.append(hnsw_time)
 
+        print("HNSW Recall:", hnsw_recalls, flush=True)
+        print("HNSW Time:", hnsw_times, flush=True)
+
+
+        
 #    results = []
 #    for k in [1, 2, 3, 5, 7, 10, 25, 50, 75, 100]:
 #        results.append(test_search(k=k, r=3, verbose=False))
@@ -201,14 +219,14 @@ if __name__ == "__main__":
     #     mem.log("queries_finished")
 #    bf_time, lsh_recall, lsh_time, pq_recall, pq_time, ivfpq_recall, ivfpq_time, hnsw_recall, hnsw_time = zip(*results)
 
-    print("k:", k_values)
-    print("Brute Force Time:", bf_times)
-    print("LSH Recall:", lsh_recalls)
-    print("LSH Time:", lsh_times)
-    print("PQ Recall:", pq_recalls)
-    print("PQ Time:", pq_times)
-    print("IVFPQ Recall:", ivfpq_recalls)
-    print("IVFPQ Time:", ivfpq_times)
-    print("HNSW Recall:", hnsw_recalls)
-    print("HNSW Time:", hnsw_times)
+    # print("k:", k_values)
+    # print("Brute Force Time:", bf_times)
+    # print("LSH Recall:", lsh_recalls)
+    # print("LSH Time:", lsh_times)
+    # print("PQ Recall:", pq_recalls)
+    # print("PQ Time:", pq_times)
+    # print("IVFPQ Recall:", ivfpq_recalls)
+    # print("IVFPQ Time:", ivfpq_times)
+    # print("HNSW Recall:", hnsw_recalls)
+    # print("HNSW Time:", hnsw_times)
     
