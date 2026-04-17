@@ -15,6 +15,9 @@ import faiss
 from timeit import repeat
 # import hnswlib  # SOPHIA EDIT: removed hnswlib, switching to FAISS HNSW
 import json
+from types import SimpleNamespace
+
+from device_utils import is_bluefield
 
 #import faiss
 faiss.omp_set_num_threads(8) 
@@ -72,12 +75,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     only = set(args.only) if args.only is not None else {"flat", "lsh", "pq", "ivfpq", "hnsw"}
-
-
     indices_dir = args.indices_dir
 
     # Load saved artifacts from builder
-
     meta_path = os.path.join(indices_dir, "meta.json")
     with open(meta_path, "r") as f:
         meta = json.load(f)
@@ -118,10 +118,10 @@ if __name__ == "__main__":
         ib.HNSW.hnsw.efSearch = max(int(ib.HNSW_efsearch),1)
         
 
-#    ib.FL2   = faiss.read_index(os.path.join(indices_dir, "flat.index"))
-#    ib.LSH   = faiss.read_index(os.path.join(indices_dir, "lsh.index"))
-#    ib.PQ    = faiss.read_index(os.path.join(indices_dir, "pq.index"))
-#    ib.IVFPQ = faiss.read_index(os.path.join(indices_dir, "ivfpq.index")) 
+    # ib.FL2   = faiss.read_index(os.path.join(indices_dir, "flat.index"))
+    # ib.LSH   = faiss.read_index(os.path.join(indices_dir, "lsh.index"))
+    # ib.PQ    = faiss.read_index(os.path.join(indices_dir, "pq.index"))
+    # ib.IVFPQ = faiss.read_index(os.path.join(indices_dir, "ivfpq.index")) 
 
     # OLD HNSWLIB LOAD (COMMENTED OUT — DO NOT DELETE) 
     # ib.HNSW = hnswlib.Index(space='l2', dim=ib.d)
@@ -212,21 +212,51 @@ if __name__ == "__main__":
 
 
         
-#    results = []
-#    for k in [1, 2, 3, 5, 7, 10, 25, 50, 75, 100]:
-#        results.append(test_search(k=k, r=3, verbose=False))
+    # results = []
+    # for k in [1, 2, 3, 5, 7, 10, 25, 50, 75, 100]:
+    #     results.append(test_search(k=k, r=3, verbose=False))
 
     #     mem.log("queries_finished")
-#    bf_time, lsh_recall, lsh_time, pq_recall, pq_time, ivfpq_recall, ivfpq_time, hnsw_recall, hnsw_time = zip(*results)
+    # bf_time, lsh_recall, lsh_time, pq_recall, pq_time, ivfpq_recall, ivfpq_time, hnsw_recall, hnsw_time = zip(*results)
 
-    # print("k:", k_values)
-    # print("Brute Force Time:", bf_times)
-    # print("LSH Recall:", lsh_recalls)
-    # print("LSH Time:", lsh_times)
-    # print("PQ Recall:", pq_recalls)
-    # print("PQ Time:", pq_times)
-    # print("IVFPQ Recall:", ivfpq_recalls)
-    # print("IVFPQ Time:", ivfpq_times)
-    # print("HNSW Recall:", hnsw_recalls)
-    # print("HNSW Time:", hnsw_times)
-    
+
+    # Load Results JSON file
+    results_path = os.path.join("results", "results.json")
+    if os.path.exists(results_path):
+        with open(results_path, "r") as f:
+            results = json.load(f) #, object_hook=lambda d: SimpleNamespace(**d))
+    else:
+        results = {} #SimpleNamespace()
+
+    # Gather current results and insert into loaded JSON (overwriting any existing results for this indices_dir)
+    device = "bf3" if is_bluefield() else "host"
+    dataset = meta["source_file"]
+    dimensions = meta["d"]
+    num_vecs = meta["num_vecs"]
+    #threads = THREADS
+
+    current_results = { # To add to JSON dict
+        "date": pd.Timestamp.now().isoformat(),
+        "repeats": REPLICATIONS,
+        "k_values" : k_values,
+
+        "bf_times" : bf_times,
+        "lsh_recalls" : lsh_recalls,
+        "lsh_times" : lsh_times,
+        "pq_recalls" : pq_recalls,
+        "pq_times" : pq_times,
+        "ivfpq_recalls" : ivfpq_recalls,
+        "ivfpq_times" : ivfpq_times,
+        "hnsw_recalls" : hnsw_recalls,
+        "hnsw_times" : hnsw_times,
+    }
+
+
+    # def serialize_namespace(obj):
+    #     if isinstance(obj, SimpleNamespace):
+    #         return vars(obj)
+    #     raise TypeError(f"Type {type(obj)} not serializable")
+
+    # Save results to JSON
+    with open(results_path, "w") as f:
+        json.dump(results, f, indent=4)
