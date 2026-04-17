@@ -251,7 +251,18 @@ if __name__ == "__main__":
     dataset = meta["source_file"]
     dimensions = meta["d"]
     num_vecs = meta["num_vecs"]
-    #threads = THREADS
+    threads = args.threads
+
+    if device not in results: results[device] = {}
+    if dataset not in results[device]: results[device][dataset] = {}
+    if dimensions not in results[device][dataset]: results[device][dataset][dimensions] = {}
+    if num_vecs not in results[device][dataset][dimensions]: results[device][dataset][dimensions][num_vecs] = {}
+    if threads not in results[device][dataset][dimensions][num_vecs]: results[device][dataset][dimensions][num_vecs][threads] = {}
+    slot = results[device][dataset][dimensions][num_vecs][threads]
+    old_date = slot.get("date", None)
+    if old_date is not None:
+        old_date_slot = slot.get(old_date, {})
+        slot[old_date] = old_date_slot
 
     current_results = { # To add to JSON dict
         "date": pd.Timestamp.now().isoformat(),
@@ -268,6 +279,12 @@ if __name__ == "__main__":
         "hnsw_recalls" : hnsw_recalls,
         "hnsw_times" : hnsw_times,
     }
+    for key, value in current_results.items():
+        # Save old data under old date as subkey
+        old_item = slot.get(key, None)
+        if old_item is not None: old_date_slot[key] = old_item
+        # Insert current data
+        slot[key] = value
 
 
     # def serialize_namespace(obj):
