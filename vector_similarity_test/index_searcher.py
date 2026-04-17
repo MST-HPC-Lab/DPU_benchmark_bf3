@@ -153,14 +153,24 @@ if __name__ == "__main__":
 
     print("k:", k_values, flush=True)
 
-    #  Brute Force
+    # #  Brute Force
+    # if "flat" in only:
+    #     for k in k_values:
+    #         brute_force_search(k)  # keep truth current / consistent
+    #         bf_time = avg_time(lambda: ib.FL2.search(ib.x_query, k))
+    #         bf_times.append(bf_time)
+
+    #     print("Brute Force Time:", bf_times, flush=True)
+
+    #Brute Force 
     if "flat" in only:
         for k in k_values:
-            brute_force_search(k)  # keep truth current / consistent
-            bf_time = avg_time(lambda: ib.FL2.search(ib.x_query, k))
+            brute_force_search(k)  # sets truth_I
+            bf_time = avg_time(lambda: brute_force_search(k))
             bf_times.append(bf_time)
-
+        
         print("Brute Force Time:", bf_times, flush=True)
+
 
     #  LSH
     if "lsh" in only:
