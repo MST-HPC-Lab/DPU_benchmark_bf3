@@ -280,6 +280,7 @@ if __name__ == "__main__":
         "hnsw_times" : hnsw_times,
     }
     for key, value in current_results.items():
+        if key == "date": continue
         # Save old data under old date as subkey
         old_item = slot.get(key, None)
         if old_item is not None: old_date_slot[key] = old_item
