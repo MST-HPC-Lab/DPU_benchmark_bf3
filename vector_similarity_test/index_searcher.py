@@ -103,10 +103,12 @@ if __name__ == "__main__":
     # SOPHIA EDIT: Load numpy arrays directly (not DataFrames)
     # Builder now saves contiguous float32 numpy arrays.
     x_query_np = np.load(os.path.join(indices_dir, "x_query.npy"))
-    #x_train_np = np.load(os.path.join(indices_dir, "x_train.npy"))
+    x_train_np = np.load(os.path.join(indices_dir, "x_train.npy"))
 
     ib.x_query = x_query_np
-    #ib.x_train = x_train_np
+    ib.x_train = x_train_np
+
+    ib._x_train_np = x_train_np  # for brute force search without FAISS
 
     # Load FAISS indices
 
@@ -153,7 +155,8 @@ if __name__ == "__main__":
 
     k_values = [1, 2, 3, 5, 7, 10, 25, 50, 75, 100]
 
-    bf_times = []
+    bf_times = [] #FAISS brute force (flat index) times 
+    bf_times_np = [] #numpy brute force (no FAIS) 
     lsh_recalls, lsh_times = [], []
     pq_recalls, pq_times = [], []
     ivfpq_recalls, ivfpq_times = [], []
@@ -161,24 +164,21 @@ if __name__ == "__main__":
 
     print("k:", k_values, flush=True)
 
-    # #  Brute Force
-    # if "flat" in only:
-    #     for k in k_values:
-    #         brute_force_search(k)  # keep truth current / consistent
-    #         bf_time = avg_time(lambda: ib.FL2.search(ib.x_query, k))
-    #         bf_times.append(bf_time)
-
-    #     print("Brute Force Time:", bf_times, flush=True)
-
-    #Brute Force 
+    # Brute Force — FAISS
     if "flat" in only:
         for k in k_values:
-            brute_force_search(k)  # sets truth_I
-            bf_time = avg_time(lambda: brute_force_search(k))
+            brute_force_search(k)
+            bf_time = avg_time(lambda: ib.FL2.search(ib.x_query, k))
             bf_times.append(bf_time)
-        
-        print("Brute Force Time:", bf_times, flush=True)
+        print("Brute Force Time (FAISS):", bf_times, flush=True)
 
+    # Brute Force — numpy (no FAISS)
+    if "flat" in only:
+        for k in k_values:
+            brute_force_search(k)
+            bf_time_np = avg_time(lambda: brute_force_search(k))
+            bf_times_np.append(bf_time_np)
+        print("Brute Force Time (no FAISS):", bf_times_np, flush=True)
 
     #  LSH
     if "lsh" in only:
@@ -269,7 +269,8 @@ if __name__ == "__main__":
         "repeats": REPLICATIONS,
         "k_values" : k_values,
 
-        "bf_times" : bf_times,
+        "bf_times" : bf_times, #faiss brute force times
+        "bf_times_np" : bf_times_np, #no FAISS brute force times
         "lsh_recalls" : lsh_recalls,
         "lsh_times" : lsh_times,
         "pq_recalls" : pq_recalls,

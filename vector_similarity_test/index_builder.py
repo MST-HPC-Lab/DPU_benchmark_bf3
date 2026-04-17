@@ -36,33 +36,49 @@ def batch_recall(test_I, truth_I, k):
 
 # Flat index
 
-# def brute_force_build():
-#     global FL2
-#     FL2 = faiss.IndexFlatL2(d)
-#     FL2.add(x_train)
-
 def brute_force_build():
-    global FL2
-    # Use FAISS flat but we'll override search with numpy anyway
+    global FL2, _x_train_np
+    _x_train_np = x_train          # for numpy (no FAISS) search
     FL2 = faiss.IndexFlatL2(d)
-    FL2.add(x_train)
-    # Store train data for numpy fallback
-    global _x_train_np
-    _x_train_np = x_train  # already float32 contiguous
+    FL2.add(x_train)               # for FAISS search
+
+def brute_force_search_with_FAISS(k, measure_accuracy=False):
+    global FL2, truth_D, truth_I
+    truth_D, truth_I = FL2.search(x_query, k)
+    if measure_accuracy:
+        return 1.0
 
 # def brute_force_search(k, measure_accuracy=False):
-#     global FL2, truth_D, truth_I
-#     truth_D, truth_I = FL2.search(x_query, k)
+#     global truth_D, truth_I, _x_train_np
+#     # Pure numpy brute force — no AVX/BLAS optimization
+#     # Compute L2 distances manually
+#     dists = np.sum((x_query[:, None, :] - _x_train_np[None, :, :]) ** 2, axis=-1)  # (nq, n_train)
+#     truth_I = np.argsort(dists, axis=1)[:, :k].astype(np.int64)
+#     truth_D = np.sort(dists, axis=1)[:, :k]
 #     if measure_accuracy:
 #         return 1.0
 
 def brute_force_search(k, measure_accuracy=False):
     global truth_D, truth_I, _x_train_np
-    # Pure numpy brute force — no AVX/BLAS optimization
-    # Compute L2 distances manually
-    dists = np.sum((x_query[:, None, :] - _x_train_np[None, :, :]) ** 2, axis=-1)  # (nq, n_train)
-    truth_I = np.argsort(dists, axis=1)[:, :k].astype(np.int64)
-    truth_D = np.sort(dists, axis=1)[:, :k]
+    nq = x_query.shape[0]
+    all_I = np.empty((nq, k), dtype=np.int64)
+    all_D = np.empty((nq, k), dtype=np.float32)
+
+    BATCH = 100
+    for start in range(0, nq, BATCH):
+        end = min(start + BATCH, nq)
+        q_batch = x_query[start:end]
+        q_sq = np.sum(q_batch ** 2, axis=1, keepdims=True)
+        x_sq = np.sum(_x_train_np ** 2, axis=1, keepdims=True).T
+        dists = q_sq + x_sq - 2 * (q_batch @ _x_train_np.T)
+        idx = np.argpartition(dists, k, axis=1)[:, :k]
+        for i in range(end - start):
+            sorted_k = np.argsort(dists[i, idx[i]])
+            all_I[start + i] = idx[i][sorted_k]
+            all_D[start + i] = dists[i, idx[i][sorted_k]]
+
+    truth_I = all_I
+    truth_D = all_D
     if measure_accuracy:
         return 1.0
 
@@ -120,7 +136,8 @@ def ivfpq_build(ncentroids, code_size, n_bits):
     IVFPQ = faiss.IndexIVFPQ(coarse_quantizer, d, ncentroids, code_size, n_bits)
     IVFPQ.train(x_train)
     IVFPQ.add(x_train)
-    IVFPQ.nprobe = 5
+#    IVFPQ.nprobe = 5
+    IVFPQ.nprobe = 32
 
 
 # Build Only (no timing)
@@ -214,9 +231,11 @@ if __name__ == "__main__":
     x_query = np.ascontiguousarray(x_query.to_numpy(dtype=np.float32))
     x_train = np.ascontiguousarray(x_train.to_numpy(dtype=np.float32))
 
-    lsh_nbits = 1600
+    #lsh_nbits = 1600
+    lsh_nbits = 256
     pq_nbits = 8
-    ivfpq_ncentroids = 5
+    #ivfpq_ncentroids = 5
+    ivfpq_ncentroids = 512
     HNSW_M = 16
     HNSW_efconstruction = 200
     HNSW_efsearch = 128
