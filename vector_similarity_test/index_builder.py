@@ -36,17 +36,35 @@ def batch_recall(test_I, truth_I, k):
 
 # Flat index
 
+# def brute_force_build():
+#     global FL2
+#     FL2 = faiss.IndexFlatL2(d)
+#     FL2.add(x_train)
+
 def brute_force_build():
     global FL2
+    # Use FAISS flat but we'll override search with numpy anyway
     FL2 = faiss.IndexFlatL2(d)
     FL2.add(x_train)
+    # Store train data for numpy fallback
+    global _x_train_np
+    _x_train_np = x_train  # already float32 contiguous
+
+# def brute_force_search(k, measure_accuracy=False):
+#     global FL2, truth_D, truth_I
+#     truth_D, truth_I = FL2.search(x_query, k)
+#     if measure_accuracy:
+#         return 1.0
 
 def brute_force_search(k, measure_accuracy=False):
-    global FL2, truth_D, truth_I
-    truth_D, truth_I = FL2.search(x_query, k)
+    global truth_D, truth_I, _x_train_np
+    # Pure numpy brute force — no AVX/BLAS optimization
+    # Compute L2 distances manually
+    dists = np.sum((x_query[:, None, :] - _x_train_np[None, :, :]) ** 2, axis=-1)  # (nq, n_train)
+    truth_I = np.argsort(dists, axis=1)[:, :k].astype(np.int64)
+    truth_D = np.sort(dists, axis=1)[:, :k]
     if measure_accuracy:
         return 1.0
-
 
 def search(index, k, measure_accuracy=True):
     D, I = index.search(x_query, k)
