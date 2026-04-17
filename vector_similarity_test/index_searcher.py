@@ -1,17 +1,8 @@
 # index_searcher.py
 import os
 
-# Force thread counts BEFORE importing numpy/faiss
-os.environ["OMP_NUM_THREADS"] = "8"
-os.environ["OPENBLAS_NUM_THREADS"] = "8"
-os.environ["MKL_NUM_THREADS"] = "8"
-os.environ["VECLIB_MAXIMUM_THREADS"] = "8"
-os.environ["NUMEXPR_NUM_THREADS"] = "8"
-
 import argparse
 import pandas as pd
-import numpy as np
-import faiss
 from timeit import repeat
 # import hnswlib  # SOPHIA EDIT: removed hnswlib, switching to FAISS HNSW
 import json
@@ -19,34 +10,9 @@ from types import SimpleNamespace
 
 from device_utils import is_bluefield
 
-#import faiss
-faiss.omp_set_num_threads(8) 
-print("FAISS threads:", faiss.omp_get_max_threads()) 
-
-REPLICATIONS = 5
-
-#warmup function to ensure fair timing (e.g. JIT compilation, caching effects)
-def avg_time(fn, reps=REPLICATIONS):
-    for _ in range(2): #two extra runs to warm up caches 
-        fn()
-    #fn()
-    return np.mean(repeat(fn, repeat=reps, number=1))
-
-#sophia edit: refactored to load indices built by index_builder.py, and to run searches with timing and recall measurement, but without rebuilding indices (since that can be time consuming and we want to separate build vs. search time in our measurements)
-from index_builder import (
-    recall_at_k, batch_recall,
-    #brute_force_build,
-    brute_force_search,
-    search, hnsw_search,
-    #lsh_build, pq_build, ivfpq_build, hnsw_build,
-    #test_build, test_search,
-)
-
-import index_builder as ib
-from mem_utils import MemoryMonitor
-os.makedirs("results", exist_ok=True)
 
 if __name__ == "__main__":
+    #---------------------- PARAMETERS ---------------------------------#
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--mem_out",
@@ -72,9 +38,51 @@ if __name__ == "__main__":
         default=None,
         help="Run only selected indices: flat lsh pq ivfpq hnsw"
     )
+    parser.add_argument(
+        "--threads",
+        nargs="+",
+        default=None,
+        help="Limit the number of threads used by FAISS."
+    )
     args = parser.parse_args()
 
+    #---------------------- IMPORTS ---------------------------------#
+    # Force thread counts BEFORE importing numpy/faiss
+    if args.threads is not None:
+        os.environ["OMP_NUM_THREADS"] = args.threads
+        os.environ["OPENBLAS_NUM_THREADS"] = args.threads
+        os.environ["MKL_NUM_THREADS"] = args.threads
+        os.environ["VECLIB_MAXIMUM_THREADS"] = args.threads
+        os.environ["NUMEXPR_NUM_THREADS"] = args.threads
+        import faiss
+        faiss.omp_set_num_threads(int(args.threads)) 
+    else: import faiss
+    import numpy as np
+    print("FAISS threads:", faiss.omp_get_max_threads()) 
+
+    #sophia edit: refactored to load indices built by index_builder.py, and to run searches with timing and recall measurement, but without rebuilding indices (since that can be time consuming and we want to separate build vs. search time in our measurements)
+    from index_builder import (
+        brute_force_search,
+        search, hnsw_search,
+        #test_search,
+    )
+    import index_builder as ib
+    from mem_utils import MemoryMonitor
+
+
+    #---------------------- SETUP ---------------------------------#
+    REPLICATIONS = 5
+    os.makedirs("results", exist_ok=True)
+
+    #warmup function to ensure fair timing (e.g. JIT compilation, caching effects)
+    def avg_time(fn, reps=REPLICATIONS):
+        for _ in range(2): #two extra runs to warm up caches 
+            fn()
+        #fn()
+        return np.mean(repeat(fn, repeat=reps, number=1))
+
     only = set(args.only) if args.only is not None else {"flat", "lsh", "pq", "ivfpq", "hnsw"}
+    
     indices_dir = args.indices_dir
 
     # Load saved artifacts from builder
