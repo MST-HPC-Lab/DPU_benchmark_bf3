@@ -11,58 +11,58 @@ import os, json
 from mem_utils import MemoryMonitor
 os.makedirs("results", exist_ok=True)
 
+# Constants
+k_values = [1, 2, 3, 5, 7, 10, 25, 50, 75, 100]
+
 # Globals used across functions
-truth_D, truth_I = None, None
+truth_D, truth_I = {}, {}
+x_train, x_query = None, None
 FL2 = None
 LSH = None
 PQ = None
 IVFPQ = None
 HNSW = None
+HNSWSQ = None
+HNSWPQ = None
 
 
 # Recall helpers
 
-def recall_at_k(test, truth, k):
+def k_recall_at_k(test, truth, k):
     assert len(test) == k
     assert len(truth) == k
     return len(set(truth).intersection(test)) / k
 
-def batch_recall(test_I, truth_I, k):
-    results = []
-    for i, row in enumerate(test_I):
-        results.append(recall_at_k(row, truth_I[i], k))
-    return sum(results) / len(results)
+def batch_recall(test_I, truth_I_k, k):
+    # results = []
+    # for i, row in enumerate(test_I):
+    #     results.append(k_recall_at_k(row, truth_I_k[i], k))
+    # return sum(results) / len(results)
+    return np.mean([k_recall_at_k(row, truth_I_k[i], k) for i, row in enumerate(test_I)])
 
 
-# Flat index
-
-# def brute_force_build():
-#     global FL2
-#     FL2 = faiss.IndexFlatL2(d)
-#     FL2.add(x_train)
-
-def brute_force_build():
-    global FL2
-    # Use FAISS flat but we'll override search with numpy anyway
-    FL2 = faiss.IndexFlatL2(d)
-    FL2.add(x_train)
-    # Store train data for numpy fallback
-    global _x_train_np
-    _x_train_np = x_train  # already float32 contiguous
+# def brute_force_build(data):
+#     # global FL2
+#     # Use FAISS flat but we'll override search with numpy anyway
+#     # FL2 = faiss.IndexFlatL2(d)
+#     # FL2.add(data)
+#     # Store train data for numpy fallback
+#     global _x_train_np
+#     _x_train_np = data  # already float32 contiguous
 
 # def brute_force_search(k, measure_accuracy=False):
 #     global FL2, truth_D, truth_I
-#     truth_D, truth_I = FL2.search(x_query, k)
+#     truth_D[k], truth_I[k] = FL2.search(x_query, k)
 #     if measure_accuracy:
 #         return 1.0
 
 def brute_force_search(k, measure_accuracy=False):
-    global truth_D, truth_I, _x_train_np
-    # Pure numpy brute force — no AVX/BLAS optimization
-    # Compute L2 distances manually
-    dists = np.sum((x_query[:, None, :] - _x_train_np[None, :, :]) ** 2, axis=-1)  # (nq, n_train)
-    truth_I = np.argsort(dists, axis=1)[:, :k].astype(np.int64)
-    truth_D = np.sort(dists, axis=1)[:, :k]
+    global truth_D, truth_I, x_query, x_train#, _x_train_np
+    # Pure numpy brute force, Compute L2 distances manually
+    # dists = np.sum((x_query[:, None, :] - _x_train_np[None, :, :]) ** 2, axis=-1)  # (nq, n_train)
+    dists = np.sum((x_query[:, None, :] - x_train[None, :, :]) ** 2, axis=-1)  # (nq, n_train)
+    truth_I[k] = np.argsort(dists, axis=1)[:, :k].astype(np.int64)
+    truth_D[k] = np.sort(dists, axis=1)[:, :k]
     if measure_accuracy:
         return 1.0
 
@@ -70,25 +70,43 @@ def search(index, k, measure_accuracy=True):
     D, I = index.search(x_query, k)
     if measure_accuracy:
         global truth_I
-        return batch_recall(I, truth_I, k)
+        return batch_recall(I, truth_I[k], k)
+    
+def load_truth(path):
+    global truth_D, truth_I
+    with open(path, "r") as f:
+        data = json.load(f)
+        truth_I = {int(k): np.array(v) for k, v in data["truth_I"].items()}
+        truth_D = {int(k): np.array(v) for k, v in data["truth_D"].items()}
 
 
-# HNSW
 
-def hnsw_search(k, measure_accuracy=True):
-    global HNSW, truth_I, x_query
+# Index Builders
+def flat_build(data):
+    global FL2
+    FL2 = faiss.IndexFlatL2(d)
+    FL2.add(data)
 
-    # OLD HNSWLIB VERSION (COMMENTED OUT — DO NOT DELETE)
-    # labels, distances = HNSW.knn_query(x_query, k=k)
+def lsh_build(data, n_bits):
+    global LSH
+    LSH = faiss.IndexLSH(d, n_bits)
+    LSH.add(data)
 
-    # SOPHIA EDIT: FAISS HNSW SEARCH
-    D, I = HNSW.search(x_query, k)
-    if measure_accuracy:
-        return batch_recall(I, truth_I, k)
-    return I, D
+def pq_build(data, subquantizers, n_bits):
+    global PQ
+    PQ = faiss.IndexPQ(d, subquantizers, n_bits)
+    PQ.train(data)
+    PQ.add(data)
 
+def ivfpq_build(data, ncentroids, code_size, n_bits):
+    global IVFPQ
+    coarse_quantizer = faiss.IndexFlatL2(d)
+    IVFPQ = faiss.IndexIVFPQ(coarse_quantizer, d, ncentroids, code_size, n_bits)
+    IVFPQ.train(data)
+    IVFPQ.add(data)
+    IVFPQ.nprobe = 5
 
-def hnsw_build(data, dim, ef_construction=200, M=16, ef_search=100):
+def hnsw_build(data, dim, ef_construction, M, ef_search):#ef_construction=200, M=16, ef_search=100):
     global HNSW
 
     # OLD HNSWLIB VERSION
@@ -100,55 +118,69 @@ def hnsw_build(data, dim, ef_construction=200, M=16, ef_search=100):
     HNSW.add(data)
     HNSW.hnsw.efSearch = max(int(ef_search), 1)
 
+# def hnsw_search(k, measure_accuracy=True):
+#     global HNSW, truth_I, x_query
 
-# Other Index Builders
+#     # OLD HNSWLIB VERSION (COMMENTED OUT — DO NOT DELETE)
+#     # labels, distances = HNSW.knn_query(x_query, k=k)
 
-def lsh_build(n_bits):
-    global LSH
-    LSH = faiss.IndexLSH(d, n_bits)
-    LSH.add(x_train)
+#     # SOPHIA EDIT: FAISS HNSW SEARCH
+#     D, I = HNSW.search(x_query, k)
+#     if measure_accuracy:
+#         return batch_recall(I, truth_I[k], k)
+#     return I, D
 
-def pq_build(subquantizers, n_bits):
-    global PQ
-    PQ = faiss.IndexPQ(d, subquantizers, n_bits)
-    PQ.train(x_train)
-    PQ.add(x_train)
+def hnsw_pq_build(data, dim, ef_construction, M, pq_m, ef_search):#ef_construction=200, M=16, pq_m=40, ef_search=100):
+    global HNSWPQ
+    HNSWPQ = faiss.IndexHNSWPQ(dim, pq_m, M)
+    HNSWPQ.hnsw.efConstruction = ef_construction
+    HNSWPQ.add(data)
+    HNSWPQ.hnsw.efSearch = max(int(ef_search), 1)
 
-def ivfpq_build(ncentroids, code_size, n_bits):
-    global IVFPQ
-    coarse_quantizer = faiss.IndexFlatL2(d)
-    IVFPQ = faiss.IndexIVFPQ(coarse_quantizer, d, ncentroids, code_size, n_bits)
-    IVFPQ.train(x_train)
-    IVFPQ.add(x_train)
-    IVFPQ.nprobe = 5
+def hnsw_sq_build(data, dim, ef_construction, M, q_type, ef_search):#ef_construction=200, M=16, q_type=faiss.ScalarQuantizer.QT_8bit, ef_search=100):
+    global HNSWSQ
+    HNSWSQ = faiss.IndexHNSWFlat(dim, q_type, M)
+    HNSWSQ.hnsw.efConstruction = ef_construction
+    HNSWSQ.add(data)
+    HNSWSQ.hnsw.efSearch = max(int(ef_search), 1)
 
 
 # Build Only (no timing)
 #Sophia edit: refactored to allow building only a subset of indices, and to save outputs in a specified subdirectory of indices/
 def test_build(only=None, mem=None):
     #Build selected indices
-    #only: None or list of ["flat", "lsh", "pq", "ivfpq", "hnsw"]
+    #only: None or list of ["bf", "flat", "lsh", "pq", "ivfpq", "hnsw", "hsnw_pq", "hnsw_sq"]
 
     if only is None:
-        only = ["flat", "lsh", "pq", "ivfpq", "hnsw"]
+        only = ["bf", "flat", "lsh", "pq", "ivfpq", "hnsw", "hnsw_pq", "hnsw_sq"]
 
     only = set(only)
 
+    if "bf" in only: # No need to build; it's just a numpy array.
+        for k in k_values:
+            brute_force_search(k, measure_accuracy=False)  # populates truth_I and truth_D
+
     if "flat" in only:
-        brute_force_build()
+        flat_build(x_train)
 
     if "lsh" in only:
-        lsh_build(lsh_nbits)
+        lsh_build(x_train, lsh_nbits)
 
     if "pq" in only:
-        pq_build(pq_subquantizers, pq_nbits)
+        pq_build(x_train, pq_subquantizers, pq_nbits)
 
     if "ivfpq" in only:
-        ivfpq_build(ivfpq_ncentroids, ivfpq_codesize, pq_nbits)
+        ivfpq_build(x_train, ivfpq_ncentroids, ivfpq_codesize, pq_nbits)
 
     if "hnsw" in only:
         # SOPHIA EDIT: ensure correct numpy data passed
         hnsw_build(x_train, d, HNSW_efconstruction, HNSW_M, HNSW_efsearch)
+
+    if "hnsw_pq" in only:
+        hnsw_pq_build(x_train, d, HNSW_efconstruction, HNSW_M, pq_subquantizers, HNSW_efsearch)
+
+    if "hnsw_sq" in only:
+        hnsw_sq_build(x_train, d, HNSW_efconstruction, HNSW_M, HNSW_SQ_qtype, HNSW_efsearch)
 
 #    brute_force_build()
 #   lsh_build(lsh_nbits)
@@ -191,12 +223,6 @@ if __name__ == "__main__":
 
     d = df.shape[1]
 
-    dim_to_subspaces = {128: 32, 200: 40, 300: 30, 1000: 40}
-
-    if d in dim_to_subspaces:
-        pq_subquantizers = dim_to_subspaces[d]
-        ivfpq_codesize = dim_to_subspaces[d]
-
     print(f'File: "{filename}"')
     print("Dimensions:", d)
 
@@ -204,22 +230,31 @@ if __name__ == "__main__":
     test_i = [i for i in range(199, N, 200)]
     train_i = [i for i in range(N) if (i + 199) % 200]
 
-    x_query = df.iloc[test_i]
-    x_train = df.iloc[train_i]
-
     print("Train Size:", len(train_i))
     print("Test  Size:", len(test_i))
 
-    # SOPHIA EDIT: convert to contiguous float32 numpy
-    x_query = np.ascontiguousarray(x_query.to_numpy(dtype=np.float32))
+    x_query = df.iloc[test_i]
+    x_train = df.iloc[train_i]
+    x_query = np.ascontiguousarray(x_query.to_numpy(dtype=np.float32)) # SOPHIA EDIT: convert to contiguous float32 numpy
     x_train = np.ascontiguousarray(x_train.to_numpy(dtype=np.float32))
 
+    dim_to_subspaces = {
+        128: 32, 
+        200: 40, 
+        300: 30, 
+        1000: 40
+    }
+    assert d in dim_to_subspaces
+
     lsh_nbits = 1600
+    pq_subquantizers = dim_to_subspaces[d] # Same as pq m value
     pq_nbits = 8
-    ivfpq_ncentroids = 5
+    ivfpq_ncentroids = int(8 * np.sqrt(len(x_train)))
+    ivfpq_codesize = pq_subquantizers * pq_nbits // 8 # code size in bytes, which is (m * n_bits) / 8
     HNSW_M = 16
     HNSW_efconstruction = 200
     HNSW_efsearch = 128
+    HNSW_SQ_qtype = faiss.ScalarQuantizer.QT_8bit
 
     print("Building...\r", end='')
 
@@ -232,22 +267,34 @@ if __name__ == "__main__":
         os.makedirs(base_dir, exist_ok=True)
 
         #Sophia EDIT: allow saving only a subset of indices, based on --only argument
-        built = set(args.only) if args.only is not None else {"flat", "lsh", "pq", "ivfpq", "hnsw"}
+        build = set(args.only) if args.only is not None else {"bf", "flat", "lsh", "pq", "ivfpq", "hnsw", "hnsw_pq", "hnsw_sq"}
 
-        if "flat" in built and FL2 is not None:
+        # Save the ground truth for recall calculations.
+        if "bf" in build:
+            assert truth_I is not None and truth_D is not None
+            with open(os.path.join(base_dir, "truth_I,D.json"), "w") as f:
+                json.dump({"truth_I": truth_I, "truth_D": truth_D}, f)
+
+        if "flat" in build and FL2 is not None:
             faiss.write_index(FL2, os.path.join(base_dir, "flat.index"))
     
-        if "lsh" in built and LSH is not None:
+        if "lsh" in build and LSH is not None:
             faiss.write_index(LSH, os.path.join(base_dir, "lsh.index"))
         
-        if "pq" in built and PQ is not None:
+        if "pq" in build and PQ is not None:
             faiss.write_index(PQ, os.path.join(base_dir, "pq.index"))
 
-        if "ivfpq" in built and IVFPQ is not None:
+        if "ivfpq" in build and IVFPQ is not None:
             faiss.write_index(IVFPQ, os.path.join(base_dir, "ivfpq.index"))
 
-        if "hnsw" in built and HNSW is not None:
+        if "hnsw" in build and HNSW is not None:
             faiss.write_index(HNSW, os.path.join(base_dir, "hnsw.index"))
+
+        if "hnsw_pq" in build and HNSWPQ is not None:
+            faiss.write_index(HNSWPQ, os.path.join(base_dir, "hnsw_pq.index"))
+
+        if "hnsw_sq" in build and HNSWSQ is not None:
+            faiss.write_index(HNSWSQ, os.path.join(base_dir, "hnsw_sq.index"))
 
 #        faiss.write_index(FL2,   os.path.join(base_dir, "flat.index"))
 #        faiss.write_index(LSH,   os.path.join(base_dir, "lsh.index"))
@@ -260,7 +307,10 @@ if __name__ == "__main__":
 
         with open(os.path.join(base_dir, "meta.json"), "w") as f:
             json.dump({
+                "source_file": args.file,
                 "d": int(d),
+                "num_vecs": int(N),
+
                 "lsh_nbits": int(lsh_nbits),
                 "pq_nbits": int(pq_nbits),
                 "pq_subquantizers": int(pq_subquantizers),
@@ -269,8 +319,7 @@ if __name__ == "__main__":
                 "HNSW_M": int(HNSW_M),
                 "HNSW_efconstruction": int(HNSW_efconstruction),
                 "HNSW_efsearch": int(HNSW_efsearch),
-                "source_file": args.file,
-                "num_vecs": int(N),
+                "HNSW_SQ_qtype": int(HNSW_SQ_qtype),
             }, f)
 
     print("Build complete.")

@@ -81,7 +81,7 @@ if __name__ == "__main__":
         #fn()
         return np.mean(repeat(fn, repeat=reps, number=1))
 
-    only = set(args.only) if args.only is not None else {"flat", "lsh", "pq", "ivfpq", "hnsw"}
+    only = set(args.only) if args.only is not None else {"bf", "flat", "lsh", "pq", "ivfpq", "hnsw", "hnsw_pq", "hnsw_sq"}
     
     indices_dir = args.indices_dir
 
@@ -99,32 +99,15 @@ if __name__ == "__main__":
     ib.HNSW_M = int(meta["HNSW_M"])
     ib.HNSW_efconstruction = int(meta["HNSW_efconstruction"])
     ib.HNSW_efsearch = int(meta["HNSW_efsearch"])
+    ib.HNSW_SQ_qtype = int(meta["HNSW_SQ_qtype"])
 
     # SOPHIA EDIT: Load numpy arrays directly (not DataFrames)
     # Builder now saves contiguous float32 numpy arrays.
-    x_query_np = np.load(os.path.join(indices_dir, "x_query.npy"))
+    x_query = np.load(os.path.join(indices_dir, "x_query.npy"))
     #x_train_np = np.load(os.path.join(indices_dir, "x_train.npy"))
 
-    ib.x_query = x_query_np
+    ib.x_query = x_query
     #ib.x_train = x_train_np
-
-    # Load FAISS indices
-
-    ib.FL2 = faiss.read_index(os.path.join(indices_dir, "flat.index"))
-
-    if "lsh" in only:
-        ib.LSH = faiss.read_index(os.path.join(indices_dir, "lsh.index"))
-    
-    if "pq" in only:
-        ib.PQ = faiss.read_index(os.path.join(indices_dir, "pq.index"))
-
-    if "ivfpq" in only:
-        ib.IVFPQ = faiss.read_index(os.path.join(indices_dir, "ivfpq.index"))
-
-    if "hnsw" in only:
-        ib.HNSW = faiss.read_index(os.path.join(indices_dir, "hnsw.index"))
-        ib.HNSW.hnsw.efSearch = max(int(ib.HNSW_efsearch),1)
-        
 
     # ib.FL2   = faiss.read_index(os.path.join(indices_dir, "flat.index"))
     # ib.LSH   = faiss.read_index(os.path.join(indices_dir, "lsh.index"))
@@ -151,39 +134,51 @@ if __name__ == "__main__":
 
     print("Indexes loaded. Running searches...", flush=True)
 
-    k_values = [1, 2, 3, 5, 7, 10, 25, 50, 75, 100]
-
     bf_times = []
+    flat_recalls, flat_times = [], []
     lsh_recalls, lsh_times = [], []
     pq_recalls, pq_times = [], []
     ivfpq_recalls, ivfpq_times = [], []
     hnsw_recalls, hnsw_times = [], []
+    hnsw_pq_recalls, hnsw_pq_times = [], []
+    hnsw_sq_recalls, hnsw_sq_times = [], []
 
-    print("k:", k_values, flush=True)
+    print("Threads:", args.threads, flush=True)
+    print("k:", ib.k_values, flush=True)
 
-    # #  Brute Force
-    # if "flat" in only:
-    #     for k in k_values:
-    #         brute_force_search(k)  # keep truth current / consistent
-    #         bf_time = avg_time(lambda: ib.FL2.search(ib.x_query, k))
-    #         bf_times.append(bf_time)
+    # Load ground truth for recall calculations
+    ib.load_truth(os.path.join(indices_dir, "truth_I,D.json")) # Load ground truth for recall calculations
 
-    #     print("Brute Force Time:", bf_times, flush=True)
-
-    #Brute Force 
-    if "flat" in only:
-        for k in k_values:
-            brute_force_search(k)  # sets truth_I
-            bf_time = avg_time(lambda: brute_force_search(k))
+    # Brute Force 
+    if "bf" in only:
+        ib.x_train = np.load(os.path.join(indices_dir, "x_train.npy"))
+        for k in ib.k_values:
+            # brute_force_search(k)
+            bf_time = avg_time(lambda: brute_force_search(k, measure_accuracy=False))
             bf_times.append(bf_time)
         
         print("Brute Force Time:", bf_times, flush=True)
+        ib.x_train = None # free memory
 
+    # Flat
+    if "flat" in only:
+        ib.FL2 = faiss.read_index(os.path.join(indices_dir, "flat.index"))
+        for k in ib.k_values:
+            # brute_force_search(k)  # keep truth current / consistent
+            flat_recall = search(ib.FL2, k)
+            flat_time = avg_time(lambda: search(ib.FL2, k, measure_accuracy=False))
+            flat_recalls.append(flat_recall)
+            flat_times.append(flat_time)
+
+        print("Flat Recall:", flat_recalls, flush=True)
+        print("Flat Time:", flat_times, flush=True)
+        ib.FL2 = None
 
     #  LSH
     if "lsh" in only:
-        for k in k_values:
-            brute_force_search(k)
+        ib.LSH = faiss.read_index(os.path.join(indices_dir, "lsh.index"))
+        for k in ib.k_values:
+            # brute_force_search(k)
             lsh_recall = search(ib.LSH, k)
             lsh_time = avg_time(lambda: search(ib.LSH, k, measure_accuracy=False))
             lsh_recalls.append(lsh_recall)
@@ -191,11 +186,13 @@ if __name__ == "__main__":
 
         print("LSH Recall:", lsh_recalls, flush=True)
         print("LSH Time:", lsh_times, flush=True)
+        ib.LSH = None
 
     # PQ 
     if "pq" in only:
-        for k in k_values:
-            brute_force_search(k)
+        ib.PQ = faiss.read_index(os.path.join(indices_dir, "pq.index"))
+        for k in ib.k_values:
+            # brute_force_search(k)
             pq_recall = search(ib.PQ, k)
             pq_time = avg_time(lambda: search(ib.PQ, k, measure_accuracy=False))
             pq_recalls.append(pq_recall)
@@ -203,11 +200,13 @@ if __name__ == "__main__":
 
         print("PQ Recall:", pq_recalls, flush=True)
         print("PQ Time:", pq_times, flush=True)
+        ib.PQ = None
 
     #  IVFPQ
     if "ivfpq" in only:
-        for k in k_values:
-            brute_force_search(k)
+        ib.IVFPQ = faiss.read_index(os.path.join(indices_dir, "ivfpq.index"))
+        for k in ib.k_values:
+            # brute_force_search(k)
             ivfpq_recall = search(ib.IVFPQ, k)
             ivfpq_time = avg_time(lambda: search(ib.IVFPQ, k, measure_accuracy=False))
             ivfpq_recalls.append(ivfpq_recall)
@@ -215,18 +214,54 @@ if __name__ == "__main__":
 
         print("IVFPQ Recall:", ivfpq_recalls, flush=True)
         print("IVFPQ Time:", ivfpq_times, flush=True)
+        ib.IVFPQ = None
 
     #  HNSW
     if "hnsw" in only:
-        for k in k_values:
-            brute_force_search(k)
-            hnsw_recall = hnsw_search(k)
-            hnsw_time = avg_time(lambda: hnsw_search(k, measure_accuracy=False))
+        ib.HNSW = faiss.read_index(os.path.join(indices_dir, "hnsw.index"))
+        ib.HNSW.hnsw.efSearch = max(int(ib.HNSW_efsearch),1)
+        for k in ib.k_values:
+            # brute_force_search(k)
+            hnsw_recall = search(ib.HNSW, k)
+            hnsw_time = avg_time(lambda: search(ib.HNSW, k, measure_accuracy=False))
+            # hnsw_recall = hnsw_search(k)
+            # hnsw_time = avg_time(lambda: hnsw_search(k, measure_accuracy=False))
             hnsw_recalls.append(hnsw_recall)
             hnsw_times.append(hnsw_time)
 
         print("HNSW Recall:", hnsw_recalls, flush=True)
         print("HNSW Time:", hnsw_times, flush=True)
+        ib.HNSW = None
+
+    # HNSW + PQ
+    if "hnsw_pq" in only:
+        ib.HNSWPQ = faiss.read_index(os.path.join(indices_dir, "hnsw_pq.index"))
+        ib.HNSWPQ.hnsw.efSearch = max(int(ib.HNSW_efsearch),1)
+        for k in ib.k_values:
+            # brute_force_search(k)
+            hnsw_pq_recall = search(ib.HNSWPQ, k)
+            hnsw_pq_time = avg_time(lambda: search(ib.HNSWPQ, k, measure_accuracy=False))
+            hnsw_pq_recalls.append(hnsw_pq_recall)
+            hnsw_pq_times.append(hnsw_pq_time)
+
+        print("HNSW+PQ Recall:", hnsw_pq_recalls, flush=True)
+        print("HNSW+PQ Time:", hnsw_pq_times, flush=True)
+        ib.HNSWPQ = None
+
+    # HNSW + SQ
+    if "hnsw_sq" in only:
+        ib.HNSWSQ = faiss.read_index(os.path.join(indices_dir, "hnsw_sq.index"))
+        ib.HNSWSQ.hnsw.efSearch = max(int(ib.HNSW_efsearch),1)
+        for k in ib.k_values:
+            # brute_force_search(k)
+            hnsw_sq_recall = search(ib.HNSWSQ, k)
+            hnsw_sq_time = avg_time(lambda: search(ib.HNSWSQ, k, measure_accuracy=False))
+            hnsw_sq_recalls.append(hnsw_sq_recall)
+            hnsw_sq_times.append(hnsw_sq_time)
+
+        print("HNSW+SQ Recall:", hnsw_sq_recalls, flush=True)
+        print("HNSW+SQ Time:", hnsw_sq_times, flush=True)
+        ib.HNSWSQ = None
 
 
         
@@ -267,9 +302,11 @@ if __name__ == "__main__":
     current_results = { # To add to JSON dict
         "date": pd.Timestamp.now().isoformat(),
         "repeats": REPLICATIONS,
-        "k_values" : k_values,
+        "k_values" : ib.k_values,
 
         "bf_times" : bf_times,
+        "flat_recalls" : flat_recalls,
+        "flat_times" : flat_times,
         "lsh_recalls" : lsh_recalls,
         "lsh_times" : lsh_times,
         "pq_recalls" : pq_recalls,
@@ -278,9 +315,14 @@ if __name__ == "__main__":
         "ivfpq_times" : ivfpq_times,
         "hnsw_recalls" : hnsw_recalls,
         "hnsw_times" : hnsw_times,
+        "hnsw_pq_recalls" : hnsw_pq_recalls,
+        "hnsw_pq_times" : hnsw_pq_times,
+        "hnsw_sq_recalls" : hnsw_sq_recalls,
+        "hnsw_sq_times" : hnsw_sq_times,
     }
     for key, value in current_results.items():
         if key == "date": continue
+        if value is None or not len(value): continue # skip empty results
         # Save old data under old date as subkey
         old_item = slot.get(key, None)
         if old_item is not None: old_date_slot[key] = old_item
