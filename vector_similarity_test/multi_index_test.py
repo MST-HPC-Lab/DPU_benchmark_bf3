@@ -62,7 +62,7 @@ def test_suite(r=3):
 
     # LSH 
     print("\nLSH")
-    for nbits in [128, 256, 512, 1024, 1600, 2048]:
+    for nbits in [32, 64, 128, 256, 512, 1024, 1600]:
         ib.lsh_build(ib.x_train, nbits) # bt = avg_time(lambda: ib.lsh_build(ib.x_train, nbits), r)
         # lsh_build(nbits)
         # brute_force_search(k)
@@ -94,6 +94,7 @@ def test_suite(r=3):
     for ncentroids in nlist: # Usually ranges from 4xsqrt(|x_train|) to 16xsqrt(|x_train|).
         for code_size in pq_m_vals: # code_size and m are same if n_bits is 8, since code_size = (m * n_bits) / 8
             ib.ivfpq_build(ib.x_train, ncentroids, code_size, n_bits=8) #bt = avg_time(lambda: ib.ivfpq_build(ib.x_train, ncentroids, code_size, n_bits=8), r)
+            ib.IVFPQ.nprobe = 32
             # ivfpq_build(nlist)
             # brute_force_search(k)
 

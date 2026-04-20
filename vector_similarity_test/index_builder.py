@@ -51,10 +51,10 @@ def batch_recall(test_I, truth_I_k, k):
 #     _x_train_np = data  # already float32 contiguous
 
 # def brute_force_search(k, measure_accuracy=False):
-#     global truth_D, truth_I, _x_train_np
+#     global truth_D, truth_I, x_train
 #     # Pure numpy brute force — no AVX/BLAS optimization
 #     # Compute L2 distances manually
-#     dists = np.sum((x_query[:, None, :] - _x_train_np[None, :, :]) ** 2, axis=-1)  # (nq, n_train)
+#     dists = np.sum((x_query[:, None, :] - x_train[None, :, :]) ** 2, axis=-1)  # (nq, n_train)
 #     truth_I = np.argsort(dists, axis=1)[:, :k].astype(np.int64)
 #     truth_D = np.sort(dists, axis=1)[:, :k]
 #     if measure_accuracy:
