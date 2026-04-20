@@ -51,18 +51,36 @@ def batch_recall(test_I, truth_I_k, k):
 #     _x_train_np = data  # already float32 contiguous
 
 # def brute_force_search(k, measure_accuracy=False):
-#     global FL2, truth_D, truth_I
-#     truth_D[k], truth_I[k] = FL2.search(x_query, k)
+#     global truth_D, truth_I, _x_train_np
+#     # Pure numpy brute force — no AVX/BLAS optimization
+#     # Compute L2 distances manually
+#     dists = np.sum((x_query[:, None, :] - _x_train_np[None, :, :]) ** 2, axis=-1)  # (nq, n_train)
+#     truth_I = np.argsort(dists, axis=1)[:, :k].astype(np.int64)
+#     truth_D = np.sort(dists, axis=1)[:, :k]
 #     if measure_accuracy:
 #         return 1.0
 
 def brute_force_search(k, measure_accuracy=False):
-    global truth_D, truth_I, x_query, x_train#, _x_train_np
-    # Pure numpy brute force, Compute L2 distances manually
-    # dists = np.sum((x_query[:, None, :] - _x_train_np[None, :, :]) ** 2, axis=-1)  # (nq, n_train)
-    dists = np.sum((x_query[:, None, :] - x_train[None, :, :]) ** 2, axis=-1)  # (nq, n_train)
-    truth_I[k] = np.argsort(dists, axis=1)[:, :k].astype(np.int64)
-    truth_D[k] = np.sort(dists, axis=1)[:, :k]
+    global truth_D, truth_I, x_query, x_train
+    nq = x_query.shape[0]
+    all_I = np.empty((nq, k), dtype=np.int64)
+    all_D = np.empty((nq, k), dtype=np.float32)
+
+    BATCH = 100
+    for start in range(0, nq, BATCH):
+        end = min(start + BATCH, nq)
+        q_batch = x_query[start:end]
+        q_sq = np.sum(q_batch ** 2, axis=1, keepdims=True)
+        x_sq = np.sum(x_train ** 2, axis=1, keepdims=True).T
+        dists = q_sq + x_sq - 2 * (q_batch @ x_train.T)
+        idx = np.argpartition(dists, k, axis=1)[:, :k]
+        for i in range(end - start):
+            sorted_k = np.argsort(dists[i, idx[i]])
+            all_I[start + i] = idx[i][sorted_k]
+            all_D[start + i] = dists[i, idx[i][sorted_k]]
+
+    truth_I[k] = all_I
+    truth_D[k] = all_D
     if measure_accuracy:
         return 1.0
 
@@ -104,7 +122,7 @@ def ivfpq_build(data, ncentroids, code_size, n_bits):
     IVFPQ = faiss.IndexIVFPQ(coarse_quantizer, d, ncentroids, code_size, n_bits)
     IVFPQ.train(data)
     IVFPQ.add(data)
-    IVFPQ.nprobe = 5
+    IVFPQ.nprobe = 32
 
 def hnsw_build(data, dim, ef_construction, M, ef_search):#ef_construction=200, M=16, ef_search=100):
     global HNSW
@@ -246,8 +264,8 @@ if __name__ == "__main__":
     }
     assert d in dim_to_subspaces
 
-    lsh_nbits = 1600
     pq_subquantizers = dim_to_subspaces[d] # Same as pq m value
+    lsh_nbits = 256 # 1600
     pq_nbits = 8
     ivfpq_ncentroids = int(8 * np.sqrt(len(x_train)))
     ivfpq_codesize = pq_subquantizers * pq_nbits // 8 # code size in bytes, which is (m * n_bits) / 8

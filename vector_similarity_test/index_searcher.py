@@ -103,10 +103,8 @@ if __name__ == "__main__":
 
     # SOPHIA EDIT: Load numpy arrays directly (not DataFrames)
     # Builder now saves contiguous float32 numpy arrays.
-    x_query = np.load(os.path.join(indices_dir, "x_query.npy"))
+    ib.x_query = np.load(os.path.join(indices_dir, "x_query.npy"))
     #x_train_np = np.load(os.path.join(indices_dir, "x_train.npy"))
-
-    ib.x_query = x_query
     #ib.x_train = x_train_np
 
     # ib.FL2   = faiss.read_index(os.path.join(indices_dir, "flat.index"))
