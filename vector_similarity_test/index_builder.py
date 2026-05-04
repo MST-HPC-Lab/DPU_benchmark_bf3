@@ -43,6 +43,7 @@ def batch_recall(test_I, truth_I_k, k):
 
 # def brute_force_build(data):
 #     # global FL2
+#     # global d
 #     # Use FAISS flat but we'll override search with numpy anyway
 #     # FL2 = faiss.IndexFlatL2(d)
 #     # FL2.add(data)
@@ -102,22 +103,26 @@ def load_truth(path):
 # Index Builders
 def flat_build(data):
     global FL2
+    global d
     FL2 = faiss.IndexFlatL2(d)
     FL2.add(data)
 
 def lsh_build(data, n_bits):
     global LSH
+    global d
     LSH = faiss.IndexLSH(d, n_bits)
     LSH.add(data)
 
 def pq_build(data, subquantizers, n_bits):
     global PQ
+    global d
     PQ = faiss.IndexPQ(d, subquantizers, n_bits)
     PQ.train(data)
     PQ.add(data)
 
 def ivfpq_build(data, ncentroids, code_size, n_bits):
     global IVFPQ
+    global d
     coarse_quantizer = faiss.IndexFlatL2(d)
     IVFPQ = faiss.IndexIVFPQ(coarse_quantizer, d, ncentroids, code_size, n_bits)
     IVFPQ.train(data)
@@ -168,6 +173,7 @@ def hnsw_sq_build(data, dim, ef_construction, M, q_type, ef_search):#ef_construc
 def test_build(only=None, mem=None):
     #Build selected indices
     #only: None or list of ["bf", "flat", "lsh", "pq", "ivfpq", "hnsw", "hsnw_pq", "hnsw_sq"]
+    global d
 
     if only is None:
         only = ["bf", "flat", "lsh", "pq", "ivfpq", "hnsw", "hnsw_pq", "hnsw_sq"]
@@ -239,6 +245,7 @@ if __name__ == "__main__":
     if args.dim is not None:
         df = df.iloc[:, :args.dim]
 
+    global d
     d = df.shape[1]
 
     print(f'File: "{filename}"')
