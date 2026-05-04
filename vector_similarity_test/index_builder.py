@@ -290,8 +290,24 @@ if __name__ == "__main__":
         # Save the ground truth for recall calculations.
         if "bf" in build:
             assert truth_I is not None and truth_D is not None
+
+            truth_I_json = {str(k): v.tolist() for k, v in truth_I.items()}
+            truth_D_json = {str(k): v.tolist() for k, v in truth_D.items()}
+
             with open(os.path.join(base_dir, "truth_I,D.json"), "w") as f:
-                json.dump({"truth_I": truth_I, "truth_D": truth_D}, f)
+                json.dump(
+                    {
+                        "truth_I": truth_I_json,
+                        "truth_D": truth_D_json
+                    },
+                    f      
+                )
+
+
+        # if "bf" in build:
+        #     assert truth_I is not None and truth_D is not None
+        #     with open(os.path.join(base_dir, "truth_I,D.json"), "w") as f:
+        #         json.dump({"truth_I": truth_I, "truth_D": truth_D}, f)
 
         if "flat" in build and FL2 is not None:
             faiss.write_index(FL2, os.path.join(base_dir, "flat.index"))
