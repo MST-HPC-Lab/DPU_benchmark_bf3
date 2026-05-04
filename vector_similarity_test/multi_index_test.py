@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import faiss
+import argparse
 from timeit import repeat
 
 import index_builder as ib
@@ -39,121 +40,143 @@ def avg_time(fn, reps=3):
 
 
 # TEST
-def test_suite(r=3):
+def test_suite(r=3, only=None):
+    if only is None:
+        only = {"brute", "flat", "lsh", "pq", "ivfpq", "hnsw", "hnswpq", "hnswsq"}
+    else:
+        only = set(only)
+
+
     print(f"(All times averaged over {r} repeats)")
     ib.load_truth(truth_path)
 
     # Ground Truth or Brute Force
-    print("\nBrute Force")
-    # bf_build = avg_time(lambda: ib.brute_force_build(x_train), r)
-    # brute_force_build()
-    bf_search = avg_time(lambda: ib.brute_force_search(k, measure_accuracy=False), r)
-    # print("Build Time:", bf_build)
-    print("Search Time:", bf_search)
-    # ib.x_train = None # Needed for other builds
+    if "brute" in only:
+        print("\nBrute Force")
+        # bf_build = avg_time(lambda: ib.brute_force_build(x_train), r)
+        # brute_force_build()
+        bf_search = avg_time(lambda: ib.brute_force_search(k, measure_accuracy=False), r)
+        # print("Build Time:", bf_build)
+        print("Search Time:", bf_search)
+        # ib.x_train = None # Needed for other builds
 
     # Flat
-    print("\nFlat")
-    ib.flat_build(ib.x_train) # bt = avg_time(lambda: ib.flat_build(ib.x_train), r)
-    flat_search = avg_time(lambda: ib.search(ib.FL2, k, measure_accuracy=False), r)
-    # print("Build Time:", bt)
-    print("Search Time:", flat_search)
-    ib.FL2 = None
+    if "flat" in only:
+        print("\nFlat")
+        ib.flat_build(ib.x_train) # bt = avg_time(lambda: ib.flat_build(ib.x_train), r)
+        flat_search = avg_time(lambda: ib.search(ib.FL2, k, measure_accuracy=False), r)
+        # print("Build Time:", bt)
+        print("Search Time:", flat_search)
+        ib.FL2 = None
 
     # LSH 
-    print("\nLSH")
-    for nbits in [32, 64, 128, 256, 512, 1024, 1600]:
-        ib.lsh_build(ib.x_train, nbits) # bt = avg_time(lambda: ib.lsh_build(ib.x_train, nbits), r)
-        # lsh_build(nbits)
-        # brute_force_search(k)
+    if "lsh" in only:    
+        print("\nLSH")
+        for nbits in [32, 64, 128, 256, 512, 1024, 1600]:
+            ib.lsh_build(ib.x_train, nbits) # bt = avg_time(lambda: ib.lsh_build(ib.x_train, nbits), r)
+            # lsh_build(nbits)
+            # brute_force_search(k)
 
-        rc = ib.search(ib.LSH, k)
-        st = avg_time(lambda: ib.search(ib.LSH, k, measure_accuracy=False), r)
-        print(f"nbits={nbits} | recall={rc:.3f}, time={st:.4f}")
-        ib.LSH = None
+            rc = ib.search(ib.LSH, k)
+            st = avg_time(lambda: ib.search(ib.LSH, k, measure_accuracy=False), r)
+            print(f"nbits={nbits} | recall={rc:.3f}, time={st:.4f}")
+            ib.LSH = None
 
     # PQ
-    print("\nPQ")
-    assert d == 200 or d == 300, "This test suite is designed for d=200 or d=300. Please adjust pq_m_vals accordingly if using a different dimension. They must be factors of d."
-    pq_m_vals = [4, 5, 10, 20, 40] if d == 200 else [4, 5, 10, 25, 30, 50] if d == 300 else None # "subquantizers" or "m" in the PQ index, which is the number of subvectors the original vector is split into. It must be a factor of d.
-    pq_n_bits = [4, 6, 8] # "nbits_per_index" or "nbits" in the PQ index, which is the number of bits used to encode each subvector.
-    for m in pq_m_vals:
-        for nbits in pq_n_bits:
-            ib.pq_build(ib.x_train, m, nbits) # bt = avg_time(lambda: ib.pq_build(ib.x_train, m), r)
-            # pq_build(m)
-            # brute_force_search(k)
+    if "pq" in only:
+        print("\nPQ")
+        assert d == 200 or d == 300, "This test suite is designed for d=200 or d=300. Please adjust pq_m_vals accordingly if using a different dimension. They must be factors of d."
+        pq_m_vals = [4, 5, 10, 20, 40] if d == 200 else [4, 5, 10, 25, 30, 50] if d == 300 else None # "subquantizers" or "m" in the PQ index, which is the number of subvectors the original vector is split into. It must be a factor of d.
+        pq_n_bits = [4, 6, 8] # "nbits_per_index" or "nbits" in the PQ index, which is the number of bits used to encode each subvector.
+        for m in pq_m_vals:
+            for nbits in pq_n_bits:
+                ib.pq_build(ib.x_train, m, nbits) # bt = avg_time(lambda: ib.pq_build(ib.x_train, m), r)
+                # pq_build(m)
+                # brute_force_search(k)
 
-            rc = ib.search(ib.PQ, k)
-            st = avg_time(lambda: ib.search(ib.PQ, k, measure_accuracy=False), r)
-            print(f"m={m} | recall={rc:.3f}, time={st:.4f}")
-            ib.PQ = None
+                rc = ib.search(ib.PQ, k)
+                st = avg_time(lambda: ib.search(ib.PQ, k, measure_accuracy=False), r)
+                print(f"m={m} | recall={rc:.3f}, time={st:.4f}")
+                ib.PQ = None
 
     # IVFPQ 
-    print("\nIVFPQ")
-    nlist = [int(4 * np.sqrt(len(ib.x_train))), int(8 * np.sqrt(len(ib.x_train))), int(16 * np.sqrt(len(ib.x_train)))] # "nlist" or "ncentroids" in the IVFPQ index, which is the number of Voronoi cells (or clusters) used to partition the training data. It must be less than the number of training vectors.
-    for ncentroids in nlist: # Usually ranges from 4xsqrt(|x_train|) to 16xsqrt(|x_train|).
-        for code_size in pq_m_vals: # code_size and m are same if n_bits is 8, since code_size = (m * n_bits) / 8
-            ib.ivfpq_build(ib.x_train, ncentroids, code_size, n_bits=8) #bt = avg_time(lambda: ib.ivfpq_build(ib.x_train, ncentroids, code_size, n_bits=8), r)
-            ib.IVFPQ.nprobe = 32
-            # ivfpq_build(nlist)
-            # brute_force_search(k)
+    if "ivfpq" in only:
+        print("\nIVFPQ")
+        nlist = [int(4 * np.sqrt(len(ib.x_train))), int(8 * np.sqrt(len(ib.x_train))), int(16 * np.sqrt(len(ib.x_train)))] # "nlist" or "ncentroids" in the IVFPQ index, which is the number of Voronoi cells (or clusters) used to partition the training data. It must be less than the number of training vectors.
+        for ncentroids in nlist: # Usually ranges from 4xsqrt(|x_train|) to 16xsqrt(|x_train|).
+            for code_size in pq_m_vals: # code_size and m are same if n_bits is 8, since code_size = (m * n_bits) / 8
+                ib.ivfpq_build(ib.x_train, ncentroids, code_size, n_bits=8) #bt = avg_time(lambda: ib.ivfpq_build(ib.x_train, ncentroids, code_size, n_bits=8), r)
+                ib.IVFPQ.nprobe = 32
+                # ivfpq_build(nlist)
+                # brute_force_search(k)
 
-            rc = ib.search(ib.IVFPQ, k)
-            st = avg_time(lambda: ib.search(ib.IVFPQ, k, measure_accuracy=False), r)
-            print(f"nlist={nlist} | recall={rc:.3f}, time={st:.4f}")
-            ib.IVFPQ = None
+                rc = ib.search(ib.IVFPQ, k)
+                st = avg_time(lambda: ib.search(ib.IVFPQ, k, measure_accuracy=False), r)
+                print(f"nlist={nlist} | recall={rc:.3f}, time={st:.4f}")
+                ib.IVFPQ = None
 
     # HNSW 
-    print("\nHNSW")
-    for M in [8, 16, 32]:
-        for efc in [128, 200]: # Default is 40, but users find this range is the sweet spot. Should be significantly higher than M.
-            ib.hnsw_build(ib.x_train, d, efc, M, efs=128) # bt = avg_time(lambda: ib.hnsw_build(ib.x_train, d, efc, M, efs=100), r)
-            for efs in [128, 200]: # A good starting place is 2xk to 4xk, but it can be higher to improve recall.
-                ib.HNSW.hnsw.efSearch = efs
-                # hnsw_build(M, efc, efs)
-                # brute_force_search(k) # truth_I calculation no longer needed; loaded from truth_I,D.json
+    if "hnsw" in only:
+        print("\nHNSW")
+        for M in [8, 16, 32]:
+            for efc in [128, 200]: # Default is 40, but users find this range is the sweet spot. Should be significantly higher than M.
+                ib.hnsw_build(ib.x_train, d, efc, M, efs=128) # bt = avg_time(lambda: ib.hnsw_build(ib.x_train, d, efc, M, efs=100), r)
+                for efs in [128, 200]: # A good starting place is 2xk to 4xk, but it can be higher to improve recall.
+                    ib.HNSW.hnsw.efSearch = efs
+                    # hnsw_build(M, efc, efs)
+                    # brute_force_search(k) # truth_I calculation no longer needed; loaded from truth_I,D.json
 
-                rc = ib.search(ib.HNSW, k)
-                st = avg_time(lambda: ib.search(ib.HNSW, k, measure_accuracy=False), r)
-                print(f"M={M}, efc={efc}, efs={efs} | recall={rc:.3f}, time={st:.4f}")
-                ib.HNSW = None
+                    rc = ib.search(ib.HNSW, k)
+                    st = avg_time(lambda: ib.search(ib.HNSW, k, measure_accuracy=False), r)
+                    print(f"M={M}, efc={efc}, efs={efs} | recall={rc:.3f}, time={st:.4f}")
+                    ib.HNSW = None
 
     # HNSW+PQ
-    print("\nHNSW+PQ")
-    for M in [8, 16, 32]:
-        for efc in [128, 200]: # Default is 40, but users find this range is the sweet spot. Should be significantly higher than M.
-            for pq_m in pq_m_vals:
-                ib.hnsw_pq_build(ib.x_train, d, efc, M, pq_m, efs=128) #bt = avg_time(lambda: ib.hnsw_pq_build(ib.x_train, M, efc, efs), r)
-                for efs in [100, 200]: # A good starting place is 2xk to 4xk, but it can be higher to improve recall.
-                    ib.HNSWPQ.hnsw.efSearch = efs
-                    # hnsw_build(M, efc, efs)
-                    # brute_force_search(k)
+    if "hnswpq" in only:
+        print("\nHNSW+PQ")
+        for M in [8, 16, 32]:
+            for efc in [128, 200]: # Default is 40, but users find this range is the sweet spot. Should be significantly higher than M.
+                for pq_m in pq_m_vals:
+                    ib.hnsw_pq_build(ib.x_train, d, efc, M, pq_m, efs=128) #bt = avg_time(lambda: ib.hnsw_pq_build(ib.x_train, M, efc, efs), r)
+                    for efs in [100, 200]: # A good starting place is 2xk to 4xk, but it can be higher to improve recall.
+                        ib.HNSWPQ.hnsw.efSearch = efs
+                        # hnsw_build(M, efc, efs)
+                        # brute_force_search(k)
 
-                    rc = ib.search(ib.HNSWPQ, k)
-                    st = avg_time(lambda: ib.search(ib.HNSWPQ, k, measure_accuracy=False), r)
-                    print(f"M={M}, efc={efc}, efs={efs}, pq_m={pq_m} | recall={rc:.3f}, time={st:.4f}")
-                    ib.HNSWPQ = None
+                        rc = ib.search(ib.HNSWPQ, k)
+                        st = avg_time(lambda: ib.search(ib.HNSWPQ, k, measure_accuracy=False), r)
+                        print(f"M={M}, efc={efc}, efs={efs}, pq_m={pq_m} | recall={rc:.3f}, time={st:.4f}")
+                        ib.HNSWPQ = None
 
     # HNSW+SQ
-    print("\nHNSW+SQ")
-    for M in [8, 16, 32]:
-        for efc in [128, 200]: # Default is 40, but users find this range is the sweet spot. Should be significantly higher than M.
-            for sq in [faiss.ScalarQuantizer.QT_4bit, faiss.ScalarQuantizer.QT_8bit]:
-                ib.hnsw_sq_build(ib.x_train, d, efc, M, sq, efs=128) #bt = avg_time(lambda: ib.hnsw_sq_build(ib.x_train, M, efc, efs), r)
-                for efs in [100, 200]: # A good starting place is 2xk to 4xk, but it can be higher to improve recall.
-                    ib.HNSWSQ.hnsw.efSearch = efs
-                    # hnsw_sq_build(M, efc, efs)
-                    # brute_force_search(k)
+    if "hnswsq" in only:
+        print("\nHNSW+SQ")
+        for M in [8, 16, 32]:
+            for efc in [128, 200]: # Default is 40, but users find this range is the sweet spot. Should be significantly higher than M.
+                for sq in [faiss.ScalarQuantizer.QT_4bit, faiss.ScalarQuantizer.QT_8bit]:
+                    ib.hnsw_sq_build(ib.x_train, d, efc, M, sq, efs=128) #bt = avg_time(lambda: ib.hnsw_sq_build(ib.x_train, M, efc, efs), r)
+                    for efs in [100, 200]: # A good starting place is 2xk to 4xk, but it can be higher to improve recall.
+                        ib.HNSWSQ.hnsw.efSearch = efs
+                        # hnsw_sq_build(M, efc, efs)
+                        # brute_force_search(k)
 
-                    rc = ib.search(ib.HNSWSQ, k)
-                    st = avg_time(lambda: ib.search(ib.HNSWSQ, k, measure_accuracy=False), r)
-                    print(f"M={M}, efc={efc}, efs={efs}, sq_type={sq} | recall={rc:.3f}, time={st:.4f}")
-                    ib.HNSWSQ = None
+                        rc = ib.search(ib.HNSWSQ, k)
+                        st = avg_time(lambda: ib.search(ib.HNSWSQ, k, measure_accuracy=False), r)
+                        print(f"M={M}, efc={efc}, efs={efs}, sq_type={sq} | recall={rc:.3f}, time={st:.4f}")
+                        ib.HNSWSQ = None
 
 
 if __name__ == "__main__":
-    test_suite()
-    # TODO: Make it write to the json file!
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--only",
+        nargs="+",
+        default=None,
+        help="Run only selected tests: brute flat lsh pq ivfpq hnsw hnswpq hnswsq"
+    )
+    args = parser.parse_args()
+
+    test_suite(only=args.only)
 
 
 
