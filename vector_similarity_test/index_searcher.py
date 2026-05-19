@@ -1,6 +1,5 @@
 # index_searcher.py
 import os
-
 import argparse
 import pandas as pd
 from timeit import repeat
@@ -29,8 +28,8 @@ if __name__ == "__main__":
     parser.add_argument(
         "--indices_dir",
         type=str,
-        default="indices",
-        help="Directory containing indices and meta.json (default: indices)",
+        default="indices/glove_clean",
+        help="Directory containing indices and meta.json (default: indices/glove_clean)",
     )
     parser.add_argument(
         "--only",
@@ -40,7 +39,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--threads",
-        nargs="+",
+        type=int,
         default=None,
         help="Limit the number of threads used by FAISS."
     )
@@ -48,22 +47,35 @@ if __name__ == "__main__":
 
     #---------------------- IMPORTS ---------------------------------#
     # Force thread counts BEFORE importing numpy/faiss
+    # if args.threads is not None:
+    #     os.environ["OMP_NUM_THREADS"] = args.threads
+    #     os.environ["OPENBLAS_NUM_THREADS"] = args.threads
+    #     os.environ["MKL_NUM_THREADS"] = args.threads
+    #     os.environ["VECLIB_MAXIMUM_THREADS"] = args.threads
+    #     os.environ["NUMEXPR_NUM_THREADS"] = args.threads
+    #     import faiss
+    #     faiss.omp_set_num_threads(int(args.threads)) 
+    # else: import faiss
+
     if args.threads is not None:
-        os.environ["OMP_NUM_THREADS"] = args.threads
-        os.environ["OPENBLAS_NUM_THREADS"] = args.threads
-        os.environ["MKL_NUM_THREADS"] = args.threads
-        os.environ["VECLIB_MAXIMUM_THREADS"] = args.threads
-        os.environ["NUMEXPR_NUM_THREADS"] = args.threads
+        thread_count = str(args.threads)
+        os.environ["OMP_NUM_THREADS"] = thread_count
+        os.environ["OPENBLAS_NUM_THREADS"] = thread_count
+        os.environ["MKL_NUM_THREADS"] = thread_count
+        os.environ["VECLIB_MAXIMUM_THREADS"] = thread_count
+        os.environ["NUMEXPR_NUM_THREADS"] = thread_count
         import faiss
-        faiss.omp_set_num_threads(int(args.threads)) 
-    else: import faiss
+        faiss.omp_set_num_threads(args.threads)
+    else:
+        import faiss
+
     import numpy as np
     print("FAISS threads:", faiss.omp_get_max_threads()) 
 
     #sophia edit: refactored to load indices built by index_builder.py, and to run searches with timing and recall measurement, but without rebuilding indices (since that can be time consuming and we want to separate build vs. search time in our measurements)
     from index_builder import (
         brute_force_search,
-        search, hnsw_search,
+        search, #hnsw_search,
         #test_search,
     )
     import index_builder as ib
@@ -82,7 +94,12 @@ if __name__ == "__main__":
         return np.mean(repeat(fn, repeat=reps, number=1))
 
     only = set(args.only) if args.only is not None else {"bf", "flat", "lsh", "pq", "ivfpq", "hnsw", "hnsw_pq", "hnsw_sq"}
-    
+    if "brute" in only:
+        only.add("bf")
+    if "hnswpq" in only:
+        only.add("hnsw_pq")
+    if "hnswsq" in only:
+        only.add("hnsw_sq")
     indices_dir = args.indices_dir
 
     # Load saved artifacts from builder
@@ -279,59 +296,94 @@ if __name__ == "__main__":
     else:
         results = {} #SimpleNamespace()
 
-    # Gather current results and insert into loaded JSON (overwriting any existing results for this indices_dir)
+    # Gather current results and insert into loaded JSON
     device = "bf3" if is_bluefield() else "host"
-    dataset = meta["source_file"]
-    dimensions = meta["d"]
-    num_vecs = meta["num_vecs"]
-    threads = args.threads
+    dataset = str(meta["source_file"])
+    dimensions = str(meta["d"])
+    num_vecs = str(meta["num_vecs"])
+    threads = str(args.threads) if args.threads is not None else "default"
 
-    if device not in results: results[device] = {}
-    if dataset not in results[device]: results[device][dataset] = {}
-    if dimensions not in results[device][dataset]: results[device][dataset][dimensions] = {}
-    if num_vecs not in results[device][dataset][dimensions]: results[device][dataset][dimensions][num_vecs] = {}
-    if threads not in results[device][dataset][dimensions][num_vecs]: results[device][dataset][dimensions][num_vecs][threads] = {}
+
+    def jsonable(x):
+        """Convert numpy values to normal Python values so json.dump will work."""
+        if isinstance(x, np.ndarray):
+            return x.tolist()
+        if isinstance(x, np.integer):
+            return int(x)
+        if isinstance(x, np.floating):
+            return float(x)
+        if isinstance(x, list):
+            return [jsonable(v) for v in x]
+        if isinstance(x, tuple):
+            return [jsonable(v) for v in x]
+        if isinstance(x, dict):
+            return {str(k): jsonable(v) for k, v in x.items()}
+        return x
+
+
+    if device not in results:
+        results[device] = {}
+
+    if dataset not in results[device]:
+        results[device][dataset] = {}
+
+    if dimensions not in results[device][dataset]:
+        results[device][dataset][dimensions] = {}
+
+    if num_vecs not in results[device][dataset][dimensions]:
+        results[device][dataset][dimensions][num_vecs] = {}
+
+    if threads not in results[device][dataset][dimensions][num_vecs]:
+        results[device][dataset][dimensions][num_vecs][threads] = {}
+
     slot = results[device][dataset][dimensions][num_vecs][threads]
+
     old_date = slot.get("date", None)
     if old_date is not None:
         old_date_slot = slot.get(old_date, {})
         slot[old_date] = old_date_slot
+    else:
+        old_date_slot = {}
 
-    current_results = { # To add to JSON dict
+    current_results = {
         "date": pd.Timestamp.now().isoformat(),
         "repeats": REPLICATIONS,
-        "k_values" : ib.k_values,
+        "k_values": ib.k_values,
 
-        "bf_times" : bf_times,
-        "flat_recalls" : flat_recalls,
-        "flat_times" : flat_times,
-        "lsh_recalls" : lsh_recalls,
-        "lsh_times" : lsh_times,
-        "pq_recalls" : pq_recalls,
-        "pq_times" : pq_times,
-        "ivfpq_recalls" : ivfpq_recalls,
-        "ivfpq_times" : ivfpq_times,
-        "hnsw_recalls" : hnsw_recalls,
-        "hnsw_times" : hnsw_times,
-        "hnsw_pq_recalls" : hnsw_pq_recalls,
-        "hnsw_pq_times" : hnsw_pq_times,
-        "hnsw_sq_recalls" : hnsw_sq_recalls,
-        "hnsw_sq_times" : hnsw_sq_times,
+        "bf_times": bf_times,
+        "flat_recalls": flat_recalls,
+        "flat_times": flat_times,
+        "lsh_recalls": lsh_recalls,
+        "lsh_times": lsh_times,
+        "pq_recalls": pq_recalls,
+        "pq_times": pq_times,
+        "ivfpq_recalls": ivfpq_recalls,
+        "ivfpq_times": ivfpq_times,
+        "hnsw_recalls": hnsw_recalls,
+        "hnsw_times": hnsw_times,
+        "hnsw_pq_recalls": hnsw_pq_recalls,
+        "hnsw_pq_times": hnsw_pq_times,
+        "hnsw_sq_recalls": hnsw_sq_recalls,
+        "hnsw_sq_times": hnsw_sq_times,
     }
+
+    slot["date"] = current_results["date"]
+
     for key, value in current_results.items():
-        if key == "date": continue
-        if value is None or not len(value): continue # skip empty results
-        # Save old data under old date as subkey
+        if key == "date":
+            continue
+
+        if value is None:
+            continue
+
+        if isinstance(value, (list, tuple, dict, np.ndarray)) and len(value) == 0:
+            continue  # skip empty result arrays/lists only
+
         old_item = slot.get(key, None)
-        if old_item is not None: old_date_slot[key] = old_item
-        # Insert current data
-        slot[key] = value
+        if old_item is not None and old_date is not None:
+            old_date_slot[key] = old_item
 
-
-    # def serialize_namespace(obj):
-    #     if isinstance(obj, SimpleNamespace):
-    #         return vars(obj)
-    #     raise TypeError(f"Type {type(obj)} not serializable")
+        slot[key] = jsonable(value)
 
     # Save results to JSON
     with open(results_path, "w") as f:
