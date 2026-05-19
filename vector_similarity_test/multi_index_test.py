@@ -1,3 +1,4 @@
+#multi_index_test.py 
 import pandas as pd
 import numpy as np
 import faiss
@@ -10,12 +11,16 @@ import index_builder as ib
 # Load Data File (TODO: make this more flexible for different datasets)
 # df = pd.read_csv("../Data/glove.6B.200d.txt", sep=" ", quoting=3, header=None)
 # d = 300
-df = pd.read_csv("../Data/glove.6B.200d.txt", sep=" ", quoting=3, skiprows=1, header=None)
+df = pd.read_csv("../Data/glove.6B.200d.txt", sep=" ", quoting=3, header=None)
+#df = pd.read_csv("../Data/glove.6B.200d.txt", sep=" ", quoting=3, skiprows=1, header=None)
+
 truth_path = "indices/glove_clean/truth_I,D.json"
 d = 200
+k = 10
 
-
-k = 10 # Number of nearest neighbors to search for (TODO: update this and graph to 100?)
+# sharing these variables with index_builder.py
+ib.d = d
+ib.k = k
 
 # Split into vocab column and data
 # vocab = df.iloc[:, 0]
@@ -42,16 +47,20 @@ def avg_time(fn, reps=3):
 # TEST
 def test_suite(r=3, only=None):
     if only is None:
-        only = {"brute", "flat", "lsh", "pq", "ivfpq", "hnsw", "hnswpq", "hnswsq"}
+        only = {"bf", "flat", "lsh", "pq", "ivfpq", "hnsw", "hnsw_pq", "hnsw_sq"}
     else:
         only = set(only)
+#sophia edit: the pq vals were undefined earlier
+    assert d == 200 or d == 300, "This test suite is designed for d=200 or d=300. Please adjust pq_m_vals accordingly if using a different dimension."
 
+    pq_m_vals = [4, 5, 10, 20, 40] if d == 200 else [4, 5, 10, 25, 30, 50]
+    pq_n_bits = [4, 6, 8]
 
     print(f"(All times averaged over {r} repeats)")
     ib.load_truth(truth_path)
 
     # Ground Truth or Brute Force
-    if "brute" in only:
+    if "bf" in only:
         print("\nBrute Force")
         # bf_build = avg_time(lambda: ib.brute_force_build(x_train), r)
         # brute_force_build()
@@ -85,9 +94,9 @@ def test_suite(r=3, only=None):
     # PQ
     if "pq" in only:
         print("\nPQ")
-        assert d == 200 or d == 300, "This test suite is designed for d=200 or d=300. Please adjust pq_m_vals accordingly if using a different dimension. They must be factors of d."
-        pq_m_vals = [4, 5, 10, 20, 40] if d == 200 else [4, 5, 10, 25, 30, 50] if d == 300 else None # "subquantizers" or "m" in the PQ index, which is the number of subvectors the original vector is split into. It must be a factor of d.
-        pq_n_bits = [4, 6, 8] # "nbits_per_index" or "nbits" in the PQ index, which is the number of bits used to encode each subvector.
+        # assert d == 200 or d == 300, "This test suite is designed for d=200 or d=300. Please adjust pq_m_vals accordingly if using a different dimension. They must be factors of d."
+        # pq_m_vals = [4, 5, 10, 20, 40] if d == 200 else [4, 5, 10, 25, 30, 50] if d == 300 else None # "subquantizers" or "m" in the PQ index, which is the number of subvectors the original vector is split into. It must be a factor of d.
+        # pq_n_bits = [4, 6, 8] # "nbits_per_index" or "nbits" in the PQ index, which is the number of bits used to encode each subvector.
         for m in pq_m_vals:
             for nbits in pq_n_bits:
                 ib.pq_build(ib.x_train, m, nbits) # bt = avg_time(lambda: ib.pq_build(ib.x_train, m), r)
@@ -96,7 +105,8 @@ def test_suite(r=3, only=None):
 
                 rc = ib.search(ib.PQ, k)
                 st = avg_time(lambda: ib.search(ib.PQ, k, measure_accuracy=False), r)
-                print(f"m={m} | recall={rc:.3f}, time={st:.4f}")
+                # print(f"m={m} | recall={rc:.3f}, time={st:.4f}")
+                print(f"m={m}, nbits={nbits} | recall={rc:.3f}, time={st:.4f}")
                 ib.PQ = None
 
     # IVFPQ 
@@ -112,7 +122,8 @@ def test_suite(r=3, only=None):
 
                 rc = ib.search(ib.IVFPQ, k)
                 st = avg_time(lambda: ib.search(ib.IVFPQ, k, measure_accuracy=False), r)
-                print(f"nlist={nlist} | recall={rc:.3f}, time={st:.4f}")
+                # print(f"nlist={nlist} | recall={rc:.3f}, time={st:.4f}")
+                print(f"nlist={ncentroids}, code_size={code_size} | recall={rc:.3f}, time={st:.4f}")               
                 ib.IVFPQ = None
 
     # HNSW 
@@ -120,7 +131,7 @@ def test_suite(r=3, only=None):
         print("\nHNSW")
         for M in [8, 16, 32]:
             for efc in [128, 200]: # Default is 40, but users find this range is the sweet spot. Should be significantly higher than M.
-                ib.hnsw_build(ib.x_train, d, efc, M, efs=128) # bt = avg_time(lambda: ib.hnsw_build(ib.x_train, d, efc, M, efs=100), r)
+                ib.hnsw_build(ib.x_train, d, efc, M, 128) # bt = avg_time(lambda: ib.hnsw_build(ib.x_train, d, efc, M, efs=100), r)
                 for efs in [128, 200]: # A good starting place is 2xk to 4xk, but it can be higher to improve recall.
                     ib.HNSW.hnsw.efSearch = efs
                     # hnsw_build(M, efc, efs)
@@ -129,15 +140,15 @@ def test_suite(r=3, only=None):
                     rc = ib.search(ib.HNSW, k)
                     st = avg_time(lambda: ib.search(ib.HNSW, k, measure_accuracy=False), r)
                     print(f"M={M}, efc={efc}, efs={efs} | recall={rc:.3f}, time={st:.4f}")
-                    ib.HNSW = None
+                ib.HNSW = None
 
     # HNSW+PQ
-    if "hnswpq" in only:
+    if "hnsw_pq" in only:
         print("\nHNSW+PQ")
         for M in [8, 16, 32]:
             for efc in [128, 200]: # Default is 40, but users find this range is the sweet spot. Should be significantly higher than M.
                 for pq_m in pq_m_vals:
-                    ib.hnsw_pq_build(ib.x_train, d, efc, M, pq_m, efs=128) #bt = avg_time(lambda: ib.hnsw_pq_build(ib.x_train, M, efc, efs), r)
+                    ib.hnsw_pq_build(ib.x_train, d, efc, M, pq_m, 128) #bt = avg_time(lambda: ib.hnsw_pq_build(ib.x_train, M, efc, efs), r)
                     for efs in [100, 200]: # A good starting place is 2xk to 4xk, but it can be higher to improve recall.
                         ib.HNSWPQ.hnsw.efSearch = efs
                         # hnsw_build(M, efc, efs)
@@ -146,15 +157,15 @@ def test_suite(r=3, only=None):
                         rc = ib.search(ib.HNSWPQ, k)
                         st = avg_time(lambda: ib.search(ib.HNSWPQ, k, measure_accuracy=False), r)
                         print(f"M={M}, efc={efc}, efs={efs}, pq_m={pq_m} | recall={rc:.3f}, time={st:.4f}")
-                        ib.HNSWPQ = None
+                    ib.HNSWPQ = None
 
     # HNSW+SQ
-    if "hnswsq" in only:
+    if "hnsw_sq" in only:
         print("\nHNSW+SQ")
         for M in [8, 16, 32]:
             for efc in [128, 200]: # Default is 40, but users find this range is the sweet spot. Should be significantly higher than M.
                 for sq in [faiss.ScalarQuantizer.QT_4bit, faiss.ScalarQuantizer.QT_8bit]:
-                    ib.hnsw_sq_build(ib.x_train, d, efc, M, sq, efs=128) #bt = avg_time(lambda: ib.hnsw_sq_build(ib.x_train, M, efc, efs), r)
+                    ib.hnsw_sq_build(ib.x_train, d, efc, M, sq, 128) #bt = avg_time(lambda: ib.hnsw_sq_build(ib.x_train, M, efc, efs), r)
                     for efs in [100, 200]: # A good starting place is 2xk to 4xk, but it can be higher to improve recall.
                         ib.HNSWSQ.hnsw.efSearch = efs
                         # hnsw_sq_build(M, efc, efs)
@@ -163,7 +174,7 @@ def test_suite(r=3, only=None):
                         rc = ib.search(ib.HNSWSQ, k)
                         st = avg_time(lambda: ib.search(ib.HNSWSQ, k, measure_accuracy=False), r)
                         print(f"M={M}, efc={efc}, efs={efs}, sq_type={sq} | recall={rc:.3f}, time={st:.4f}")
-                        ib.HNSWSQ = None
+                    ib.HNSWSQ = None
 
 
 if __name__ == "__main__":
@@ -172,7 +183,7 @@ if __name__ == "__main__":
         "--only",
         nargs="+",
         default=None,
-        help="Run only selected tests: brute flat lsh pq ivfpq hnsw hnswpq hnswsq"
+        help="Run only selected tests: bf flat lsh pq ivfpq hnsw hnsw_pq hnsw_sq"
     )
     args = parser.parse_args()
 
