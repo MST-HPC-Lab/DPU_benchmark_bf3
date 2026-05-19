@@ -1,5 +1,4 @@
 # index_builder.py
-
 import argparse
 import pandas as pd
 import numpy as np
@@ -157,13 +156,15 @@ def hnsw_pq_build(data, dim, ef_construction, M, pq_m, ef_search):#ef_constructi
     global HNSWPQ
     HNSWPQ = faiss.IndexHNSWPQ(dim, pq_m, M)
     HNSWPQ.hnsw.efConstruction = ef_construction
+    HNSWPQ.train(data)
     HNSWPQ.add(data)
     HNSWPQ.hnsw.efSearch = max(int(ef_search), 1)
 
 def hnsw_sq_build(data, dim, ef_construction, M, q_type, ef_search):#ef_construction=200, M=16, q_type=faiss.ScalarQuantizer.QT_8bit, ef_search=100):
     global HNSWSQ
-    HNSWSQ = faiss.IndexHNSWFlat(dim, q_type, M)
+    HNSWSQ = faiss.IndexHNSWSQ(dim, q_type, M)
     HNSWSQ.hnsw.efConstruction = ef_construction
+    HNSWSQ.train(data)
     HNSWSQ.add(data)
     HNSWSQ.hnsw.efSearch = max(int(ef_search), 1)
 
@@ -222,7 +223,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--num_vecs", type=int, default=None)
     parser.add_argument("--dim", type=int, default=None)
-    parser.add_argument("--file", type=str, default="cc.en.300.vec")
+    parser.add_argument("--file", type=str, default="glove.6B.200d.txt")
 
     # SOPHIA EDIT: Add out_folder argument
     parser.add_argument("--out_folder", type=str, required=True,
@@ -230,11 +231,11 @@ if __name__ == "__main__":
 
     parser.add_argument("--mem_out", type=str, default=None)
     parser.add_argument("--no_save", action="store_true")
-    parser.add_argument("--only", nargs="+", default=None, help = "Build only selected indices: flat lsh pq ivfpq hnsw")
+    parser.add_argument("--only", nargs="+", default=None, help = "Build only selected indices: bf flat lsh pq ivfpq hnsw hnsw_pq hnsw_sq")
     args = parser.parse_args()
 
     filename = f"../Data/{args.file}"
-    df = pd.read_csv(filename, sep=" ", quoting=3, skiprows=1, header=None)
+    df = pd.read_csv(filename, sep=" ", quoting=3, header=None)
 
     vocab = df.iloc[:, 0]
     df = df.drop(0, axis=1)
@@ -252,8 +253,10 @@ if __name__ == "__main__":
     print("Dimensions:", d)
 
     N = len(df)
-    test_i = [i for i in range(199, N, 200)]
-    train_i = [i for i in range(N) if (i + 199) % 200]
+    test_i = [i for i in range(d - 1, N, d)]
+    train_i = [i for i in range(N) if (i + d - 1) % d]
+    # test_i = [i for i in range(199, N, 200)]
+    # train_i = [i for i in range(N) if (i + 199) % 200]
 
     print("Train Size:", len(train_i))
     print("Test  Size:", len(test_i))
