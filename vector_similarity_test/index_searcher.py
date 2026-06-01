@@ -3,11 +3,28 @@ import os
 import argparse
 import pandas as pd
 from timeit import repeat
-# import hnswlib  # SOPHIA EDIT: removed hnswlib, switching to FAISS HNSW
+# import hnswlib  # removed hnswlib, now using FAISS HNSW
 import json
-from types import SimpleNamespace
 
 from device_utils import is_bluefield
+
+
+
+def jsonable(x):
+    """Convert numpy values to normal Python values so json.dump will work."""
+    if isinstance(x, np.ndarray):
+        return x.tolist()
+    if isinstance(x, np.integer):
+        return int(x)
+    if isinstance(x, np.floating):
+        return float(x)
+    if isinstance(x, list):
+        return [jsonable(v) for v in x]
+    if isinstance(x, tuple):
+        return [jsonable(v) for v in x]
+    if isinstance(x, dict):
+        return {str(k): jsonable(v) for k, v in x.items()}
+    return x
 
 
 if __name__ == "__main__":
@@ -66,6 +83,7 @@ if __name__ == "__main__":
         os.environ["NUMEXPR_NUM_THREADS"] = thread_count
         import faiss
         faiss.omp_set_num_threads(args.threads)
+        # NOTE: Does not affect AVX or NEON (SMID capabilities)
     else:
         import faiss
 
@@ -87,8 +105,8 @@ if __name__ == "__main__":
     os.makedirs("results", exist_ok=True)
 
     #warmup function to ensure fair timing (e.g. JIT compilation, caching effects)
-    def avg_time(fn, reps=REPLICATIONS):
-        for _ in range(2): #two extra runs to warm up caches 
+    def avg_time(fn, reps=REPLICATIONS, warmup_runs=2):
+        for _ in range(warmup_runs): #extra runs to warm up caches 
             fn()
         #fn()
         return np.mean(repeat(fn, repeat=reps, number=1))
@@ -304,23 +322,6 @@ if __name__ == "__main__":
     threads = str(args.threads) if args.threads is not None else "default"
 
 
-    def jsonable(x):
-        """Convert numpy values to normal Python values so json.dump will work."""
-        if isinstance(x, np.ndarray):
-            return x.tolist()
-        if isinstance(x, np.integer):
-            return int(x)
-        if isinstance(x, np.floating):
-            return float(x)
-        if isinstance(x, list):
-            return [jsonable(v) for v in x]
-        if isinstance(x, tuple):
-            return [jsonable(v) for v in x]
-        if isinstance(x, dict):
-            return {str(k): jsonable(v) for k, v in x.items()}
-        return x
-
-
     if device not in results:
         results[device] = {}
 
@@ -338,14 +339,12 @@ if __name__ == "__main__":
 
     slot = results[device][dataset][dimensions][num_vecs][threads]
 
-    old_date = slot.get("date", None)
-    if old_date is not None:
-        old_date_slot = slot.get(old_date, {})
-        slot[old_date] = old_date_slot
-    else:
+    old_date = slot.get("date", None) # Will be None if slot is empty
+    if old_date is not None: # Slot was not empty, preserve old results
         old_date_slot = {}
+        slot[old_date] = old_date_slot
 
-    current_results = {
+    current_results = { # To become the JSON dict entry for this run
         "date": pd.Timestamp.now().isoformat(),
         "repeats": REPLICATIONS,
         "k_values": ib.k_values,

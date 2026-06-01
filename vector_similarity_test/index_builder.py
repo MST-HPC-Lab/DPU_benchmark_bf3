@@ -235,9 +235,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     filename = f"../Data/{args.file}"
-    df = pd.read_csv(filename, sep=" ", quoting=3, header=None)
+    df = pd.read_csv(filename, sep=" ", quoting=3, skiprows=1, header=None)
 
-    vocab = df.iloc[:, 0]
+    # vocab = df.iloc[:, 0]
     df = df.drop(0, axis=1)
 
     if args.num_vecs is not None:

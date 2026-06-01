@@ -6,115 +6,155 @@ import argparse
 from timeit import repeat
 
 import index_builder as ib
+from device_utils import is_bluefield
+from index_searcher import jsonable
 
-
-# Load Data File (TODO: make this more flexible for different datasets)
-# df = pd.read_csv("../Data/glove.6B.200d.txt", sep=" ", quoting=3, header=None)
-# d = 300
-df = pd.read_csv("../Data/glove.6B.200d.txt", sep=" ", quoting=3, header=None)
-#df = pd.read_csv("../Data/glove.6B.200d.txt", sep=" ", quoting=3, skiprows=1, header=None)
-
-truth_path = "indices/glove_clean/truth_I,D.json"
-d = 200
-k = 10
-
-# sharing these variables with index_builder.py
-ib.d = d
-ib.k = k
-
-# Split into vocab column and data
-# vocab = df.iloc[:, 0]
-df = df.drop(0, axis=1)
-
-# Fixed Split
-N = len(df)
-test_i = [i for i in range(d-1, N, d)]
-train_i = [i for i in range(N) if (i + d-1) % d]
-
-ib.x_query = df.iloc[test_i]
-ib.x_query = np.ascontiguousarray(ib.x_query.to_numpy(dtype=np.float32))
-ib.x_train = df.iloc[train_i]
-ib.x_train = np.ascontiguousarray(ib.x_train.to_numpy(dtype=np.float32))
-del df
 
 
 # Timing
-def avg_time(fn, reps=3):
+def avg_time(fn, reps=3): # No cache warmup here, but later reps will be warm, so this creates a mixture.
     fn()
     return np.mean(repeat(fn, number=1, repeat=reps))
 
 
 # TEST
-def test_suite(r=3, only=None):
+def test_suite(filename="../Data/glove.6B.200d.txt", only=None, k=10, r=3):
+    # Load Data File (TODO: make this more flexible for different datasets)
+    # df = pd.read_csv("../Data/glove.6B.200d.txt", sep=" ", quoting=3, header=None)
+    # d = 300
+    df = pd.read_csv(filename, sep=" ", quoting=3, skiprows=1, header=None)
+    # Split into vocab column and data
+    # vocab = df.iloc[:, 0]
+    df = df.drop(0, axis=1)
+
+    d = df.shape[1]
+    # sharing these variables with index_builder.py
+    ib.d = d
+    # ib.k = k
+
+    truth_path = "indices/glove_clean/truth_I,D.json"
+
+    # Fixed Split
+    N = len(df)
+    test_i = [i for i in range(d-1, N, d)]
+    train_i = [i for i in range(N) if (i + d-1) % d]
+
+    ib.x_query = df.iloc[test_i]
+    ib.x_query = np.ascontiguousarray(ib.x_query.to_numpy(dtype=np.float32))
+    ib.x_train = df.iloc[train_i]
+    ib.x_train = np.ascontiguousarray(ib.x_train.to_numpy(dtype=np.float32))
+    del df
+
     if only is None:
         only = {"bf", "flat", "lsh", "pq", "ivfpq", "hnsw", "hnsw_pq", "hnsw_sq"}
     else:
         only = set(only)
-#sophia edit: the pq vals were undefined earlier
-    assert d == 200 or d == 300, "This test suite is designed for d=200 or d=300. Please adjust pq_m_vals accordingly if using a different dimension."
 
-    pq_m_vals = [4, 5, 10, 20, 40] if d == 200 else [4, 5, 10, 25, 30, 50]
-    pq_n_bits = [4, 6, 8]
+    assert d == 200 or d == 300, "This test suite is designed for d=200 or d=300. Please adjust pq_m_vals accordingly if using a different dimension. They must be factors of d."
+    
+    pq_m_vals = [4, 5, 10, 20, 40] if d == 200 else [4, 5, 10, 25, 30, 50] if d == 300 else None # "subquantizers" or "m" in the PQ index, which is the number of subvectors the original vector is split into. It must be a factor of d.
+    pq_n_bits = [4, 6, 8] # "nbits_per_index" or "nbits" in the PQ index, which is the number of bits used to encode each subvector.
+
+    nlist = [int(4 * np.sqrt(len(ib.x_train))), int(8 * np.sqrt(len(ib.x_train))), int(16 * np.sqrt(len(ib.x_train)))] # "nlist" or "ncentroids" in the IVFPQ index, which is the number of Voronoi cells (or clusters) used to partition the training data. It must be less than the number of training vectors.
+
+    hnsw_m_vals = [8, 16, 32] # "M" in the HNSW index, which is the number of bi-directional links created for each new element during index construction. A higher M leads to higher recall but also higher search time and memory usage.
+    hnsw_efc_vals = [128, 200] # "efConstruction" or "efc" in the HNSW index, which is the size of the dynamic list used during index construction to select neighbors. A higher efc leads to higher recall but also longer build time.
+    hnsw_efs_vals = [128, 200] # "efSearch" or "efs" in the HNSW index, which is the size of the dynamic list used during search. A higher efs leads to higher recall but also longer search time. A good starting place is 2xk to 4xk, but it can be higher to improve recall.
+
+    sq_vals = [faiss.ScalarQuantizer.QT_4bit, faiss.ScalarQuantizer.QT_8bit]
 
     print(f"(All times averaged over {r} repeats)")
     ib.load_truth(truth_path)
+
+    current_results = { # To be saved as JSON at the end; structured as results["multitest"][device][dataset][k] = current_results
+        "date": pd.Timestamp.now().isoformat(),
+        "repeats": r,
+        "threads": str(ib.threads) if ib.threads is not None else "default",
+        "dimensions": d,
+        "train_size": len(ib.x_train),
+        "test_size": len(ib.x_query),
+        "cache": "mixture", # "warm" or "cold" or "mixture" (if some builds are warm and some are cold)
+        "pq_m_vals": pq_m_vals,
+        "pq_n_bits": pq_n_bits,
+        "nlist": nlist,
+        "hnsw_m_vals": hnsw_m_vals,
+        "hnsw_efc_vals": hnsw_efc_vals,
+        "hnsw_efs_vals": hnsw_efs_vals,
+        "sq_vals": ["QT_4bit", "QT_8bit"]
+    }
 
     # Ground Truth or Brute Force
     if "bf" in only:
         print("\nBrute Force")
         # bf_build = avg_time(lambda: ib.brute_force_build(x_train), r)
         # brute_force_build()
-        bf_search = avg_time(lambda: ib.brute_force_search(k, measure_accuracy=False), r)
+        st = avg_time(lambda: ib.brute_force_search(k, measure_accuracy=False), r)
         # print("Build Time:", bf_build)
-        print("Search Time:", bf_search)
+        # print("Search Time:", bf_search)
         # ib.x_train = None # Needed for other builds
+        current_results["bf_recalls"] = 1.0 # By definition, brute force has perfect recall
+        current_results["bf_times"] = st
 
     # Flat
     if "flat" in only:
         print("\nFlat")
         ib.flat_build(ib.x_train) # bt = avg_time(lambda: ib.flat_build(ib.x_train), r)
-        flat_search = avg_time(lambda: ib.search(ib.FL2, k, measure_accuracy=False), r)
+
+        rc = ib.search(ib.FL2, k)
+        st = avg_time(lambda: ib.search(ib.FL2, k, measure_accuracy=False), r)
         # print("Build Time:", bt)
-        print("Search Time:", flat_search)
+        # print("Search Time:", flat_search)
         ib.FL2 = None
+        current_results["flat_recalls"] = rc
+        current_results["flat_times"] = st
 
     # LSH 
     if "lsh" in only:    
         print("\nLSH")
-        for nbits in [32, 64, 128, 256, 512, 1024, 1600]:
+        nbits_vals = [32, 64, 128, 256, 512, 1024, 1600]
+        recalls = np.ones(len(nbits_vals)) * -1
+        times = np.ones(len(nbits_vals)) * -1
+        for i, nbits in enumerate(nbits_vals):
             ib.lsh_build(ib.x_train, nbits) # bt = avg_time(lambda: ib.lsh_build(ib.x_train, nbits), r)
             # lsh_build(nbits)
             # brute_force_search(k)
 
             rc = ib.search(ib.LSH, k)
             st = avg_time(lambda: ib.search(ib.LSH, k, measure_accuracy=False), r)
-            print(f"nbits={nbits} | recall={rc:.3f}, time={st:.4f}")
+            # print(f"nbits={nbits} | recall={rc:.3f}, time={st:.4f}")
+            recalls[i] = rc
+            times[i] = st
             ib.LSH = None
+        current_results["lsh_recalls"] = recalls.tolist()
+        current_results["lsh_times"] = times.tolist()
 
     # PQ
     if "pq" in only:
         print("\nPQ")
-        # assert d == 200 or d == 300, "This test suite is designed for d=200 or d=300. Please adjust pq_m_vals accordingly if using a different dimension. They must be factors of d."
-        # pq_m_vals = [4, 5, 10, 20, 40] if d == 200 else [4, 5, 10, 25, 30, 50] if d == 300 else None # "subquantizers" or "m" in the PQ index, which is the number of subvectors the original vector is split into. It must be a factor of d.
-        # pq_n_bits = [4, 6, 8] # "nbits_per_index" or "nbits" in the PQ index, which is the number of bits used to encode each subvector.
-        for m in pq_m_vals:
-            for nbits in pq_n_bits:
+        recalls = np.ones((len(pq_m_vals), len(pq_n_bits))) * -1
+        times = np.ones((len(pq_m_vals), len(pq_n_bits))) * -1
+        for i, m in enumerate(pq_m_vals):
+            for j, nbits in enumerate(pq_n_bits):
                 ib.pq_build(ib.x_train, m, nbits) # bt = avg_time(lambda: ib.pq_build(ib.x_train, m), r)
                 # pq_build(m)
                 # brute_force_search(k)
 
                 rc = ib.search(ib.PQ, k)
                 st = avg_time(lambda: ib.search(ib.PQ, k, measure_accuracy=False), r)
-                # print(f"m={m} | recall={rc:.3f}, time={st:.4f}")
-                print(f"m={m}, nbits={nbits} | recall={rc:.3f}, time={st:.4f}")
+                # print(f"m={m}, nbits={nbits} | recall={rc:.3f}, time={st:.4f}")
+                recalls[i, j] = rc
+                times[i, j] = st
                 ib.PQ = None
+        current_results["pq_recalls"] = recalls.tolist()
+        current_results["pq_times"] = times.tolist()
 
     # IVFPQ 
     if "ivfpq" in only:
         print("\nIVFPQ")
-        nlist = [int(4 * np.sqrt(len(ib.x_train))), int(8 * np.sqrt(len(ib.x_train))), int(16 * np.sqrt(len(ib.x_train)))] # "nlist" or "ncentroids" in the IVFPQ index, which is the number of Voronoi cells (or clusters) used to partition the training data. It must be less than the number of training vectors.
-        for ncentroids in nlist: # Usually ranges from 4xsqrt(|x_train|) to 16xsqrt(|x_train|).
-            for code_size in pq_m_vals: # code_size and m are same if n_bits is 8, since code_size = (m * n_bits) / 8
+        recalls = np.ones((len(nlist), len(pq_m_vals))) * -1
+        times = np.ones((len(nlist), len(pq_m_vals))) * -1
+        for i, ncentroids in enumerate(nlist): # Usually ranges from 4xsqrt(|x_train|) to 16xsqrt(|x_train|).
+            for j, code_size in enumerate(pq_m_vals): # code_size and m are same if n_bits is 8, since code_size = (m * n_bits) / 8
                 ib.ivfpq_build(ib.x_train, ncentroids, code_size, n_bits=8) #bt = avg_time(lambda: ib.ivfpq_build(ib.x_train, ncentroids, code_size, n_bits=8), r)
                 ib.IVFPQ.nprobe = 32
                 # ivfpq_build(nlist)
@@ -122,72 +162,101 @@ def test_suite(r=3, only=None):
 
                 rc = ib.search(ib.IVFPQ, k)
                 st = avg_time(lambda: ib.search(ib.IVFPQ, k, measure_accuracy=False), r)
-                # print(f"nlist={nlist} | recall={rc:.3f}, time={st:.4f}")
-                print(f"nlist={ncentroids}, code_size={code_size} | recall={rc:.3f}, time={st:.4f}")               
+                # print(f"nlist={ncentroids}, code_size={code_size} | recall={rc:.3f}, time={st:.4f}")               
+                recalls[i, j] = rc
+                times[i, j] = st
                 ib.IVFPQ = None
+        current_results["ivfpq_recalls"] = recalls.tolist()
+        current_results["ivfpq_times"] = times.tolist()
 
     # HNSW 
     if "hnsw" in only:
         print("\nHNSW")
-        for M in [8, 16, 32]:
-            for efc in [128, 200]: # Default is 40, but users find this range is the sweet spot. Should be significantly higher than M.
+        recalls = np.ones((len(hnsw_m_vals), len(hnsw_efc_vals), len(hnsw_efs_vals))) * -1
+        times = np.ones((len(hnsw_m_vals), len(hnsw_efc_vals), len(hnsw_efs_vals))) * -1
+        for i, M in enumerate(hnsw_m_vals):
+            for j, efc in enumerate(hnsw_efc_vals): # Default is 40, but users find this range is the sweet spot. Should be significantly higher than M.
                 ib.hnsw_build(ib.x_train, d, efc, M, 128) # bt = avg_time(lambda: ib.hnsw_build(ib.x_train, d, efc, M, efs=100), r)
-                for efs in [128, 200]: # A good starting place is 2xk to 4xk, but it can be higher to improve recall.
+                for s, efs in enumerate(hnsw_efs_vals): # A good starting place is 2xk to 4xk, but it can be higher to improve recall.
                     ib.HNSW.hnsw.efSearch = efs
                     # hnsw_build(M, efc, efs)
                     # brute_force_search(k) # truth_I calculation no longer needed; loaded from truth_I,D.json
 
                     rc = ib.search(ib.HNSW, k)
                     st = avg_time(lambda: ib.search(ib.HNSW, k, measure_accuracy=False), r)
-                    print(f"M={M}, efc={efc}, efs={efs} | recall={rc:.3f}, time={st:.4f}")
+                    # print(f"M={M}, efc={efc}, efs={efs} | recall={rc:.3f}, time={st:.4f}")
+                    recalls[i, j, s] = rc
+                    times[i, j, s] = st
                 ib.HNSW = None
+        current_results["hnsw_recalls"] = recalls.tolist()
+        current_results["hnsw_times"] = times.tolist()
 
     # HNSW+PQ
     if "hnsw_pq" in only:
         print("\nHNSW+PQ")
-        for M in [8, 16, 32]:
-            for efc in [128, 200]: # Default is 40, but users find this range is the sweet spot. Should be significantly higher than M.
-                for pq_m in pq_m_vals:
+        recalls = np.ones((len(hnsw_m_vals), len(hnsw_efc_vals), len(pq_m_vals), len(hnsw_efs_vals))) * -1
+        times = np.ones((len(hnsw_m_vals), len(hnsw_efc_vals), len(pq_m_vals), len(hnsw_efs_vals))) * -1
+        for i, M in enumerate(hnsw_m_vals):
+            for j, efc in enumerate(hnsw_efc_vals): # Default is 40, but users find this range is the sweet spot. Should be significantly higher than M.
+                for m, pq_m in enumerate(pq_m_vals):
                     ib.hnsw_pq_build(ib.x_train, d, efc, M, pq_m, 128) #bt = avg_time(lambda: ib.hnsw_pq_build(ib.x_train, M, efc, efs), r)
-                    for efs in [100, 200]: # A good starting place is 2xk to 4xk, but it can be higher to improve recall.
+                    for s, efs in enumerate(hnsw_efs_vals): # A good starting place is 2xk to 4xk, but it can be higher to improve recall.
                         ib.HNSWPQ.hnsw.efSearch = efs
                         # hnsw_build(M, efc, efs)
                         # brute_force_search(k)
 
                         rc = ib.search(ib.HNSWPQ, k)
                         st = avg_time(lambda: ib.search(ib.HNSWPQ, k, measure_accuracy=False), r)
-                        print(f"M={M}, efc={efc}, efs={efs}, pq_m={pq_m} | recall={rc:.3f}, time={st:.4f}")
+                        # print(f"M={M}, efc={efc}, efs={efs}, pq_m={pq_m} | recall={rc:.3f}, time={st:.4f}")
+                        recalls[i, j, m, s] = rc
+                        times[i, j, m, s] = st
                     ib.HNSWPQ = None
+        current_results["hnsw_pq_recalls"] = recalls.tolist()
+        current_results["hnsw_pq_times"] = times.tolist()
 
     # HNSW+SQ
     if "hnsw_sq" in only:
         print("\nHNSW+SQ")
-        for M in [8, 16, 32]:
-            for efc in [128, 200]: # Default is 40, but users find this range is the sweet spot. Should be significantly higher than M.
-                for sq in [faiss.ScalarQuantizer.QT_4bit, faiss.ScalarQuantizer.QT_8bit]:
+        recalls = np.ones((len(hnsw_m_vals), len(hnsw_efc_vals), len(sq_vals), len(hnsw_efs_vals))) * -1
+        times = np.ones((len(hnsw_m_vals), len(hnsw_efc_vals), len(sq_vals), len(hnsw_efs_vals))) * -1
+        for i, M in enumerate(hnsw_m_vals):
+            for j, efc in enumerate(hnsw_efc_vals): # Default is 40, but users find this range is the sweet spot. Should be significantly higher than M.
+                for q, sq in enumerate(sq_vals):
                     ib.hnsw_sq_build(ib.x_train, d, efc, M, sq, 128) #bt = avg_time(lambda: ib.hnsw_sq_build(ib.x_train, M, efc, efs), r)
-                    for efs in [100, 200]: # A good starting place is 2xk to 4xk, but it can be higher to improve recall.
+                    for s, efs in enumerate(hnsw_efs_vals): # A good starting place is 2xk to 4xk, but it can be higher to improve recall.
                         ib.HNSWSQ.hnsw.efSearch = efs
                         # hnsw_sq_build(M, efc, efs)
                         # brute_force_search(k)
 
                         rc = ib.search(ib.HNSWSQ, k)
                         st = avg_time(lambda: ib.search(ib.HNSWSQ, k, measure_accuracy=False), r)
-                        print(f"M={M}, efc={efc}, efs={efs}, sq_type={sq} | recall={rc:.3f}, time={st:.4f}")
+                        # print(f"M={M}, efc={efc}, efs={efs}, sq_type={sq} | recall={rc:.3f}, time={st:.4f}")
+                        recalls[i, j, q, s] = rc
+                        times[i, j, q, s] = st
                     ib.HNSWSQ = None
+        current_results["hnsw_sq_recalls"] = recalls.tolist()
+        current_results["hnsw_sq_times"] = times.tolist()
+
+    return current_results
+
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("--file", type=str, default="glove.6B.200d.txt")
     parser.add_argument(
         "--only",
         nargs="+",
         default=None,
-        help="Run only selected tests: bf flat lsh pq ivfpq hnsw hnsw_pq hnsw_sq"
+        help="Run only selected tests out of: bf flat lsh pq ivfpq hnsw hnsw_pq hnsw_sq"
     )
+    parser.add_argument("--k", type=int, default=10)
+    parser.add_argument("--r", type=int, default=3)
     args = parser.parse_args()
+    
+    filename = f"../Data/{args.file}"
 
-    test_suite(only=args.only)
+    test_suite(filename=filename, only=args.only, k=args.k, r=args.r)
 
 
 
