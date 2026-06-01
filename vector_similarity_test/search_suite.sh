@@ -1,5 +1,6 @@
 if grep -q "BlueField" /sys/class/dmi/id/product_name; then
     echo "DETECTED BLUEFIELD ENVIRONMENT"
+    echo "yay"
     
     # BF3 BUILD
     # python3 index_builder.py --file glove.6B.200d.txt --out_folder glove >> results/glove/bf3_build.txt 2>>&1 & disown
