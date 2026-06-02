@@ -4,6 +4,8 @@ import numpy as np
 import faiss
 import argparse
 from timeit import repeat
+import os
+import json
 
 import index_builder as ib
 from device_utils import is_bluefield
@@ -18,11 +20,13 @@ def avg_time(fn, reps=3): # No cache warmup here, but later reps will be warm, s
 
 
 # TEST
-def test_suite(filename="../Data/glove.6B.200d.txt", only=None, k=10, r=3):
+def test_suite(filename="glove.6B.200d.txt", only=None, k=10, r=3):
+    if "../Data/" not in filename: path = f"../Data/{filename}"
+    else: path = filename
     # Load Data File (TODO: make this more flexible for different datasets)
     # df = pd.read_csv("../Data/glove.6B.200d.txt", sep=" ", quoting=3, header=None)
     # d = 300
-    df = pd.read_csv(filename, sep=" ", quoting=3, skiprows=1, header=None)
+    df = pd.read_csv(path, sep=" ", quoting=3, skiprows=1, header=None)
     # Split into vocab column and data
     # vocab = df.iloc[:, 0]
     df = df.drop(0, axis=1)
@@ -66,11 +70,12 @@ def test_suite(filename="../Data/glove.6B.200d.txt", only=None, k=10, r=3):
     print(f"(All times averaged over {r} repeats)")
     ib.load_truth(truth_path)
 
-    current_results = { # To be saved as JSON at the end; structured as results["multitest"][device][dataset][k] = current_results
+    current_results = { # To be saved as JSON at the end; structured as results["multitest"][device][dataset_filename][k] = current_results
         "date": pd.Timestamp.now().isoformat(),
         "repeats": r,
         "threads": str(ib.threads) if ib.threads is not None else "default",
         "dimensions": d,
+        "num_vecs": len(ib.x_train) + len(ib.x_query),
         "train_size": len(ib.x_train),
         "test_size": len(ib.x_query),
         "cache": "mixture", # "warm" or "cold" or "mixture" (if some builds are warm and some are cold)
@@ -237,7 +242,38 @@ def test_suite(filename="../Data/glove.6B.200d.txt", only=None, k=10, r=3):
         current_results["hnsw_sq_recalls"] = recalls.tolist()
         current_results["hnsw_sq_times"] = times.tolist()
 
-    return current_results
+    # Load existing results JSON file
+    results_path = os.path.join("results", "results.json")
+    if os.path.exists(results_path):
+        with open(results_path, "r") as f:
+            results = json.load(f) #, object_hook=lambda d: SimpleNamespace(**d))
+    else:
+        results = {}
+
+    device = "bf3" if is_bluefield() else "host"
+
+    # Find location in data structure
+    if "multitest" not in results:
+        results["multitest"] = {}
+    if device not in results["multitest"]:
+        results["multitest"][device] = {}
+    if filename not in results["multitest"][device]:
+        results["multitest"][device][filename] = {}
+    if k not in results["multitest"][device][filename]:
+        results["multitest"][device][filename][k] = {}
+    slot = results["multitest"][device][filename][k]
+    # Any runs modifying other values than these will be rewritten!
+
+    for key, value in current_results.items():
+        if key in slot and slot[key] != value:
+            print(f"WARNING: Overwriting existing results for {key} in slot. Old value: {slot[key]}, new value: {value}")
+        slot[key] = jsonable(value) # Convert any non-JSON-serializable values to JSON-serializable format (e.g. numpy arrays to lists)
+
+    # Save results to JSON
+    with open(results_path, "w") as f:
+        json.dump(results, f, indent=4)
+
+    return
 
 
 
@@ -253,10 +289,8 @@ if __name__ == "__main__":
     parser.add_argument("--k", type=int, default=10)
     parser.add_argument("--r", type=int, default=3)
     args = parser.parse_args()
-    
-    filename = f"../Data/{args.file}"
 
-    test_suite(filename=filename, only=args.only, k=args.k, r=args.r)
+    test_suite(filename=args.file, only=args.only, k=args.k, r=args.r)
 
 
 
