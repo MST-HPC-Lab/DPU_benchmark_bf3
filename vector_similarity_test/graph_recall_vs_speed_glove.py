@@ -67,6 +67,7 @@ plt.grid(color='0.8')
 # plt.scatter(host_LSH_k10_recall, host_LSH_k10_time, color='purple')
 
 # plt.ylabel("Time (ms)")
+#To do: Check if 1000 is correct
 plt.scatter(host_IVFPQ_k10_recall, 1000/host_IVFPQ_k10_time, color='orange')
 plt.scatter(host_PQ_k10_recall, 1000/host_PQ_k10_time, color='teal')
 plt.scatter(host_LSH_k10_recall, 1000/host_LSH_k10_time, color='purple')
