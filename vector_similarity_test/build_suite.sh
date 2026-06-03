@@ -1,3 +1,6 @@
+#!/bin/bash
+
+# ./build_suite.sh >> results/combined_log.txt 2>>&1 & disown
 if grep -q "BlueField" /sys/class/dmi/id/product_name; then
     echo "DETECTED BLUEFIELD; DISCONTINUING!"
 

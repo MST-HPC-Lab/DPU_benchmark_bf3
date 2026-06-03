@@ -1,3 +1,4 @@
+#!/bin/bash
 if grep -q "BlueField" /sys/class/dmi/id/product_name; then
     echo "DETECTED BLUEFIELD ENVIRONMENT"
     
