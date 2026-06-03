@@ -78,7 +78,7 @@ def test_suite(filename="glove.6B.200d.txt", only=None, k=10, r=3):
     truth_path = f"indexes/{index_name}/truth_I,D.json"
 
     if only is None:
-        only = {"bf", "flat", "lsh", "pq", "ivfpq", "hnsw", "hnsw_pq", "hnsw_sq"}
+        only = {"flat", "lsh", "pq", "ivfpq", "hnsw", "hnsw_pq", "hnsw_sq"} #"bf", 
     else:
         only = set(only)
 
@@ -117,28 +117,28 @@ def test_suite(filename="glove.6B.200d.txt", only=None, k=10, r=3):
     }
 
     # Ground Truth or Brute Force
-    if "bf" in only:
-        print("\nBrute Force")
-        # bf_build = avg_time(lambda: ib.brute_force_build(x_train), r)
-        # brute_force_build()
-        st = avg_time(lambda: ib.brute_force_search(k, measure_accuracy=False), r)
-        # print("Build Time:", bf_build)
-        # print("Search Time:", bf_search)
-        # ib.x_train = None # Needed for other builds
-        current_results["bf_recalls"] = 1.0 # By definition, brute force has perfect recall
-        current_results["bf_times"] = st
+    # if "bf" in only:
+    #     print("\nBrute Force")
+    #     # bf_build = avg_time(lambda: ib.brute_force_build(x_train), r)
+    #     # brute_force_build()
+    #     st = avg_time(lambda: ib.brute_force_search(k, measure_accuracy=False), r)
+    #     # print("Build Time:", bf_build)
+    #     # print("Search Time:", bf_search)
+    #     # ib.x_train = None # Needed for other builds
+    #     current_results["bf_recalls"] = 1.0 # By definition, brute force has perfect recall
+    #     current_results["bf_times"] = st
 
-    # Flat
+    # Flat (Ground Truth)
     if "flat" in only:
-        print("\nFlat")
+        print("\nFlat (Brute Force)")
         ib.flat_build(ib.x_train) # bt = avg_time(lambda: ib.flat_build(ib.x_train), r)
 
-        rc = ib.search(ib.FL2, k)
+        # rc = ib.search(ib.FL2, k)
         st = avg_time(lambda: ib.search(ib.FL2, k, measure_accuracy=False), r)
         # print("Build Time:", bt)
         # print("Search Time:", flat_search)
         ib.FL2 = None
-        current_results["flat_recalls"] = rc
+        current_results["flat_recalls"] = 1.0 # By definition, flat brute force has perfect recall
         current_results["flat_times"] = st
 
     # LSH 
@@ -312,7 +312,7 @@ if __name__ == "__main__":
         "--only",
         nargs="+",
         default=None,
-        help="Run only selected tests out of: bf flat lsh pq ivfpq hnsw hnsw_pq hnsw_sq"
+        help="Run only selected tests out of: flat lsh pq ivfpq hnsw hnsw_pq hnsw_sq"
     )
     parser.add_argument("--k", type=int, default=10)
     parser.add_argument("--r", type=int, default=3)

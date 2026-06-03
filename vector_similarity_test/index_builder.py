@@ -178,13 +178,13 @@ def test_build(only=None, mem=None):
     global d
 
     if only is None:
-        only = ["bf", "flat", "lsh", "pq", "ivfpq", "hnsw", "hnsw_pq", "hnsw_sq"]
+        only = ["flat", "lsh", "pq", "ivfpq", "hnsw", "hnsw_pq", "hnsw_sq"] # "bf", 
 
     only = set(only)
 
-    if "bf" in only: # No need to build; it's just a numpy array.
-        for k in k_values:
-            brute_force_search(k, measure_accuracy=False)  # populates truth_I and truth_D
+    # if "bf" in only: # No need to build; it's just a numpy array.
+    #     for k in k_values:
+    #         brute_force_search(k, measure_accuracy=False)  # populates truth_I and truth_D
 
     if "flat" in only:
         flat_build(x_train)
@@ -232,7 +232,7 @@ if __name__ == "__main__":
 
     parser.add_argument("--mem_out", type=str, default=None)
     parser.add_argument("--no_save", action="store_true")
-    parser.add_argument("--only", nargs="+", default=None, help = "Build only selected indexes: bf flat lsh pq ivfpq hnsw hnsw_pq hnsw_sq")
+    parser.add_argument("--only", nargs="+", default=None, help = "Build only selected indexes: flat lsh pq ivfpq hnsw hnsw_pq hnsw_sq")
     args = parser.parse_args()
 
     filename = f"../Data/{args.file}"
@@ -337,10 +337,10 @@ if __name__ == "__main__":
         os.makedirs(base_dir, exist_ok=True)
 
         #Sophia EDIT: allow saving only a subset of indexes, based on --only argument
-        build = set(args.only) if args.only is not None else {"bf", "flat", "lsh", "pq", "ivfpq", "hnsw", "hnsw_pq", "hnsw_sq"}
+        build = set(args.only) if args.only is not None else {"flat", "lsh", "pq", "ivfpq", "hnsw", "hnsw_pq", "hnsw_sq"} #"bf", 
 
         # Save the ground truth for recall calculations.
-        if "bf" in build:
+        if "flat" in build: # was "bf"
             assert truth_I is not None and truth_D is not None
 
             truth_I_json = {str(k): v.tolist() for k, v in truth_I.items()}

@@ -111,9 +111,9 @@ if __name__ == "__main__":
         #fn()
         return np.mean(repeat(fn, repeat=reps, number=1))
 
-    only = set(args.only) if args.only is not None else {"bf", "flat", "lsh", "pq", "ivfpq", "hnsw", "hnsw_pq", "hnsw_sq"}
-    if "brute" in only:
-        only.add("bf")
+    only = set(args.only) if args.only is not None else {"flat", "lsh", "pq", "ivfpq", "hnsw", "hnsw_pq", "hnsw_sq"} # "bf", 
+    # if "brute" in only:
+    #     only.add("bf")
     if "hnswpq" in only:
         only.add("hnsw_pq")
     if "hnswsq" in only:
@@ -167,8 +167,8 @@ if __name__ == "__main__":
 
     print("Indexes loaded. Running searches...", flush=True)
 
-    bf_times = []
-    flat_recalls, flat_times = [], []
+    # bf_times = []
+    flat_times = [] # flat_recalls = []
     lsh_recalls, lsh_times = [], []
     pq_recalls, pq_times = [], []
     ivfpq_recalls, ivfpq_times = [], []
@@ -182,28 +182,28 @@ if __name__ == "__main__":
     # Load ground truth for recall calculations
     ib.load_truth(os.path.join(indexes_dir, "truth_I,D.json")) # Load ground truth for recall calculations
 
-    # Brute Force 
-    if "bf" in only:
-        ib.x_train = np.load(os.path.join(indexes_dir, "x_train.npy"))
-        for k in ib.k_values:
-            # brute_force_search(k)
-            bf_time = avg_time(lambda: brute_force_search(k, measure_accuracy=False))
-            bf_times.append(bf_time)
+    # # Brute Force 
+    # if "bf" in only:
+    #     ib.x_train = np.load(os.path.join(indexes_dir, "x_train.npy"))
+    #     for k in ib.k_values:
+    #         # brute_force_search(k)
+    #         bf_time = avg_time(lambda: brute_force_search(k, measure_accuracy=False))
+    #         bf_times.append(bf_time)
         
-        print("Brute Force Time:", bf_times, flush=True)
-        ib.x_train = None # free memory
+    #     print("Brute Force Time:", bf_times, flush=True)
+    #     ib.x_train = None # free memory
 
     # Flat
     if "flat" in only:
         ib.FL2 = faiss.read_index(os.path.join(indexes_dir, "flat.index"))
         for k in ib.k_values:
             # brute_force_search(k)  # keep truth current / consistent
-            flat_recall = search(ib.FL2, k)
+            # flat_recall = search(ib.FL2, k)
             flat_time = avg_time(lambda: search(ib.FL2, k, measure_accuracy=False))
-            flat_recalls.append(flat_recall)
+            # flat_recalls.append(flat_recall)
             flat_times.append(flat_time)
 
-        print("Flat Recall:", flat_recalls, flush=True)
+        # print("Flat Recall:", flat_recalls, flush=True)
         print("Flat Time:", flat_times, flush=True)
         ib.FL2 = None
 
@@ -347,10 +347,12 @@ if __name__ == "__main__":
     current_results = { # To become the JSON dict entry for this run
         "date": pd.Timestamp.now().isoformat(),
         "repeats": REPLICATIONS,
+        "train_size": num_vecs - len(ib.x_query),
+        "query_size": len(ib.x_query),
         "k_values": ib.k_values,
 
-        "bf_times": bf_times,
-        "flat_recalls": flat_recalls,
+        # "bf_times": bf_times,
+        # "flat_recalls": flat_recalls,
         "flat_times": flat_times,
         "lsh_recalls": lsh_recalls,
         "lsh_times": lsh_times,
