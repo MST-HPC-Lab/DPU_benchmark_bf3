@@ -236,6 +236,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     filename = f"../Data/{args.file}"
+    global d
+    
     if filename[-4:] == ".mat": 
         mat_data = loadmat(filename)['fea'].T
 
@@ -247,7 +249,6 @@ if __name__ == "__main__":
             mat_data = mat_data[:, :args.dim]
         # mat_data = np.ascountigousarray(mat_data, dtype=np.float32)
 
-        global d
         d = mat_data.shape[1]
 
         print(f'File: "{filename}"')
@@ -281,7 +282,7 @@ if __name__ == "__main__":
         if args.dim is not None:
             df = df.iloc[:, :args.dim]
 
-        global d
+        
         d = df.shape[1]
 
         print(f'File: "{filename}"')
