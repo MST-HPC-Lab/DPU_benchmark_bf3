@@ -6,6 +6,7 @@ import faiss
 from timeit import repeat
 # import hnswlib  # SOPHIA EDIT: removed hnswlib, switching to FAISS HNSW
 import os, json
+from mat73 import loadmat
 
 from mem_utils import MemoryMonitor
 os.makedirs("results", exist_ok=True)
@@ -235,38 +236,43 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     filename = f"../Data/{args.file}"
-    df = pd.read_csv(filename, sep=" ", quoting=3, skiprows=1, header=None)
+    if filename[-4:] == ".mat": 
+        mat_data = loadmat(filename)['fea'].T
+        raise NotImplementedError() # Sesi implement
 
-    # vocab = df.iloc[:, 0]
-    df = df.drop(0, axis=1)
+    else:
+        df = pd.read_csv(filename, sep=" ", quoting=3, skiprows=1, header=None)
 
-    if args.num_vecs is not None:
-        df = df.iloc[:args.num_vecs]
+        # vocab = df.iloc[:, 0]
+        df = df.drop(0, axis=1)
 
-    if args.dim is not None:
-        df = df.iloc[:, :args.dim]
+        if args.num_vecs is not None:
+            df = df.iloc[:args.num_vecs]
 
-    global d
-    d = df.shape[1]
+        if args.dim is not None:
+            df = df.iloc[:, :args.dim]
 
-    print(f'File: "{filename}"')
-    print("Dimensions:", d)
+        global d
+        d = df.shape[1]
 
-    N = len(df)
-    start_i = 0 # 99
-    step = 100 # Makes 1/step test set
-    test_i = [i for i in range(start_i, N, step)] # 1% test set
-    train_i = [i for i in range(N) if (i % step != start_i)] # rest is train set
-    # test_i = [i for i in range(d - 1, N, d)]
-    # train_i = [i for i in range(N) if (i + d - 1) % d]
-    # test_i = [i for i in range(199, N, 200)]
-    # train_i = [i for i in range(N) if (i + 199) % 200]
+        print(f'File: "{filename}"')
+        print("Dimensions:", d)
 
-    print("Train Size:", len(train_i))
-    print("Test  Size:", len(test_i))
+        N = len(df)
+        start_i = 0 # 99
+        step = 100 # Makes 1/step test set
+        test_i = [i for i in range(start_i, N, step)] # 1% test set
+        train_i = [i for i in range(N) if (i % step != start_i)] # rest is train set
+        # test_i = [i for i in range(d - 1, N, d)]
+        # train_i = [i for i in range(N) if (i + d - 1) % d]
+        # test_i = [i for i in range(199, N, 200)]
+        # train_i = [i for i in range(N) if (i + 199) % 200]
 
-    x_query = df.iloc[test_i]
-    x_train = df.iloc[train_i]
+        print("Train Size:", len(train_i))
+        print("Test  Size:", len(test_i))
+
+        x_query = df.iloc[test_i]
+        x_train = df.iloc[train_i]
     x_query = np.ascontiguousarray(x_query.to_numpy(dtype=np.float32)) # SOPHIA EDIT: convert to contiguous float32 numpy
     x_train = np.ascontiguousarray(x_train.to_numpy(dtype=np.float32))
 
