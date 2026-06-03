@@ -273,6 +273,8 @@ if __name__ == "__main__":
 
         x_query = df.iloc[test_i]
         x_train = df.iloc[train_i]
+        del df
+        
     x_query = np.ascontiguousarray(x_query.to_numpy(dtype=np.float32)) # SOPHIA EDIT: convert to contiguous float32 numpy
     x_train = np.ascontiguousarray(x_train.to_numpy(dtype=np.float32))
 
