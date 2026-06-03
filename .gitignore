@@ -1,7 +1,7 @@
 Data/*
 !Data/*.py
 !Data/*.md
-vector_similarity_test/indices/*
+vector_similarity_test/indexes/*
 
 derda_grpc_full/*
 
@@ -14,3 +14,4 @@ derda_grpc_full/*
 *.zip
 *.out
 *.pyc
+__pycache__/

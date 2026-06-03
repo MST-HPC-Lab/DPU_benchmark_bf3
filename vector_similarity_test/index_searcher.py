@@ -43,16 +43,16 @@ if __name__ == "__main__":
         help="Memory sampling interval seconds",
     )
     parser.add_argument(
-        "--indices_dir",
+        "--indexes_dir",
         type=str,
-        default="indices/glove_clean",
-        help="Directory containing indices and meta.json (default: indices/glove_clean)",
+        default="glove",
+        help="Directory containing indexes and meta.json (default: glove)",
     )
     parser.add_argument(
         "--only",
         nargs="+",
         default=None,
-        help="Run only selected indices: flat lsh pq ivfpq hnsw"
+        help="Run only selected indexes: flat lsh pq ivfpq hnsw"
     )
     parser.add_argument(
         "--threads",
@@ -90,7 +90,7 @@ if __name__ == "__main__":
     import numpy as np
     print("FAISS threads:", faiss.omp_get_max_threads()) 
 
-    #sophia edit: refactored to load indices built by index_builder.py, and to run searches with timing and recall measurement, but without rebuilding indices (since that can be time consuming and we want to separate build vs. search time in our measurements)
+    #sophia edit: refactored to load indexes built by index_builder.py, and to run searches with timing and recall measurement, but without rebuilding indexes (since that can be time consuming and we want to separate build vs. search time in our measurements)
     from index_builder import (
         brute_force_search,
         search, #hnsw_search,
@@ -118,10 +118,10 @@ if __name__ == "__main__":
         only.add("hnsw_pq")
     if "hnswsq" in only:
         only.add("hnsw_sq")
-    indices_dir = args.indices_dir
+    indexes_dir = os.path.join("indexes", args.indexes_dir) if "indexes" not in args.indexes_dir else args.indexes_dir
 
     # Load saved artifacts from builder
-    meta_path = os.path.join(indices_dir, "meta.json")
+    meta_path = os.path.join(indexes_dir, "meta.json")
     with open(meta_path, "r") as f:
         meta = json.load(f)
 
@@ -138,22 +138,22 @@ if __name__ == "__main__":
 
     # SOPHIA EDIT: Load numpy arrays directly (not DataFrames)
     # Builder now saves contiguous float32 numpy arrays.
-    ib.x_query = np.load(os.path.join(indices_dir, "x_query.npy"))
-    #x_train_np = np.load(os.path.join(indices_dir, "x_train.npy"))
+    ib.x_query = np.load(os.path.join(indexes_dir, "x_query.npy"))
+    #x_train_np = np.load(os.path.join(indexes_dir, "x_train.npy"))
     #ib.x_train = x_train_np
 
-    # ib.FL2   = faiss.read_index(os.path.join(indices_dir, "flat.index"))
-    # ib.LSH   = faiss.read_index(os.path.join(indices_dir, "lsh.index"))
-    # ib.PQ    = faiss.read_index(os.path.join(indices_dir, "pq.index"))
-    # ib.IVFPQ = faiss.read_index(os.path.join(indices_dir, "ivfpq.index")) 
+    # ib.FL2   = faiss.read_index(os.path.join(indexes_dir, "flat.index"))
+    # ib.LSH   = faiss.read_index(os.path.join(indexes_dir, "lsh.index"))
+    # ib.PQ    = faiss.read_index(os.path.join(indexes_dir, "pq.index"))
+    # ib.IVFPQ = faiss.read_index(os.path.join(indexes_dir, "ivfpq.index")) 
 
     # OLD HNSWLIB LOAD (COMMENTED OUT — DO NOT DELETE) 
     # ib.HNSW = hnswlib.Index(space='l2', dim=ib.d)
-    # ib.HNSW.load_index(os.path.join(indices_dir, "hnsw.bin"))
+    # ib.HNSW.load_index(os.path.join(indexes_dir, "hnsw.bin"))
     # ib.HNSW.set_ef(ib.HNSW_efsearch)
 
     # SOPHIA EDIT: Load FAISS HNSW index
-    #ib.HNSW = faiss.read_index(os.path.join(indices_dir, "hnsw.index"))
+    #ib.HNSW = faiss.read_index(os.path.join(indexes_dir, "hnsw.index"))
 
     # Set efSearch after loading (important for FAISS)
     #ib.HNSW.hnsw.efSearch = max(int(ib.HNSW_efsearch), 1)
@@ -163,7 +163,7 @@ if __name__ == "__main__":
     # Memory monitored query loop (optional)
 
     # with MemoryMonitor(role="query", outpath=outpath, interval=args.interval) as mem:
-    #     mem.log("after_load_indices")
+    #     mem.log("after_load_indexes")
 
     print("Indexes loaded. Running searches...", flush=True)
 
@@ -180,11 +180,11 @@ if __name__ == "__main__":
     print("k:", ib.k_values, flush=True)
 
     # Load ground truth for recall calculations
-    ib.load_truth(os.path.join(indices_dir, "truth_I,D.json")) # Load ground truth for recall calculations
+    ib.load_truth(os.path.join(indexes_dir, "truth_I,D.json")) # Load ground truth for recall calculations
 
     # Brute Force 
     if "bf" in only:
-        ib.x_train = np.load(os.path.join(indices_dir, "x_train.npy"))
+        ib.x_train = np.load(os.path.join(indexes_dir, "x_train.npy"))
         for k in ib.k_values:
             # brute_force_search(k)
             bf_time = avg_time(lambda: brute_force_search(k, measure_accuracy=False))
@@ -195,7 +195,7 @@ if __name__ == "__main__":
 
     # Flat
     if "flat" in only:
-        ib.FL2 = faiss.read_index(os.path.join(indices_dir, "flat.index"))
+        ib.FL2 = faiss.read_index(os.path.join(indexes_dir, "flat.index"))
         for k in ib.k_values:
             # brute_force_search(k)  # keep truth current / consistent
             flat_recall = search(ib.FL2, k)
@@ -209,7 +209,7 @@ if __name__ == "__main__":
 
     #  LSH
     if "lsh" in only:
-        ib.LSH = faiss.read_index(os.path.join(indices_dir, "lsh.index"))
+        ib.LSH = faiss.read_index(os.path.join(indexes_dir, "lsh.index"))
         for k in ib.k_values:
             # brute_force_search(k)
             lsh_recall = search(ib.LSH, k)
@@ -223,7 +223,7 @@ if __name__ == "__main__":
 
     # PQ 
     if "pq" in only:
-        ib.PQ = faiss.read_index(os.path.join(indices_dir, "pq.index"))
+        ib.PQ = faiss.read_index(os.path.join(indexes_dir, "pq.index"))
         for k in ib.k_values:
             # brute_force_search(k)
             pq_recall = search(ib.PQ, k)
@@ -237,7 +237,7 @@ if __name__ == "__main__":
 
     #  IVFPQ
     if "ivfpq" in only:
-        ib.IVFPQ = faiss.read_index(os.path.join(indices_dir, "ivfpq.index"))
+        ib.IVFPQ = faiss.read_index(os.path.join(indexes_dir, "ivfpq.index"))
         for k in ib.k_values:
             # brute_force_search(k)
             ivfpq_recall = search(ib.IVFPQ, k)
@@ -251,7 +251,7 @@ if __name__ == "__main__":
 
     #  HNSW
     if "hnsw" in only:
-        ib.HNSW = faiss.read_index(os.path.join(indices_dir, "hnsw.index"))
+        ib.HNSW = faiss.read_index(os.path.join(indexes_dir, "hnsw.index"))
         ib.HNSW.hnsw.efSearch = max(int(ib.HNSW_efsearch),1)
         for k in ib.k_values:
             # brute_force_search(k)
@@ -268,7 +268,7 @@ if __name__ == "__main__":
 
     # HNSW + PQ
     if "hnsw_pq" in only:
-        ib.HNSWPQ = faiss.read_index(os.path.join(indices_dir, "hnsw_pq.index"))
+        ib.HNSWPQ = faiss.read_index(os.path.join(indexes_dir, "hnsw_pq.index"))
         ib.HNSWPQ.hnsw.efSearch = max(int(ib.HNSW_efsearch),1)
         for k in ib.k_values:
             # brute_force_search(k)
@@ -283,7 +283,7 @@ if __name__ == "__main__":
 
     # HNSW + SQ
     if "hnsw_sq" in only:
-        ib.HNSWSQ = faiss.read_index(os.path.join(indices_dir, "hnsw_sq.index"))
+        ib.HNSWSQ = faiss.read_index(os.path.join(indexes_dir, "hnsw_sq.index"))
         ib.HNSWSQ.hnsw.efSearch = max(int(ib.HNSW_efsearch),1)
         for k in ib.k_values:
             # brute_force_search(k)

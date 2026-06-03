@@ -36,12 +36,16 @@ def test_suite(filename="glove.6B.200d.txt", only=None, k=10, r=3):
     ib.d = d
     # ib.k = k
 
-    truth_path = "indices/glove/truth_I,D.json"
+    truth_path = "indexes/glove/truth_I,D.json"
 
     # Fixed Split
     N = len(df)
-    test_i = [i for i in range(d-1, N, d)]
-    train_i = [i for i in range(N) if (i + d-1) % d]
+    start_i = 0 # 99
+    step = 100 # Makes 1/step test set
+    test_i = [i for i in range(start_i, N, step)] # 1% test set
+    train_i = [i for i in range(N) if (i % step != start_i)] # rest is train set
+    # test_i = [i for i in range(d-1, N, d)]
+    # train_i = [i for i in range(N) if (i + d-1) % d]
 
     ib.x_query = df.iloc[test_i]
     ib.x_query = np.ascontiguousarray(ib.x_query.to_numpy(dtype=np.float32))

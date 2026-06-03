@@ -170,9 +170,9 @@ def hnsw_sq_build(data, dim, ef_construction, M, q_type, ef_search):#ef_construc
 
 
 # Build Only (no timing)
-#Sophia edit: refactored to allow building only a subset of indices, and to save outputs in a specified subdirectory of indices/
+#Sophia edit: refactored to allow building only a subset of indexes, and to save outputs in a specified subdirectory of indexes/
 def test_build(only=None, mem=None):
-    #Build selected indices
+    #Build selected indexes
     #only: None or list of ["bf", "flat", "lsh", "pq", "ivfpq", "hnsw", "hsnw_pq", "hnsw_sq"]
     global d
 
@@ -227,11 +227,11 @@ if __name__ == "__main__":
 
     # SOPHIA EDIT: Add out_folder argument
     parser.add_argument("--out_folder", type=str, required=True,
-                        help="Subdirectory inside indices/ to save outputs")
+                        help="Subdirectory inside indexes/ to save outputs")
 
     parser.add_argument("--mem_out", type=str, default=None)
     parser.add_argument("--no_save", action="store_true")
-    parser.add_argument("--only", nargs="+", default=None, help = "Build only selected indices: bf flat lsh pq ivfpq hnsw hnsw_pq hnsw_sq")
+    parser.add_argument("--only", nargs="+", default=None, help = "Build only selected indexes: bf flat lsh pq ivfpq hnsw hnsw_pq hnsw_sq")
     args = parser.parse_args()
 
     filename = f"../Data/{args.file}"
@@ -253,8 +253,12 @@ if __name__ == "__main__":
     print("Dimensions:", d)
 
     N = len(df)
-    test_i = [i for i in range(d - 1, N, d)]
-    train_i = [i for i in range(N) if (i + d - 1) % d]
+    start_i = 0 # 99
+    step = 100 # Makes 1/step test set
+    test_i = [i for i in range(start_i, N, step)] # 1% test set
+    train_i = [i for i in range(N) if (i % step != start_i)] # rest is train set
+    # test_i = [i for i in range(d - 1, N, d)]
+    # train_i = [i for i in range(N) if (i + d - 1) % d]
     # test_i = [i for i in range(199, N, 200)]
     # train_i = [i for i in range(N) if (i + 199) % 200]
 
@@ -290,11 +294,11 @@ if __name__ == "__main__":
 
     if not args.no_save:
 
-        # SOPHIA EDIT: Save inside indices/<out_folder>/
-        base_dir = os.path.join("indices", args.out_folder)
+        # SOPHIA EDIT: Save inside indexes/<out_folder>/
+        base_dir = os.path.join("indexes", args.out_folder)
         os.makedirs(base_dir, exist_ok=True)
 
-        #Sophia EDIT: allow saving only a subset of indices, based on --only argument
+        #Sophia EDIT: allow saving only a subset of indexes, based on --only argument
         build = set(args.only) if args.only is not None else {"bf", "flat", "lsh", "pq", "ivfpq", "hnsw", "hnsw_pq", "hnsw_sq"}
 
         # Save the ground truth for recall calculations.
@@ -340,11 +344,11 @@ if __name__ == "__main__":
         if "hnsw_sq" in build and HNSWSQ is not None:
             faiss.write_index(HNSWSQ, os.path.join(base_dir, "hnsw_sq.index"))
 
-#        faiss.write_index(FL2,   os.path.join(base_dir, "flat.index"))
-#        faiss.write_index(LSH,   os.path.join(base_dir, "lsh.index"))
-#        faiss.write_index(PQ,    os.path.join(base_dir, "pq.index"))
-#        faiss.write_index(IVFPQ, os.path.join(base_dir, "ivfpq.index"))
-#        faiss.write_index(HNSW,  os.path.join(base_dir, "hnsw.index"))
+        # faiss.write_index(FL2,   os.path.join(base_dir, "flat.index"))
+        # faiss.write_index(LSH,   os.path.join(base_dir, "lsh.index"))
+        # faiss.write_index(PQ,    os.path.join(base_dir, "pq.index"))
+        # faiss.write_index(IVFPQ, os.path.join(base_dir, "ivfpq.index"))
+        # faiss.write_index(HNSW,  os.path.join(base_dir, "hnsw.index"))
 
         np.save(os.path.join(base_dir, "x_query.npy"), x_query)
         np.save(os.path.join(base_dir, "x_train.npy"), x_train)
