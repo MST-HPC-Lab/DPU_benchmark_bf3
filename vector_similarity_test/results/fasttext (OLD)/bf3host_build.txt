@@ -1,0 +1,5 @@
+File: "../Data/cc.en.300.vec"
+Dimensions: 300
+Train Size: 1990000
+Test  Size: 10000
+Building...Build complete.
