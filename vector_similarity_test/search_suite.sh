@@ -7,66 +7,66 @@ if grep -q "BlueField" /sys/class/dmi/id/product_name; then
 
     # BF3 SEARCH
     #### Glove
-    python3 index_searcher.py --only "flat"  --threads 16 --indexes_dir indexes/glove >> results/glove/bf3_flat.txt  2>>&1
-    python3 index_searcher.py --only "lsh"   --threads 16 --indexes_dir indexes/glove >> results/glove/bf3_lsh.txt   2>>&1
-    python3 index_searcher.py --only "pq"    --threads 16 --indexes_dir indexes/glove >> results/glove/bf3_pq.txt    2>>&1
-    python3 index_searcher.py --only "ivfpq" --threads 16 --indexes_dir indexes/glove >> results/glove/bf3_ivfpq.txt 2>>&1
-    python3 index_searcher.py --only "hnsw"  --threads 16 --indexes_dir indexes/glove >> results/glove/bf3_hnsw.txt  2>>&1
+    python3 index_searcher.py --only "flat"  --threads 16 --indexes_dir glove >> results/glove/bf3_flat.txt  2>>&1
+    python3 index_searcher.py --only "lsh"   --threads 16 --indexes_dir glove >> results/glove/bf3_lsh.txt   2>>&1
+    python3 index_searcher.py --only "pq"    --threads 16 --indexes_dir glove >> results/glove/bf3_pq.txt    2>>&1
+    python3 index_searcher.py --only "ivfpq" --threads 16 --indexes_dir glove >> results/glove/bf3_ivfpq.txt 2>>&1
+    python3 index_searcher.py --only "hnsw"  --threads 16 --indexes_dir glove >> results/glove/bf3_hnsw.txt  2>>&1
 
-    python3 index_searcher.py --only "flat"  --threads 8  --indexes_dir indexes/glove >> results/glove/bf3_flat.txt  2>>&1
-    python3 index_searcher.py --only "lsh"   --threads 8  --indexes_dir indexes/glove >> results/glove/bf3_lsh.txt   2>>&1
-    python3 index_searcher.py --only "pq"    --threads 8  --indexes_dir indexes/glove >> results/glove/bf3_pq.txt    2>>&1
-    python3 index_searcher.py --only "ivfpq" --threads 8  --indexes_dir indexes/glove >> results/glove/bf3_ivfpq.txt 2>>&1
-    python3 index_searcher.py --only "hnsw"  --threads 8  --indexes_dir indexes/glove >> results/glove/bf3_hnsw.txt  2>>&1
+    python3 index_searcher.py --only "flat"  --threads 8  --indexes_dir glove >> results/glove/bf3_flat.txt  2>>&1
+    python3 index_searcher.py --only "lsh"   --threads 8  --indexes_dir glove >> results/glove/bf3_lsh.txt   2>>&1
+    python3 index_searcher.py --only "pq"    --threads 8  --indexes_dir glove >> results/glove/bf3_pq.txt    2>>&1
+    python3 index_searcher.py --only "ivfpq" --threads 8  --indexes_dir glove >> results/glove/bf3_ivfpq.txt 2>>&1
+    python3 index_searcher.py --only "hnsw"  --threads 8  --indexes_dir glove >> results/glove/bf3_hnsw.txt  2>>&1
     
-    python3 index_searcher.py --only "flat"  --threads 4  --indexes_dir indexes/glove >> results/glove/bf3_flat.txt  2>>&1
-    python3 index_searcher.py --only "lsh"   --threads 4  --indexes_dir indexes/glove >> results/glove/bf3_lsh.txt   2>>&1
-    python3 index_searcher.py --only "pq"    --threads 4  --indexes_dir indexes/glove >> results/glove/bf3_pq.txt    2>>&1
-    python3 index_searcher.py --only "ivfpq" --threads 4  --indexes_dir indexes/glove >> results/glove/bf3_ivfpq.txt 2>>&1
-    python3 index_searcher.py --only "hnsw"  --threads 4  --indexes_dir indexes/glove >> results/glove/bf3_hnsw.txt  2>>&1
+    python3 index_searcher.py --only "flat"  --threads 4  --indexes_dir glove >> results/glove/bf3_flat.txt  2>>&1
+    python3 index_searcher.py --only "lsh"   --threads 4  --indexes_dir glove >> results/glove/bf3_lsh.txt   2>>&1
+    python3 index_searcher.py --only "pq"    --threads 4  --indexes_dir glove >> results/glove/bf3_pq.txt    2>>&1
+    python3 index_searcher.py --only "ivfpq" --threads 4  --indexes_dir glove >> results/glove/bf3_ivfpq.txt 2>>&1
+    python3 index_searcher.py --only "hnsw"  --threads 4  --indexes_dir glove >> results/glove/bf3_hnsw.txt  2>>&1
     
-    python3 index_searcher.py --only "flat"  --threads 2  --indexes_dir indexes/glove >> results/glove/bf3_flat.txt  2>>&1
-    python3 index_searcher.py --only "lsh"   --threads 2  --indexes_dir indexes/glove >> results/glove/bf3_lsh.txt   2>>&1
-    python3 index_searcher.py --only "pq"    --threads 2  --indexes_dir indexes/glove >> results/glove/bf3_pq.txt    2>>&1
-    python3 index_searcher.py --only "ivfpq" --threads 2  --indexes_dir indexes/glove >> results/glove/bf3_ivfpq.txt 2>>&1
-    python3 index_searcher.py --only "hnsw"  --threads 2  --indexes_dir indexes/glove >> results/glove/bf3_hnsw.txt  2>>&1
+    python3 index_searcher.py --only "flat"  --threads 2  --indexes_dir glove >> results/glove/bf3_flat.txt  2>>&1
+    python3 index_searcher.py --only "lsh"   --threads 2  --indexes_dir glove >> results/glove/bf3_lsh.txt   2>>&1
+    python3 index_searcher.py --only "pq"    --threads 2  --indexes_dir glove >> results/glove/bf3_pq.txt    2>>&1
+    python3 index_searcher.py --only "ivfpq" --threads 2  --indexes_dir glove >> results/glove/bf3_ivfpq.txt 2>>&1
+    python3 index_searcher.py --only "hnsw"  --threads 2  --indexes_dir glove >> results/glove/bf3_hnsw.txt  2>>&1
     
-    python3 index_searcher.py --only "flat"  --threads 1  --indexes_dir indexes/glove >> results/glove/bf3_flat.txt  2>>&1
-    python3 index_searcher.py --only "lsh"   --threads 1  --indexes_dir indexes/glove >> results/glove/bf3_lsh.txt   2>>&1
-    python3 index_searcher.py --only "pq"    --threads 1  --indexes_dir indexes/glove >> results/glove/bf3_pq.txt    2>>&1
-    python3 index_searcher.py --only "ivfpq" --threads 1  --indexes_dir indexes/glove >> results/glove/bf3_ivfpq.txt 2>>&1
-    python3 index_searcher.py --only "hnsw"  --threads 1  --indexes_dir indexes/glove >> results/glove/bf3_hnsw.txt  2>>&1
+    python3 index_searcher.py --only "flat"  --threads 1  --indexes_dir glove >> results/glove/bf3_flat.txt  2>>&1
+    python3 index_searcher.py --only "lsh"   --threads 1  --indexes_dir glove >> results/glove/bf3_lsh.txt   2>>&1
+    python3 index_searcher.py --only "pq"    --threads 1  --indexes_dir glove >> results/glove/bf3_pq.txt    2>>&1
+    python3 index_searcher.py --only "ivfpq" --threads 1  --indexes_dir glove >> results/glove/bf3_ivfpq.txt 2>>&1
+    python3 index_searcher.py --only "hnsw"  --threads 1  --indexes_dir glove >> results/glove/bf3_hnsw.txt  2>>&1
 
     #### Fasttext
-    python3 index_searcher.py --only "flat"  --threads 16 --indexes_dir indexes/fasttext >> results/fasttext/bf3_flat.txt  2>>&1
-    python3 index_searcher.py --only "lsh"   --threads 16 --indexes_dir indexes/fasttext >> results/fasttext/bf3_lsh.txt   2>>&1
-    python3 index_searcher.py --only "pq"    --threads 16 --indexes_dir indexes/fasttext >> results/fasttext/bf3_pq.txt    2>>&1
-    python3 index_searcher.py --only "ivfpq" --threads 16 --indexes_dir indexes/fasttext >> results/fasttext/bf3_ivfpq.txt 2>>&1
-    python3 index_searcher.py --only "hnsw"  --threads 16 --indexes_dir indexes/fasttext >> results/fasttext/bf3_hnsw.txt  2>>&1
+    python3 index_searcher.py --only "flat"  --threads 16 --indexes_dir fasttext >> results/fasttext/bf3_flat.txt  2>>&1
+    python3 index_searcher.py --only "lsh"   --threads 16 --indexes_dir fasttext >> results/fasttext/bf3_lsh.txt   2>>&1
+    python3 index_searcher.py --only "pq"    --threads 16 --indexes_dir fasttext >> results/fasttext/bf3_pq.txt    2>>&1
+    python3 index_searcher.py --only "ivfpq" --threads 16 --indexes_dir fasttext >> results/fasttext/bf3_ivfpq.txt 2>>&1
+    python3 index_searcher.py --only "hnsw"  --threads 16 --indexes_dir fasttext >> results/fasttext/bf3_hnsw.txt  2>>&1
 
-    python3 index_searcher.py --only "flat"  --threads 8  --indexes_dir indexes/fasttext >> results/fasttext/bf3_flat.txt  2>>&1
-    python3 index_searcher.py --only "lsh"   --threads 8  --indexes_dir indexes/fasttext >> results/fasttext/bf3_lsh.txt   2>>&1
-    python3 index_searcher.py --only "pq"    --threads 8  --indexes_dir indexes/fasttext >> results/fasttext/bf3_pq.txt    2>>&1
-    python3 index_searcher.py --only "ivfpq" --threads 8  --indexes_dir indexes/fasttext >> results/fasttext/bf3_ivfpq.txt 2>>&1
-    python3 index_searcher.py --only "hnsw"  --threads 8  --indexes_dir indexes/fasttext >> results/fasttext/bf3_hnsw.txt  2>>&1
+    python3 index_searcher.py --only "flat"  --threads 8  --indexes_dir fasttext >> results/fasttext/bf3_flat.txt  2>>&1
+    python3 index_searcher.py --only "lsh"   --threads 8  --indexes_dir fasttext >> results/fasttext/bf3_lsh.txt   2>>&1
+    python3 index_searcher.py --only "pq"    --threads 8  --indexes_dir fasttext >> results/fasttext/bf3_pq.txt    2>>&1
+    python3 index_searcher.py --only "ivfpq" --threads 8  --indexes_dir fasttext >> results/fasttext/bf3_ivfpq.txt 2>>&1
+    python3 index_searcher.py --only "hnsw"  --threads 8  --indexes_dir fasttext >> results/fasttext/bf3_hnsw.txt  2>>&1
     
-    python3 index_searcher.py --only "flat"  --threads 4  --indexes_dir indexes/fasttext >> results/fasttext/bf3_flat.txt  2>>&1
-    python3 index_searcher.py --only "lsh"   --threads 4  --indexes_dir indexes/fasttext >> results/fasttext/bf3_lsh.txt   2>>&1
-    python3 index_searcher.py --only "pq"    --threads 4  --indexes_dir indexes/fasttext >> results/fasttext/bf3_pq.txt    2>>&1
-    python3 index_searcher.py --only "ivfpq" --threads 4  --indexes_dir indexes/fasttext >> results/fasttext/bf3_ivfpq.txt 2>>&1
-    python3 index_searcher.py --only "hnsw"  --threads 4  --indexes_dir indexes/fasttext >> results/fasttext/bf3_hnsw.txt  2>>&1
+    python3 index_searcher.py --only "flat"  --threads 4  --indexes_dir fasttext >> results/fasttext/bf3_flat.txt  2>>&1
+    python3 index_searcher.py --only "lsh"   --threads 4  --indexes_dir fasttext >> results/fasttext/bf3_lsh.txt   2>>&1
+    python3 index_searcher.py --only "pq"    --threads 4  --indexes_dir fasttext >> results/fasttext/bf3_pq.txt    2>>&1
+    python3 index_searcher.py --only "ivfpq" --threads 4  --indexes_dir fasttext >> results/fasttext/bf3_ivfpq.txt 2>>&1
+    python3 index_searcher.py --only "hnsw"  --threads 4  --indexes_dir fasttext >> results/fasttext/bf3_hnsw.txt  2>>&1
     
-    python3 index_searcher.py --only "flat"  --threads 2  --indexes_dir indexes/fasttext >> results/fasttext/bf3_flat.txt  2>>&1
-    python3 index_searcher.py --only "lsh"   --threads 2  --indexes_dir indexes/fasttext >> results/fasttext/bf3_lsh.txt   2>>&1
-    python3 index_searcher.py --only "pq"    --threads 2  --indexes_dir indexes/fasttext >> results/fasttext/bf3_pq.txt    2>>&1
-    python3 index_searcher.py --only "ivfpq" --threads 2  --indexes_dir indexes/fasttext >> results/fasttext/bf3_ivfpq.txt 2>>&1
-    python3 index_searcher.py --only "hnsw"  --threads 2  --indexes_dir indexes/fasttext >> results/fasttext/bf3_hnsw.txt  2>>&1
+    python3 index_searcher.py --only "flat"  --threads 2  --indexes_dir fasttext >> results/fasttext/bf3_flat.txt  2>>&1
+    python3 index_searcher.py --only "lsh"   --threads 2  --indexes_dir fasttext >> results/fasttext/bf3_lsh.txt   2>>&1
+    python3 index_searcher.py --only "pq"    --threads 2  --indexes_dir fasttext >> results/fasttext/bf3_pq.txt    2>>&1
+    python3 index_searcher.py --only "ivfpq" --threads 2  --indexes_dir fasttext >> results/fasttext/bf3_ivfpq.txt 2>>&1
+    python3 index_searcher.py --only "hnsw"  --threads 2  --indexes_dir fasttext >> results/fasttext/bf3_hnsw.txt  2>>&1
     
-    python3 index_searcher.py --only "flat"  --threads 1  --indexes_dir indexes/fasttext >> results/fasttext/bf3_flat.txt  2>>&1
-    python3 index_searcher.py --only "lsh"   --threads 1  --indexes_dir indexes/fasttext >> results/fasttext/bf3_lsh.txt   2>>&1
-    python3 index_searcher.py --only "pq"    --threads 1  --indexes_dir indexes/fasttext >> results/fasttext/bf3_pq.txt    2>>&1
-    python3 index_searcher.py --only "ivfpq" --threads 1  --indexes_dir indexes/fasttext >> results/fasttext/bf3_ivfpq.txt 2>>&1
-    python3 index_searcher.py --only "hnsw"  --threads 1  --indexes_dir indexes/fasttext >> results/fasttext/bf3_hnsw.txt  2>>&1
+    python3 index_searcher.py --only "flat"  --threads 1  --indexes_dir fasttext >> results/fasttext/bf3_flat.txt  2>>&1
+    python3 index_searcher.py --only "lsh"   --threads 1  --indexes_dir fasttext >> results/fasttext/bf3_lsh.txt   2>>&1
+    python3 index_searcher.py --only "pq"    --threads 1  --indexes_dir fasttext >> results/fasttext/bf3_pq.txt    2>>&1
+    python3 index_searcher.py --only "ivfpq" --threads 1  --indexes_dir fasttext >> results/fasttext/bf3_ivfpq.txt 2>>&1
+    python3 index_searcher.py --only "hnsw"  --threads 1  --indexes_dir fasttext >> results/fasttext/bf3_hnsw.txt  2>>&1
 
 else
     echo "DETECTED HOST ENVIRONMENT"
@@ -77,65 +77,65 @@ else
 
     # Host SEARCH (NOT disowned)
     #### Glove
-    python3 index_searcher.py --only "flat"  --threads 16 --indexes_dir indexes/glove >> results/glove/bf3host_flat.txt  2>>&1
-    python3 index_searcher.py --only "lsh"   --threads 16 --indexes_dir indexes/glove >> results/glove/bf3host_lsh.txt   2>>&1
-    python3 index_searcher.py --only "pq"    --threads 16 --indexes_dir indexes/glove >> results/glove/bf3host_pq.txt    2>>&1
-    python3 index_searcher.py --only "ivfpq" --threads 16 --indexes_dir indexes/glove >> results/glove/bf3host_ivfpq.txt 2>>&1
-    python3 index_searcher.py --only "hnsw"  --threads 16 --indexes_dir indexes/glove >> results/glove/bf3host_hnsw.txt  2>>&1
+    python3 index_searcher.py --only "flat"  --threads 16 --indexes_dir glove >> results/glove/bf3host_flat.txt  2>>&1
+    python3 index_searcher.py --only "lsh"   --threads 16 --indexes_dir glove >> results/glove/bf3host_lsh.txt   2>>&1
+    python3 index_searcher.py --only "pq"    --threads 16 --indexes_dir glove >> results/glove/bf3host_pq.txt    2>>&1
+    python3 index_searcher.py --only "ivfpq" --threads 16 --indexes_dir glove >> results/glove/bf3host_ivfpq.txt 2>>&1
+    python3 index_searcher.py --only "hnsw"  --threads 16 --indexes_dir glove >> results/glove/bf3host_hnsw.txt  2>>&1
 
-    python3 index_searcher.py --only "flat"  --threads 8  --indexes_dir indexes/glove >> results/glove/bf3host_flat.txt  2>>&1
-    python3 index_searcher.py --only "lsh"   --threads 8  --indexes_dir indexes/glove >> results/glove/bf3host_lsh.txt   2>>&1
-    python3 index_searcher.py --only "pq"    --threads 8  --indexes_dir indexes/glove >> results/glove/bf3host_pq.txt    2>>&1
-    python3 index_searcher.py --only "ivfpq" --threads 8  --indexes_dir indexes/glove >> results/glove/bf3host_ivfpq.txt 2>>&1
-    python3 index_searcher.py --only "hnsw"  --threads 8  --indexes_dir indexes/glove >> results/glove/bf3host_hnsw.txt  2>>&1 
+    python3 index_searcher.py --only "flat"  --threads 8  --indexes_dir glove >> results/glove/bf3host_flat.txt  2>>&1
+    python3 index_searcher.py --only "lsh"   --threads 8  --indexes_dir glove >> results/glove/bf3host_lsh.txt   2>>&1
+    python3 index_searcher.py --only "pq"    --threads 8  --indexes_dir glove >> results/glove/bf3host_pq.txt    2>>&1
+    python3 index_searcher.py --only "ivfpq" --threads 8  --indexes_dir glove >> results/glove/bf3host_ivfpq.txt 2>>&1
+    python3 index_searcher.py --only "hnsw"  --threads 8  --indexes_dir glove >> results/glove/bf3host_hnsw.txt  2>>&1 
 
-    python3 index_searcher.py --only "flat"  --threads 4  --indexes_dir indexes/glove >> results/glove/bf3host_flat.txt  2>>&1
-    python3 index_searcher.py --only "lsh"   --threads 4  --indexes_dir indexes/glove >> results/glove/bf3host_lsh.txt   2>>&1
-    python3 index_searcher.py --only "pq"    --threads 4  --indexes_dir indexes/glove >> results/glove/bf3host_pq.txt    2>>&1
-    python3 index_searcher.py --only "ivfpq" --threads 4  --indexes_dir indexes/glove >> results/glove/bf3host_ivfpq.txt 2>>&1
-    python3 index_searcher.py --only "hnsw"  --threads 4  --indexes_dir indexes/glove >> results/glove/bf3host_hnsw.txt  2>>&1 
+    python3 index_searcher.py --only "flat"  --threads 4  --indexes_dir glove >> results/glove/bf3host_flat.txt  2>>&1
+    python3 index_searcher.py --only "lsh"   --threads 4  --indexes_dir glove >> results/glove/bf3host_lsh.txt   2>>&1
+    python3 index_searcher.py --only "pq"    --threads 4  --indexes_dir glove >> results/glove/bf3host_pq.txt    2>>&1
+    python3 index_searcher.py --only "ivfpq" --threads 4  --indexes_dir glove >> results/glove/bf3host_ivfpq.txt 2>>&1
+    python3 index_searcher.py --only "hnsw"  --threads 4  --indexes_dir glove >> results/glove/bf3host_hnsw.txt  2>>&1 
 
-    python3 index_searcher.py --only "flat"  --threads 2  --indexes_dir indexes/glove >> results/glove/bf3host_flat.txt  2>>&1
-    python3 index_searcher.py --only "lsh"   --threads 2  --indexes_dir indexes/glove >> results/glove/bf3host_lsh.txt   2>>&1
-    python3 index_searcher.py --only "pq"    --threads 2  --indexes_dir indexes/glove >> results/glove/bf3host_pq.txt    2>>&1
-    python3 index_searcher.py --only "ivfpq" --threads 2  --indexes_dir indexes/glove >> results/glove/bf3host_ivfpq.txt 2>>&1
-    python3 index_searcher.py --only "hnsw"  --threads 2  --indexes_dir indexes/glove >> results/glove/bf3host_hnsw.txt  2>>&1 
+    python3 index_searcher.py --only "flat"  --threads 2  --indexes_dir glove >> results/glove/bf3host_flat.txt  2>>&1
+    python3 index_searcher.py --only "lsh"   --threads 2  --indexes_dir glove >> results/glove/bf3host_lsh.txt   2>>&1
+    python3 index_searcher.py --only "pq"    --threads 2  --indexes_dir glove >> results/glove/bf3host_pq.txt    2>>&1
+    python3 index_searcher.py --only "ivfpq" --threads 2  --indexes_dir glove >> results/glove/bf3host_ivfpq.txt 2>>&1
+    python3 index_searcher.py --only "hnsw"  --threads 2  --indexes_dir glove >> results/glove/bf3host_hnsw.txt  2>>&1 
 
-    python3 index_searcher.py --only "flat"  --threads 1  --indexes_dir indexes/glove >> results/glove/bf3host_flat.txt  2>>&1
-    python3 index_searcher.py --only "lsh"   --threads 1  --indexes_dir indexes/glove >> results/glove/bf3host_lsh.txt   2>>&1
-    python3 index_searcher.py --only "pq"    --threads 1  --indexes_dir indexes/glove >> results/glove/bf3host_pq.txt    2>>&1
-    python3 index_searcher.py --only "ivfpq" --threads 1  --indexes_dir indexes/glove >> results/glove/bf3host_ivfpq.txt 2>>&1
-    python3 index_searcher.py --only "hnsw"  --threads 1  --indexes_dir indexes/glove >> results/glove/bf3host_hnsw.txt  2>>&1
+    python3 index_searcher.py --only "flat"  --threads 1  --indexes_dir glove >> results/glove/bf3host_flat.txt  2>>&1
+    python3 index_searcher.py --only "lsh"   --threads 1  --indexes_dir glove >> results/glove/bf3host_lsh.txt   2>>&1
+    python3 index_searcher.py --only "pq"    --threads 1  --indexes_dir glove >> results/glove/bf3host_pq.txt    2>>&1
+    python3 index_searcher.py --only "ivfpq" --threads 1  --indexes_dir glove >> results/glove/bf3host_ivfpq.txt 2>>&1
+    python3 index_searcher.py --only "hnsw"  --threads 1  --indexes_dir glove >> results/glove/bf3host_hnsw.txt  2>>&1
 
     #### Fasttext
-    python3 index_searcher.py --only "flat"  --threads 16 --indexes_dir indexes/fasttext >> results/fasttext/bf3host_flat.txt  2>>&1
-    python3 index_searcher.py --only "lsh"   --threads 16 --indexes_dir indexes/fasttext >> results/fasttext/bf3host_lsh.txt   2>>&1
-    python3 index_searcher.py --only "pq"    --threads 16 --indexes_dir indexes/fasttext >> results/fasttext/bf3host_pq.txt    2>>&1
-    python3 index_searcher.py --only "ivfpq" --threads 16 --indexes_dir indexes/fasttext >> results/fasttext/bf3host_ivfpq.txt 2>>&1
-    python3 index_searcher.py --only "hnsw"  --threads 16 --indexes_dir indexes/fasttext >> results/fasttext/bf3host_hnsw.txt  2>>&1
+    python3 index_searcher.py --only "flat"  --threads 16 --indexes_dir fasttext >> results/fasttext/bf3host_flat.txt  2>>&1
+    python3 index_searcher.py --only "lsh"   --threads 16 --indexes_dir fasttext >> results/fasttext/bf3host_lsh.txt   2>>&1
+    python3 index_searcher.py --only "pq"    --threads 16 --indexes_dir fasttext >> results/fasttext/bf3host_pq.txt    2>>&1
+    python3 index_searcher.py --only "ivfpq" --threads 16 --indexes_dir fasttext >> results/fasttext/bf3host_ivfpq.txt 2>>&1
+    python3 index_searcher.py --only "hnsw"  --threads 16 --indexes_dir fasttext >> results/fasttext/bf3host_hnsw.txt  2>>&1
 
-    python3 index_searcher.py --only "flat"  --threads 8  --indexes_dir indexes/fasttext >> results/fasttext/bf3host_flat.txt  2>>&1
-    python3 index_searcher.py --only "lsh"   --threads 8  --indexes_dir indexes/fasttext >> results/fasttext/bf3host_lsh.txt   2>>&1
-    python3 index_searcher.py --only "pq"    --threads 8  --indexes_dir indexes/fasttext >> results/fasttext/bf3host_pq.txt    2>>&1
-    python3 index_searcher.py --only "ivfpq" --threads 8  --indexes_dir indexes/fasttext >> results/fasttext/bf3host_ivfpq.txt 2>>&1
-    python3 index_searcher.py --only "hnsw"  --threads 8  --indexes_dir indexes/fasttext >> results/fasttext/bf3host_hnsw.txt  2>>&1
+    python3 index_searcher.py --only "flat"  --threads 8  --indexes_dir fasttext >> results/fasttext/bf3host_flat.txt  2>>&1
+    python3 index_searcher.py --only "lsh"   --threads 8  --indexes_dir fasttext >> results/fasttext/bf3host_lsh.txt   2>>&1
+    python3 index_searcher.py --only "pq"    --threads 8  --indexes_dir fasttext >> results/fasttext/bf3host_pq.txt    2>>&1
+    python3 index_searcher.py --only "ivfpq" --threads 8  --indexes_dir fasttext >> results/fasttext/bf3host_ivfpq.txt 2>>&1
+    python3 index_searcher.py --only "hnsw"  --threads 8  --indexes_dir fasttext >> results/fasttext/bf3host_hnsw.txt  2>>&1
     
-    python3 index_searcher.py --only "flat"  --threads 4  --indexes_dir indexes/fasttext >> results/fasttext/bf3host_flat.txt  2>>&1
-    python3 index_searcher.py --only "lsh"   --threads 4  --indexes_dir indexes/fasttext >> results/fasttext/bf3host_lsh.txt   2>>&1
-    python3 index_searcher.py --only "pq"    --threads 4  --indexes_dir indexes/fasttext >> results/fasttext/bf3host_pq.txt    2>>&1
-    python3 index_searcher.py --only "ivfpq" --threads 4  --indexes_dir indexes/fasttext >> results/fasttext/bf3host_ivfpq.txt 2>>&1
-    python3 index_searcher.py --only "hnsw"  --threads 4  --indexes_dir indexes/fasttext >> results/fasttext/bf3host_hnsw.txt  2>>&1
+    python3 index_searcher.py --only "flat"  --threads 4  --indexes_dir fasttext >> results/fasttext/bf3host_flat.txt  2>>&1
+    python3 index_searcher.py --only "lsh"   --threads 4  --indexes_dir fasttext >> results/fasttext/bf3host_lsh.txt   2>>&1
+    python3 index_searcher.py --only "pq"    --threads 4  --indexes_dir fasttext >> results/fasttext/bf3host_pq.txt    2>>&1
+    python3 index_searcher.py --only "ivfpq" --threads 4  --indexes_dir fasttext >> results/fasttext/bf3host_ivfpq.txt 2>>&1
+    python3 index_searcher.py --only "hnsw"  --threads 4  --indexes_dir fasttext >> results/fasttext/bf3host_hnsw.txt  2>>&1
     
-    python3 index_searcher.py --only "flat"  --threads 2  --indexes_dir indexes/fasttext >> results/fasttext/bf3host_flat.txt  2>>&1
-    python3 index_searcher.py --only "lsh"   --threads 2  --indexes_dir indexes/fasttext >> results/fasttext/bf3host_lsh.txt   2>>&1
-    python3 index_searcher.py --only "pq"    --threads 2  --indexes_dir indexes/fasttext >> results/fasttext/bf3host_pq.txt    2>>&1
-    python3 index_searcher.py --only "ivfpq" --threads 2  --indexes_dir indexes/fasttext >> results/fasttext/bf3host_ivfpq.txt 2>>&1
-    python3 index_searcher.py --only "hnsw"  --threads 2  --indexes_dir indexes/fasttext >> results/fasttext/bf3host_hnsw.txt  2>>&1
+    python3 index_searcher.py --only "flat"  --threads 2  --indexes_dir fasttext >> results/fasttext/bf3host_flat.txt  2>>&1
+    python3 index_searcher.py --only "lsh"   --threads 2  --indexes_dir fasttext >> results/fasttext/bf3host_lsh.txt   2>>&1
+    python3 index_searcher.py --only "pq"    --threads 2  --indexes_dir fasttext >> results/fasttext/bf3host_pq.txt    2>>&1
+    python3 index_searcher.py --only "ivfpq" --threads 2  --indexes_dir fasttext >> results/fasttext/bf3host_ivfpq.txt 2>>&1
+    python3 index_searcher.py --only "hnsw"  --threads 2  --indexes_dir fasttext >> results/fasttext/bf3host_hnsw.txt  2>>&1
     
-    python3 index_searcher.py --only "flat"  --threads 1  --indexes_dir indexes/fasttext >> results/fasttext/bf3host_flat.txt  2>>&1
-    python3 index_searcher.py --only "lsh"   --threads 1  --indexes_dir indexes/fasttext >> results/fasttext/bf3host_lsh.txt   2>>&1
-    python3 index_searcher.py --only "pq"    --threads 1  --indexes_dir indexes/fasttext >> results/fasttext/bf3host_pq.txt    2>>&1
-    python3 index_searcher.py --only "ivfpq" --threads 1  --indexes_dir indexes/fasttext >> results/fasttext/bf3host_ivfpq.txt 2>>&1
-    python3 index_searcher.py --only "hnsw"  --threads 1  --indexes_dir indexes/fasttext >> results/fasttext/bf3host_hnsw.txt  2>>&1
+    python3 index_searcher.py --only "flat"  --threads 1  --indexes_dir fasttext >> results/fasttext/bf3host_flat.txt  2>>&1
+    python3 index_searcher.py --only "lsh"   --threads 1  --indexes_dir fasttext >> results/fasttext/bf3host_lsh.txt   2>>&1
+    python3 index_searcher.py --only "pq"    --threads 1  --indexes_dir fasttext >> results/fasttext/bf3host_pq.txt    2>>&1
+    python3 index_searcher.py --only "ivfpq" --threads 1  --indexes_dir fasttext >> results/fasttext/bf3host_ivfpq.txt 2>>&1
+    python3 index_searcher.py --only "hnsw"  --threads 1  --indexes_dir fasttext >> results/fasttext/bf3host_hnsw.txt  2>>&1
 
 fi

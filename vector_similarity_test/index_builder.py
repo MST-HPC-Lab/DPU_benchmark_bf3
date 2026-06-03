@@ -171,7 +171,7 @@ def hnsw_sq_build(data, dim, ef_construction, M, q_type, ef_search):#ef_construc
 
 
 # Build Only (no timing)
-#Sophia edit: refactored to allow building only a subset of indexes, and to save outputs in a specified subdirectory of indexes/
+#Sophia edit: refactored to allow building only a subset of indexes, and to save outputs in a specified subdirectory of indexes
 def test_build(only=None, mem=None):
     #Build selected indexes
     #only: None or list of ["bf", "flat", "lsh", "pq", "ivfpq", "hnsw", "hsnw_pq", "hnsw_sq"]
@@ -228,7 +228,7 @@ if __name__ == "__main__":
 
     # SOPHIA EDIT: Add out_folder argument
     parser.add_argument("--out_folder", type=str, required=True,
-                        help="Subdirectory inside indexes/ to save outputs")
+                        help="Subdirectory inside indexes to save outputs")
 
     parser.add_argument("--mem_out", type=str, default=None)
     parser.add_argument("--no_save", action="store_true")
@@ -274,7 +274,7 @@ if __name__ == "__main__":
         x_query = df.iloc[test_i]
         x_train = df.iloc[train_i]
         del df
-        
+
     x_query = np.ascontiguousarray(x_query.to_numpy(dtype=np.float32)) # SOPHIA EDIT: convert to contiguous float32 numpy
     x_train = np.ascontiguousarray(x_train.to_numpy(dtype=np.float32))
 
@@ -322,14 +322,15 @@ if __name__ == "__main__":
                         "truth_I": truth_I_json,
                         "truth_D": truth_D_json
                     },
-                    f      
+                    f,
+                    indent=4
                 )
 
 
         # if "bf" in build:
         #     assert truth_I is not None and truth_D is not None
         #     with open(os.path.join(base_dir, "truth_I,D.json"), "w") as f:
-        #         json.dump({"truth_I": truth_I, "truth_D": truth_D}, f)
+        #         json.dump({"truth_I": truth_I, "truth_D": truth_D}, f, indent=4)
 
         if "flat" in build and FL2 is not None:
             faiss.write_index(FL2, os.path.join(base_dir, "flat.index"))
@@ -376,6 +377,6 @@ if __name__ == "__main__":
                 "HNSW_efconstruction": int(HNSW_efconstruction),
                 "HNSW_efsearch": int(HNSW_efsearch),
                 "HNSW_SQ_qtype": int(HNSW_SQ_qtype),
-            }, f)
+            }, f, indent=4)
 
     print("Build complete.")
