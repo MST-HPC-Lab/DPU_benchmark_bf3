@@ -301,12 +301,12 @@ if __name__ == "__main__":
         print("Train Size:", len(train_i))
         print("Test  Size:", len(test_i))
 
-        x_query = df.iloc[test_i]
-        x_train = df.iloc[train_i]
+        x_query = df.iloc[test_i].to_numpy(dtype=np.float32)
+        x_train = df.iloc[train_i].to_numpy(dtype=np.float32)
         del df
 
-    x_query = np.ascontiguousarray(x_query.to_numpy(dtype=np.float32)) # SOPHIA EDIT: convert to contiguous float32 numpy
-    x_train = np.ascontiguousarray(x_train.to_numpy(dtype=np.float32))
+    x_query = np.ascontiguousarray(x_query) # SOPHIA EDIT: convert to contiguous float32 numpy
+    x_train = np.ascontiguousarray(x_train)
 
     dim_to_subspaces = {
         128: 32, 
