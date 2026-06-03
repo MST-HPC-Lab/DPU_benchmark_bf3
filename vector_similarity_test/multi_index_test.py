@@ -69,7 +69,13 @@ def test_suite(filename="glove.6B.200d.txt", only=None, k=10, r=3):
     ib.x_query = np.ascontiguousarray(ib.x_query.to_numpy(dtype=np.float32))
     ib.x_train = np.ascontiguousarray(ib.x_train.to_numpy(dtype=np.float32))
 
-    truth_path = "indexes/glove/truth_I,D.json"
+    # Load ground truth answers from proper index
+    if args.indexes_dir == "unknown":
+        index_name = "glove" if "glove" in filename else "fasttext" if "fasttext" in filename else "sift" if "sift" in filename else "unknown"
+        if index_name == "unknown": raise ValueError("Index name could not be determined from filename. Please specify.")    
+    else:
+        index_name = args.indexes_dir
+    truth_path = f"indexes/{index_name}/truth_I,D.json"
 
     if only is None:
         only = {"bf", "flat", "lsh", "pq", "ivfpq", "hnsw", "hnsw_pq", "hnsw_sq"}
@@ -310,6 +316,8 @@ if __name__ == "__main__":
     )
     parser.add_argument("--k", type=int, default=10)
     parser.add_argument("--r", type=int, default=3)
+    parser.add_argument("--indexes_dir", type=str, default="unknown",
+                        help="Directory containing indexes and metadata")
     args = parser.parse_args()
 
     test_suite(filename=args.file, only=args.only, k=args.k, r=args.r)
