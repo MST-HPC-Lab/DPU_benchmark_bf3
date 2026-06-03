@@ -36,7 +36,7 @@ def test_suite(filename="glove.6B.200d.txt", only=None, k=10, r=3):
     ib.d = d
     # ib.k = k
 
-    truth_path = "indices/glove_clean/truth_I,D.json"
+    truth_path = "indices/glove/truth_I,D.json"
 
     # Fixed Split
     N = len(df)
