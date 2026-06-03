@@ -236,9 +236,39 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     filename = f"../Data/{args.file}"
+    global d
+    
     if filename[-4:] == ".mat": 
         mat_data = loadmat(filename)['fea'].T
-        raise NotImplementedError() # Sesi implement
+
+
+        if args.num_vecs is not None:
+            mat_data = mat_data[:args.num_vecs]
+
+        if args.dim is not None:
+            mat_data = mat_data[:, :args.dim]
+        # mat_data = np.ascountigousarray(mat_data, dtype=np.float32)
+
+        d = mat_data.shape[1]
+
+        print(f'File: "{filename}"')
+        print("Dimensions:", d)
+
+        N = len(mat_data)
+        start_i = 0 # 99
+        step = 100 # Makes 1/step test set
+        test_i = [i for i in range(start_i, N, step)] # 1% test set
+        train_i = [i for i in range(N) if (i % step != start_i)] # rest is train set
+        # test_i = [i for i in range(d - 1, N, d)]
+        # train_i = [i for i in range(N) if (i + d - 1) % d]
+        # test_i = [i for i in range(199, N, 200)]
+        # train_i = [i for i in range(N) if (i + 199) % 200]
+
+        print("Train Size:", len(train_i))
+        print("Test  Size:", len(test_i))
+
+        x_query = mat_data[test_i]
+        x_train = mat_data[train_i]
 
     else:
         df = pd.read_csv(filename, sep=" ", quoting=3, skiprows=1, header=None)
@@ -252,7 +282,7 @@ if __name__ == "__main__":
         if args.dim is not None:
             df = df.iloc[:, :args.dim]
 
-        global d
+        
         d = df.shape[1]
 
         print(f'File: "{filename}"')

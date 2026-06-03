@@ -6,6 +6,7 @@ import argparse
 from timeit import repeat
 import os
 import json
+from mat73 import loadmat
 
 import index_builder as ib
 from device_utils import is_bluefield
@@ -23,35 +24,52 @@ def avg_time(fn, reps=3): # No cache warmup here, but later reps will be warm, s
 def test_suite(filename="glove.6B.200d.txt", only=None, k=10, r=3):
     if "../Data/" not in filename: path = f"../Data/{filename}"
     else: path = filename
-    # Load Data File (TODO: make this more flexible for different datasets)
-    # df = pd.read_csv("../Data/glove.6B.200d.txt", sep=" ", quoting=3, header=None)
-    # d = 300
-    df = pd.read_csv(path, sep=" ", quoting=3, skiprows=1, header=None)
-    # Split into vocab column and data
-    # vocab = df.iloc[:, 0]
-    df = df.drop(0, axis=1)
 
-    d = df.shape[1]
+    if path[-4:] == ".mat": # Load matlab file
+        mat_data = loadmat(path)['fea']
+
+        d = mat_data.shape[1]
+
+        N = len(mat_data)
+        start_i = 0 # 99
+        step = 100 # Makes 1/step test set
+        test_i = [i for i in range(start_i, N, step)] # 1% test set
+        train_i = [i for i in range(N) if (i % step != start_i)] # rest is train set
+        # test_i = [i for i in range(d-1, N, d)]
+        # train_i = [i for i in range(N) if (i + d-1) % d]
+
+    else: # Load CSV or txt
+        # Load Data File (TODO: make this more flexible for different datasets)
+        # df = pd.read_csv("../Data/glove.6B.200d.txt", sep=" ", quoting=3, header=None)
+        # d = 300
+        df = pd.read_csv(path, sep=" ", quoting=3, skiprows=1, header=None)
+        # Split into vocab column and data
+        # vocab = df.iloc[:, 0]
+        df = df.drop(0, axis=1)
+
+        d = df.shape[1]
+
+        # Fixed Split
+        N = len(df)
+        start_i = 0 # 99
+        step = 100 # Makes 1/step test set
+        test_i = [i for i in range(start_i, N, step)] # 1% test set
+        train_i = [i for i in range(N) if (i % step != start_i)] # rest is train set
+        # test_i = [i for i in range(d-1, N, d)]
+        # train_i = [i for i in range(N) if (i + d-1) % d]
+
+        ib.x_query = df.iloc[test_i]
+        ib.x_train = df.iloc[train_i]
+        del df
+    
     # sharing these variables with index_builder.py
     ib.d = d
     # ib.k = k
 
-    truth_path = "indexes/glove/truth_I,D.json"
-
-    # Fixed Split
-    N = len(df)
-    start_i = 0 # 99
-    step = 100 # Makes 1/step test set
-    test_i = [i for i in range(start_i, N, step)] # 1% test set
-    train_i = [i for i in range(N) if (i % step != start_i)] # rest is train set
-    # test_i = [i for i in range(d-1, N, d)]
-    # train_i = [i for i in range(N) if (i + d-1) % d]
-
-    ib.x_query = df.iloc[test_i]
     ib.x_query = np.ascontiguousarray(ib.x_query.to_numpy(dtype=np.float32))
-    ib.x_train = df.iloc[train_i]
     ib.x_train = np.ascontiguousarray(ib.x_train.to_numpy(dtype=np.float32))
-    del df
+
+    truth_path = "indexes/glove/truth_I,D.json"
 
     if only is None:
         only = {"bf", "flat", "lsh", "pq", "ivfpq", "hnsw", "hnsw_pq", "hnsw_sq"}
