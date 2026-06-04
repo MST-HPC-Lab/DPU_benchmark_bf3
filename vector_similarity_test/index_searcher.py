@@ -60,6 +60,12 @@ if __name__ == "__main__":
         default=None,
         help="Limit the number of threads used by FAISS."
     )
+    parser.add_argument(
+        "--k",
+        nargs="+",
+        default=None,
+        help="Override k values to test (default is to use k values from meta.json)"
+    )
     args = parser.parse_args()
 
     #---------------------- IMPORTS ---------------------------------#
@@ -119,6 +125,9 @@ if __name__ == "__main__":
     if "hnswsq" in only:
         only.add("hnsw_sq")
     indexes_dir = os.path.join("indexes", args.indexes_dir) if "indexes" not in args.indexes_dir else args.indexes_dir
+
+    k_values = [int(k) for k in args.k] if args.k is not None else ib.k_values
+    ib.k_values = k_values
 
     # Load saved artifacts from builder
     meta_path = os.path.join(indexes_dir, "meta.json")
