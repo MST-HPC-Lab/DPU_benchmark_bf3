@@ -181,6 +181,10 @@ if __name__ == "__main__":
 
     # Load ground truth for recall calculations
     ib.load_truth(os.path.join(indexes_dir, "truth_I,D.json")) # Load ground truth for recall calculations
+    if ib.truth_I is None or not len(ib.truth_I):
+        for k in ib.k_values:
+            ib.search_ground_truth(k, measure_accuracy=False)
+        ib.save_ground_truth(os.path.join(indexes_dir, "truth_I,D.json"))
 
     # # Brute Force 
     # if "bf" in only:

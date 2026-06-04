@@ -63,29 +63,57 @@ def batch_recall(test_I, truth_I_k, k):
 #     if measure_accuracy:
 #         return 1.0
 
-def brute_force_search(k, measure_accuracy=False):
-    global truth_D, truth_I, x_query, x_train
-    nq = x_query.shape[0]
-    all_I = np.empty((nq, k), dtype=np.int64)
-    all_D = np.empty((nq, k), dtype=np.float32)
+# def brute_force_search(k, measure_accuracy=False):
+#     global truth_D, truth_I, x_query, x_train
+#     nq = x_query.shape[0]
+#     all_I = np.empty((nq, k), dtype=np.int64)
+#     all_D = np.empty((nq, k), dtype=np.float32)
 
-    BATCH = 100
-    for start in range(0, nq, BATCH):
-        end = min(start + BATCH, nq)
-        q_batch = x_query[start:end]
-        q_sq = np.sum(q_batch ** 2, axis=1, keepdims=True)
-        x_sq = np.sum(x_train ** 2, axis=1, keepdims=True).T
-        dists = q_sq + x_sq - 2 * (q_batch @ x_train.T)
-        idx = np.argpartition(dists, k, axis=1)[:, :k]
-        for i in range(end - start):
-            sorted_k = np.argsort(dists[i, idx[i]])
-            all_I[start + i] = idx[i][sorted_k]
-            all_D[start + i] = dists[i, idx[i][sorted_k]]
+#     BATCH = 100
+#     for start in range(0, nq, BATCH):
+#         end = min(start + BATCH, nq)
+#         q_batch = x_query[start:end]
+#         q_sq = np.sum(q_batch ** 2, axis=1, keepdims=True)
+#         x_sq = np.sum(x_train ** 2, axis=1, keepdims=True).T
+#         dists = q_sq + x_sq - 2 * (q_batch @ x_train.T)
+#         idx = np.argpartition(dists, k, axis=1)[:, :k]
+#         for i in range(end - start):
+#             sorted_k = np.argsort(dists[i, idx[i]])
+#             all_I[start + i] = idx[i][sorted_k]
+#             all_D[start + i] = dists[i, idx[i][sorted_k]]
 
-    truth_I[k] = all_I
-    truth_D[k] = all_D
+#     truth_I[k] = all_I
+#     truth_D[k] = all_D
+#     if measure_accuracy:
+#         return 1.0
+
+def search_ground_truth(k, measure_accuracy=False):
+    global truth_D, truth_I, x_query#, x_train
+    # Use FAISS flat index for brute force search to get ground truth
+    if FL2 is None:
+        raise ValueError("FL2 index not built yet")
+    D, I = FL2.search(x_query, k)
+    truth_I[k] = I
+    truth_D[k] = D
     if measure_accuracy:
         return 1.0
+    
+def save_ground_truth(path):
+    global truth_I, truth_D
+    assert truth_I is not None and truth_D is not None
+
+    truth_I_json = {str(k): v.tolist() for k, v in truth_I.items()}
+    truth_D_json = {str(k): v.tolist() for k, v in truth_D.items()}
+
+    with open(os.path.join(base_dir, "truth_I,D.json"), "w") as f:
+        json.dump(
+            {
+                "truth_I": truth_I_json,
+                "truth_D": truth_D_json
+            },
+            f,
+            indent=4
+        )
 
 def search(index, k, measure_accuracy=True):
     D, I = index.search(x_query, k)
@@ -190,6 +218,8 @@ def test_build(only=None, mem=None):
 
     if "flat" in only:
         flat_build(x_train)
+        for k in k_values:
+            search_ground_truth(k, measure_accuracy=False)  # populates truth_I and truth_D for flat/ground truth
 
     if "lsh" in only:
         lsh_build(x_train, lsh_nbits)
@@ -344,22 +374,7 @@ if __name__ == "__main__":
 
         # Save the ground truth for recall calculations.
         if "flat" in build: # was "bf"
-            assert truth_I is not None and truth_D is not None
-
-            truth_I_json = {str(k): v.tolist() for k, v in truth_I.items()}
-            truth_D_json = {str(k): v.tolist() for k, v in truth_D.items()}
-
-            with open(os.path.join(base_dir, "truth_I,D.json"), "w") as f:
-                json.dump(
-                    {
-                        "truth_I": truth_I_json,
-                        "truth_D": truth_D_json
-                    },
-                    f,
-                    indent=4
-                )
-
-
+            save_ground_truth(os.path.join(base_dir, "truth_I,D.json"))
         # if "bf" in build:
         #     assert truth_I is not None and truth_D is not None
         #     with open(os.path.join(base_dir, "truth_I,D.json"), "w") as f:
