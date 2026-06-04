@@ -6,7 +6,8 @@ import argparse
 from timeit import repeat
 import os
 import json
-from mat73 import loadmat
+# from mat73 import loadmat
+import h5py
 
 import index_builder as ib
 from device_utils import is_bluefield
@@ -26,7 +27,9 @@ def test_suite(filename="glove.6B.200d.txt", only=None, k=10, r=3):
     else: path = filename
 
     if path[-4:] == ".mat": # Load matlab file
-        mat_data = loadmat(path)['fea']
+        # mat_data = loadmat(path)['fea'].T
+        with h5py.File(path, 'r') as f:
+            mat_data = np.array(f['fea'])
 
         d = mat_data.shape[1]
 

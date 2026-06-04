@@ -1,12 +1,14 @@
 # index_builder.py
 import argparse
+from sys import argv
 import pandas as pd
 import numpy as np
 import faiss
 from timeit import repeat
 # import hnswlib  # SOPHIA EDIT: removed hnswlib, switching to FAISS HNSW
 import os, json
-from mat73 import loadmat
+# from mat73 import loadmat
+import h5py
 
 from mem_utils import MemoryMonitor
 os.makedirs("results", exist_ok=True)
@@ -239,8 +241,9 @@ if __name__ == "__main__":
     global d
     
     if filename[-4:] == ".mat": 
-        mat_data = loadmat(filename)['fea'].T
-
+        # mat_data = loadmat(filename)['fea'].T
+        with h5py.File(filename, 'r') as f:
+            mat_data = np.array(f['fea'])
 
         if args.num_vecs is not None:
             mat_data = mat_data[:args.num_vecs]
