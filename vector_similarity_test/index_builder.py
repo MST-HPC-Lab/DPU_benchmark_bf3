@@ -91,18 +91,14 @@ def batch_recall(test_I, truth_I_k, k):
 #         return 1.0
 
 def search_ground_truth(k, measure_accuracy=False, indexes_dir=None, redo=True):
-    print("---ENTER SEARCH GROUND TRUTH")
     global truth_I, x_query, FL2#, x_train, truth_D
     # Use FAISS flat index for brute force search to get ground truth
     # loaded = False
     if FL2 is None:
-        print("---NO FL2")
         # loaded = True
         if indexes_dir is None: raise ValueError("FL2 index not built yet")
         FL2 = faiss.read_index(os.path.join(indexes_dir, "flat.index"))
-        print("---FL2 IS NONE?:", FL2 is None)
     if redo or (truth_I is None or not len(truth_I) or k not in truth_I):
-        print("---NO TRUTH_I OR REDOING")
         D, I = FL2.search(x_query, k)
         # if loaded and not keep_flat_index: FL2 = None  # free memory if we loaded it just for this
         print("---I:", I)
@@ -112,7 +108,6 @@ def search_ground_truth(k, measure_accuracy=False, indexes_dir=None, redo=True):
         return 1.0
     
 def save_ground_truth(path):
-    print("---ENTER SAVE GROUND TRUTH")
     global truth_I#, truth_D
     assert truth_I is not None #and truth_D is not None
 
@@ -120,7 +115,6 @@ def save_ground_truth(path):
     # # truth_D_json = {str(k): v.tolist() for k, v in truth_D.items()}
 
     with open(path, "wb") as f:
-        print("---TRUTH I PATH:", path)
         # json.dump(
         #     {
         #         "truth_I": truth_I_json,
@@ -129,7 +123,6 @@ def save_ground_truth(path):
         #     f,
         #     # indent=4 # Takes up much more disk space this way I think!
         # )
-        print("---LEN TRUTH I:", len(truth_I))
         pickle.dump(truth_I, f) # more compact and fast than json
 
 def search(index, k, measure_accuracy=True):

@@ -199,7 +199,6 @@ if __name__ == "__main__":
             ib.search_ground_truth(k, measure_accuracy=False, indexes_dir=indexes_dir, redo=False)
         if "flat" not in only: ib.FL2 = None # free memory
         ib.save_ground_truth(os.path.join(indexes_dir, ib.TRUTH_FILE_NAME))
-    print("---GROUND TRUTH I:", ib.truth_I)
 
     # # Brute Force 
     # if "bf" in only:
