@@ -9,6 +9,7 @@ from timeit import repeat
 import os, json
 # from mat73 import loadmat
 import h5py
+import pickle
 
 from mem_utils import MemoryMonitor
 os.makedirs("results", exist_ok=True)
@@ -17,7 +18,7 @@ os.makedirs("results", exist_ok=True)
 k_values = [1, 2, 3, 5, 7, 10, 25, 50, 75, 100]
 
 # Globals used across functions
-truth_D, truth_I = {}, {}
+truth_I = {}, #truth_D = {}
 x_train, x_query = None, None
 FL2 = None
 LSH = None
@@ -26,6 +27,8 @@ IVFPQ = None
 HNSW = None
 HNSWSQ = None
 HNSWPQ = None
+
+TRUTH_FILE_NAME = "truth_I,D.pkl"
 
 
 # Recall helpers
@@ -88,7 +91,7 @@ def batch_recall(test_I, truth_I_k, k):
 #         return 1.0
 
 def search_ground_truth(k, measure_accuracy=False, indexes_dir=None, redo=True):
-    global truth_D, truth_I, x_query, FL2#, x_train
+    global truth_I, x_query, FL2#, x_train, truth_D
     # Use FAISS flat index for brute force search to get ground truth
     # loaded = False
     if FL2 is None:
@@ -99,26 +102,27 @@ def search_ground_truth(k, measure_accuracy=False, indexes_dir=None, redo=True):
         D, I = FL2.search(x_query, k)
         # if loaded and not keep_flat_index: FL2 = None  # free memory if we loaded it just for this
         truth_I[k] = I
-        truth_D[k] = D
+        # truth_D[k] = D
     if measure_accuracy:
         return 1.0
     
 def save_ground_truth(path):
-    global truth_I, truth_D
-    assert truth_I is not None and truth_D is not None
+    global truth_I#, truth_D
+    assert truth_I is not None #and truth_D is not None
 
-    truth_I_json = {str(k): v.tolist() for k, v in truth_I.items()}
-    truth_D_json = {str(k): v.tolist() for k, v in truth_D.items()}
+    # truth_I_json = {str(k): v.tolist() for k, v in truth_I.items()}
+    # # truth_D_json = {str(k): v.tolist() for k, v in truth_D.items()}
 
-    with open(path, "w") as f:
-        json.dump(
-            {
-                "truth_I": truth_I_json,
-                "truth_D": truth_D_json
-            },
-            f,
-            # indent=4 # Takes up much more disk space this way I think!
-        )
+    with open(path, "wb") as f:
+        # json.dump(
+        #     {
+        #         "truth_I": truth_I_json,
+        #         # "truth_D": truth_D_json
+        #     },
+        #     f,
+        #     # indent=4 # Takes up much more disk space this way I think!
+        # )
+        pickle.dump(truth_I, f) # more compact and fast than json
 
 def search(index, k, measure_accuracy=True):
     D, I = index.search(x_query, k)
@@ -127,11 +131,12 @@ def search(index, k, measure_accuracy=True):
         return batch_recall(I, truth_I[k], k)
     
 def load_truth(path):
-    global truth_D, truth_I
-    with open(path, "r") as f:
-        data = json.load(f)
-        truth_I = {int(k): np.array(v) for k, v in data["truth_I"].items()}
-        truth_D = {int(k): np.array(v) for k, v in data["truth_D"].items()}
+    global truth_I#, truth_D,
+    with open(path, "rb") as f:
+        # data = json.load(f)
+        truth_I = pickle.load(f)
+        # truth_I = {int(k): np.array(v) for k, v in data["truth_I"].items()}
+        # # truth_D = {int(k): np.array(v) for k, v in data["truth_D"].items()}
 
 
 
@@ -380,7 +385,7 @@ if __name__ == "__main__":
 
         # Save the ground truth for recall calculations.
         # if "flat" in build: # was "bf"
-        save_ground_truth(os.path.join(base_dir, "truth_I,D.json"))
+        save_ground_truth(os.path.join(base_dir, TRUTH_FILE_NAME))
         # if "bf" in build:
         #     assert truth_I is not None and truth_D is not None
         #     with open(os.path.join(base_dir, "truth_I,D.json"), "w") as f:

@@ -78,7 +78,7 @@ def test_suite(filename="glove.6B.200d.txt", only=None, k=10, r=3):
         if index_name == "unknown": raise ValueError("Index name could not be determined from filename. Please specify.")    
     else:
         index_name = args.indexes_dir
-    truth_path = f"indexes/{index_name}/truth_I,D.json"
+    truth_path = f"indexes/{index_name}/{ib.TRUTH_FILE_NAME}"
 
     if only is None:
         only = {"flat", "lsh", "pq", "ivfpq", "hnsw", "hnsw_pq", "hnsw_sq"} #"bf", 
