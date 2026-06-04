@@ -110,7 +110,7 @@ def save_ground_truth(path):
     truth_I_json = {str(k): v.tolist() for k, v in truth_I.items()}
     truth_D_json = {str(k): v.tolist() for k, v in truth_D.items()}
 
-    with open(os.path.join(base_dir, "truth_I,D.json"), "w") as f:
+    with open(os.path.join(path, "truth_I,D.json"), "w") as f:
         json.dump(
             {
                 "truth_I": truth_I_json,
