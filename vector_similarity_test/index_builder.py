@@ -117,7 +117,7 @@ def save_ground_truth(path):
                 "truth_D": truth_D_json
             },
             f,
-            indent=4
+            # indent=4 # Takes up much more disk space this way I think!
         )
 
 def search(index, k, measure_accuracy=True):
