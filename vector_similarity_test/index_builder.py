@@ -101,7 +101,6 @@ def search_ground_truth(k, measure_accuracy=False, indexes_dir=None, redo=True):
     if redo or (truth_I is None or not len(truth_I) or k not in truth_I):
         D, I = FL2.search(x_query, k)
         # if loaded and not keep_flat_index: FL2 = None  # free memory if we loaded it just for this
-        print("---I:", I)
         truth_I[k] = I
         # truth_D[k] = D
     if measure_accuracy:
