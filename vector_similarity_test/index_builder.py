@@ -18,7 +18,7 @@ os.makedirs("results", exist_ok=True)
 k_values = [1, 2, 3, 5, 7, 10, 25, 50, 75, 100]
 
 # Globals used across functions
-truth_I = {}, #truth_D = {}
+truth_I = {} #truth_D = {}
 x_train, x_query = None, None
 FL2 = None
 LSH = None
