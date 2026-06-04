@@ -190,11 +190,16 @@ if __name__ == "__main__":
     print("k:", ib.k_values, flush=True)
 
     # Load ground truth for recall calculations
-    ib.load_truth(os.path.join(indexes_dir, "truth_I,D.json")) # Load ground truth for recall calculations
-    if ib.truth_I is None or not len(ib.truth_I):
+    try:
+        ib.load_truth(os.path.join(indexes_dir, ib.TRUTH_FILE_NAME)) # Load ground truth for recall calculations
+    except:
+        pass
+    if (not hasattr(ib, "truth_I")) or ib.truth_I is None or (not len(ib.truth_I)):
         for k in ib.k_values:
-            ib.search_ground_truth(k, measure_accuracy=False)
-        ib.save_ground_truth(os.path.join(indexes_dir, "truth_I,D.json"))
+            print("COMPUTING GROUND TRUTH FOR K:", k)
+            ib.search_ground_truth(k, measure_accuracy=False, indexes_dir=indexes_dir, redo=False)
+            ib.save_ground_truth(os.path.join(indexes_dir, ib.TRUTH_FILE_NAME))
+        if "flat" not in only: ib.FL2 = None # free memory
 
     # # Brute Force 
     # if "bf" in only:
@@ -361,7 +366,7 @@ if __name__ == "__main__":
     current_results = { # To become the JSON dict entry for this run
         "date": pd.Timestamp.now().isoformat(),
         "repeats": REPLICATIONS,
-        "train_size": num_vecs - len(ib.x_query),
+        "train_size": int(num_vecs) - len(ib.x_query),
         "query_size": len(ib.x_query),
         "k_values": ib.k_values,
 
