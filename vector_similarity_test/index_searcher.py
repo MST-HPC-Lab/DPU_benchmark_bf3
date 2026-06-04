@@ -362,7 +362,7 @@ if __name__ == "__main__":
     current_results = { # To become the JSON dict entry for this run
         "date": pd.Timestamp.now().isoformat(),
         "repeats": REPLICATIONS,
-        "train_size": num_vecs - len(ib.x_query),
+        "train_size": int(num_vecs) - len(ib.x_query),
         "query_size": len(ib.x_query),
         "k_values": ib.k_values,
 
