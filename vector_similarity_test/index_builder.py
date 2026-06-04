@@ -87,13 +87,17 @@ def batch_recall(test_I, truth_I_k, k):
 #     if measure_accuracy:
 #         return 1.0
 
-def search_ground_truth(k, measure_accuracy=False, redo=True):
-    global truth_D, truth_I, x_query#, x_train
+def search_ground_truth(k, measure_accuracy=False, indexes_dir=None, redo=True):
+    global truth_D, truth_I, x_query, FL2#, x_train
     # Use FAISS flat index for brute force search to get ground truth
+    # loaded = False
     if FL2 is None:
-        raise ValueError("FL2 index not built yet")
+        # loaded = True
+        if indexes_dir is None: raise ValueError("FL2 index not built yet")
+        FL2 = faiss.read_index(os.path.join(indexes_dir, "flat.index"))
     if redo or (truth_I is None or not len(truth_I) or k not in truth_I):
         D, I = FL2.search(x_query, k)
+        # if loaded and not keep_flat_index: FL2 = None  # free memory if we loaded it just for this
         truth_I[k] = I
         truth_D[k] = D
     if measure_accuracy:
