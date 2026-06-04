@@ -1,0 +1,111 @@
+# Search results will be found in the json structure like this:
+
+results[device][dataset][dimensions][num_vecs][threads] = {
+        "date": pd.Timestamp.now().isoformat(),
+        "repeats": REPLICATIONS,
+        "train_size": num_vecs - len(ib.x_query),
+        "query_size": len(ib.x_query),
+        "k_values": ib.k_values,
+
+        "flat_times": flat_times, # These have the same dimensionality as k_values
+        "lsh_recalls": lsh_recalls,
+        "lsh_times": lsh_times,
+        "pq_recalls": pq_recalls,
+        "pq_times": pq_times,
+        "ivfpq_recalls": ivfpq_recalls,
+        "ivfpq_times": ivfpq_times,
+        "hnsw_recalls": hnsw_recalls,
+        "hnsw_times": hnsw_times,
+        "hnsw_pq_recalls": hnsw_pq_recalls,
+        "hnsw_pq_times": hnsw_pq_times,
+        "hnsw_sq_recalls": hnsw_sq_recalls,
+        "hnsw_sq_times": hnsw_sq_times,
+}
+
+# This results in examples that might look like the following:
+
+results.json
+{
+    "host": {
+        "glove.6B.200d.txt": {
+            "200": {
+                "400000": {
+                    "default": { # threads
+                        "date": "2026-06-03T16:25:37.140892",
+                        "repeats": 5,
+                        "k_values": [
+                            1,
+                            2,
+                            3,
+                            5,
+                            7,
+                            10,
+                            25,
+                            50,
+                            75,
+                            100
+                        ],
+                        "flat_recalls": [
+                            1.0,
+                            1.0,
+                            1.0,
+                            1.0,
+                            0.9999642857142857,
+                            1.0,
+                            1.0,
+                            1.0,
+                            1.0,
+                            0.999995
+                        ],
+                        "flat_times": [
+                            1.5307867824012646,
+                            1.1074231666018022,
+                            1.0960620462050428,
+                            1.097820194196538,
+                            1.0314471098041396,
+                            1.0735002689965767,
+                            1.047655967794708,
+                            1.0480077836051351,
+                            1.0592449773976114,
+                            1.044996987201739
+                        ]
+                    }
+                }
+            }
+        }
+    }
+}
+
+# Multi-test results (for the scatter plots) can be found in the json like this:
+
+results["multitest"][device][filename][k] = {
+        "date": pd.Timestamp.now().isoformat(),
+        "repeats": r,
+        "threads": str(ib.threads) if ib.threads is not None else "default",
+        "dimensions": d,
+        "num_vecs": len(ib.x_train) + len(ib.x_query),
+        "train_size": len(ib.x_train),
+        "test_size": len(ib.x_query),
+        "cache": "mixture", # "warm" or "cold" or "mixture" (if some builds are warm and some are cold)
+        "pq_m_vals": pq_m_vals,
+        "pq_n_bits": pq_n_bits,
+        "nlist": nlist,
+        "hnsw_m_vals": hnsw_m_vals,
+        "hnsw_efc_vals": hnsw_efc_vals,
+        "hnsw_efs_vals": hnsw_efs_vals,
+        "sq_vals": ["QT_4bit", "QT_8bit"]
+
+        "flat_times": flat_times,
+        "lsh_recalls": lsh_recalls, # Most of these results will be multidimensional arrays that will need flattened. One dimension for each algorithm parameter we tested.
+        "lsh_times": lsh_times,
+        "pq_recalls": pq_recalls,
+        "pq_times": pq_times,
+        "ivfpq_recalls": ivfpq_recalls,
+        "ivfpq_times": ivfpq_times,
+        "hnsw_recalls": hnsw_recalls,
+        "hnsw_times": hnsw_times,
+        "hnsw_pq_recalls": hnsw_pq_recalls,
+        "hnsw_pq_times": hnsw_pq_times,
+        "hnsw_sq_recalls": hnsw_sq_recalls,
+        "hnsw_sq_times": hnsw_sq_times,
+}
