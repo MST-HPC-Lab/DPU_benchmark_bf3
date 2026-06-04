@@ -87,14 +87,15 @@ def batch_recall(test_I, truth_I_k, k):
 #     if measure_accuracy:
 #         return 1.0
 
-def search_ground_truth(k, measure_accuracy=False):
+def search_ground_truth(k, measure_accuracy=False, redo=True):
     global truth_D, truth_I, x_query#, x_train
     # Use FAISS flat index for brute force search to get ground truth
     if FL2 is None:
         raise ValueError("FL2 index not built yet")
-    D, I = FL2.search(x_query, k)
-    truth_I[k] = I
-    truth_D[k] = D
+    if redo or (truth_I is None or not len(truth_I) or k not in truth_I):
+        D, I = FL2.search(x_query, k)
+        truth_I[k] = I
+        truth_D[k] = D
     if measure_accuracy:
         return 1.0
     
@@ -218,8 +219,9 @@ def test_build(only=None, mem=None):
 
     if "flat" in only:
         flat_build(x_train)
-        for k in k_values:
-            search_ground_truth(k, measure_accuracy=False)  # populates truth_I and truth_D for flat/ground truth
+
+    for k in k_values:
+        search_ground_truth(k, measure_accuracy=False)  # populates truth_I and truth_D for flat/ground truth
 
     if "lsh" in only:
         lsh_build(x_train, lsh_nbits)
@@ -373,8 +375,8 @@ if __name__ == "__main__":
         build = set(args.only) if args.only is not None else {"flat", "lsh", "pq", "ivfpq", "hnsw", "hnsw_pq", "hnsw_sq"} #"bf", 
 
         # Save the ground truth for recall calculations.
-        if "flat" in build: # was "bf"
-            save_ground_truth(os.path.join(base_dir, "truth_I,D.json"))
+        # if "flat" in build: # was "bf"
+        save_ground_truth(os.path.join(base_dir, "truth_I,D.json"))
         # if "bf" in build:
         #     assert truth_I is not None and truth_D is not None
         #     with open(os.path.join(base_dir, "truth_I,D.json"), "w") as f:
