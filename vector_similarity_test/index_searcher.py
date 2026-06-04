@@ -190,13 +190,13 @@ if __name__ == "__main__":
     print("k:", ib.k_values, flush=True)
 
     # Load ground truth for recall calculations
-    # try:
-    ib.load_truth(os.path.join(indexes_dir, ib.TRUTH_FILE_NAME)) # Load ground truth for recall calculations
-    # except:
-    #     pass
-    if not hasattr(ib, "truth_I") or ib.truth_I is None or not len(ib.truth_I):
+    try:
+        ib.load_truth(os.path.join(indexes_dir, ib.TRUTH_FILE_NAME)) # Load ground truth for recall calculations
+    except:
+        pass
+    if (not hasattr(ib, "truth_I")) or ib.truth_I is None or not len(ib.truth_I):
         for k in ib.k_values:
-            ib.search_ground_truth(k, measure_accuracy=False, indexes_dir=indexes_dir)
+            ib.search_ground_truth(k, measure_accuracy=False, indexes_dir=indexes_dir, redo=False)
         if "flat" not in only: ib.FL2 = None # free memory
         ib.save_ground_truth(os.path.join(indexes_dir, ib.TRUTH_FILE_NAME))
 
