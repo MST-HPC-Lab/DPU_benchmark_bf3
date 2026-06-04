@@ -1,0 +1,78 @@
+BUILDING GLOVE INDEXES
+File: "../Data/glove.6B.200d.txt"
+Dimensions: 200
+Train Size: 396000
+Test  Size: 4000
+Building...Build complete.
+BUILDING GLOVE EQUAL INDEXES
+File: "../Data/glove.6B.200d.txt"
+Dimensions: 128
+Train Size: 396000
+Test  Size: 4000
+Building...Build complete.
+BUILDING FASTTEXT INDEXES
+File: "../Data/fasttext_cc.en.300.vec"
+Dimensions: 300
+Train Size: 1980000
+Test  Size: 20000
+Building...Build complete.
+BUILDING FASTTEXT EQUAL INDEXES
+File: "../Data/fasttext_cc.en.300.vec"
+Dimensions: 128
+Train Size: 396000
+Test  Size: 4000
+Building...Build complete.
+BUILDING SIFT10M INDEXES
+File: "../Data/sift10m.mat"
+Dimensions: 128
+Train Size: 11053217
+Test  Size: 111649
+Building...Build complete.
+BUILDING SIFT10M EQUAL INDEXES
+File: "../Data/sift10m.mat"
+Dimensions: 128
+Train Size: 396000
+Test  Size: 4000
+Building...Build complete.
+BUILDING SIFT10M INCREASING INDEXES 100k
+File: "../Data/sift10m.mat"
+Dimensions: 128
+Train Size: 99000
+Test  Size: 1000
+Building...Build complete.
+BUILDING SIFT10M INCREASING INDEXES 200k
+File: "../Data/sift10m.mat"
+Dimensions: 128
+Train Size: 198000
+Test  Size: 2000
+Building...Build complete.
+BUILDING SIFT10M INCREASING INDEXES 500k
+File: "../Data/sift10m.mat"
+Dimensions: 128
+Train Size: 495000
+Test  Size: 5000
+Building...Build complete.
+BUILDING SIFT10M INCREASING INDEXES 1m
+File: "../Data/sift10m.mat"
+Dimensions: 128
+Train Size: 990000
+Test  Size: 10000
+Building...Build complete.
+BUILDING SIFT10M INCREASING INDEXES 2m
+File: "../Data/sift10m.mat"
+Dimensions: 128
+Train Size: 1980000
+Test  Size: 20000
+Building...Build complete.
+BUILDING SIFT10M INCREASING INDEXES 5m
+File: "../Data/sift10m.mat"
+Dimensions: 128
+Train Size: 4950000
+Test  Size: 50000
+Building...Build complete.
+BUILDING SIFT10M INCREASING INDEXES 10m
+File: "../Data/sift10m.mat"
+Dimensions: 128
+Train Size: 9900000
+Test  Size: 100000
+Building...Build complete.
