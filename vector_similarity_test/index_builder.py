@@ -28,7 +28,7 @@ HNSW = None
 HNSWSQ = None
 HNSWPQ = None
 
-TRUTH_FILE_NAME = "truth_I,D.pkl"
+TRUTH_FILE_NAME = "truth_I.pkl"
 
 
 # Recall helpers
