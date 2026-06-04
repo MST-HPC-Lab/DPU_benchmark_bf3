@@ -97,11 +97,12 @@ if __name__ == "__main__":
     print("FAISS threads:", faiss.omp_get_max_threads()) 
 
     #sophia edit: refactored to load indexes built by index_builder.py, and to run searches with timing and recall measurement, but without rebuilding indexes (since that can be time consuming and we want to separate build vs. search time in our measurements)
-    from index_builder import (
-        brute_force_search,
-        search, #hnsw_search,
-        #test_search,
-    )
+    # from index_builder import (
+    #     # brute_force_search,
+    #     search, #hnsw_search,
+    #     #test_search,
+    # )
+    from index_builder import search
     import index_builder as ib
     from mem_utils import MemoryMonitor
 
