@@ -22,18 +22,22 @@ else # NOT BLUEFIELD
     # scp -r ./indexes/sift/*.index ./indexes/sift/*.json ./indexes/sift/*.pkl ./indexes/sift/x_query.npy ubuntu@192.168.100.2:~/DPU_benchmark_bf3/vector_similarity_test/
     # scp -r ./indexes/*/*.index ./indexes/*/*.json ./indexes/*/*.pkl ./indexes/*/x_query.npy ubuntu@192.168.100.2:~/DPU_benchmark_bf3/vector_similarity_test/
     scp -r ./indexes ubuntu@192.168.100.2:~/DPU_benchmark_bf3/vector_similarity_test/
+
+    echo "STARTING SEARCHER ON BLUEFIELD"
+    ssh ubuntu@192.168.100.2 "cd DPU_benchmark_bf3/vector_similarity_test; nohup ./combined_suite.sh > results/combined_suite_bf3.log 2>&1 &"
 fi
 
+echo "STARTING SEARCHER"
 ./search_suite.sh
 
+echo "STARTING MULTIINDEXTEST"
 ./multitest_suite.sh
 
-if ! grep -q "BlueField" /sys/class/dmi/id/product_name; then # NOT BLUEFIELD
-    echo "COPYING RESULTS TO BF3"
-    scp results/results.json ubuntu@192.168.100.2:~/DPU_benchmark_bf3/vector_similarity_test/results/results.json
-    
-    echo "STARTING SEARCHER ON BLUEFIELD"
-    ssh ubuntu@192.168.100.2 "cd DPU_benchmark_bf3/vector_similarity_test; nohup ./combined_suite.sh > results/combined_suite.log 2>&1 &"
-fi
+# if ! grep -q "BlueField" /sys/class/dmi/id/product_name; then # NOT BLUEFIELD
+#     echo "COPYING RESULTS TO BF3"
+#     scp results/results.json ubuntu@192.168.100.2:~/DPU_benchmark_bf3/vector_similarity_test/results/results.json
+#     #
+#     #
+# fi
 
 echo "ALL DONE!"
