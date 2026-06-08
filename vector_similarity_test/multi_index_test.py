@@ -22,62 +22,68 @@ def avg_time(fn, reps=3): # No cache warmup here, but later reps will be warm, s
 
 
 # TEST
-def test_suite(filename="glove.6B.200d.txt", only=None, k=10, r=3):
+def test_suite(filename="glove.6B.200d.txt", indexes_dir="unknown", only=None, k=10, r=3):
     if "../Data/" not in filename: path = f"../Data/{filename}"
     else: path = filename
 
-    if path[-4:] == ".mat": # Load matlab file
-        # mat_data = loadmat(path)['fea'].T
-        with h5py.File(path, 'r') as f:
-            mat_data = np.array(f['fea'])
+    # if path[-4:] == ".mat": # Load matlab file
+    #     # mat_data = loadmat(path)['fea'].T
+    #     with h5py.File(path, 'r') as f:
+    #         mat_data = np.array(f['fea'])
 
-        d = mat_data.shape[1]
+    #     d = mat_data.shape[1]
 
-        N = len(mat_data)
-        start_i = 0 # 99
-        step = 100 # Makes 1/step test set
-        test_i = [i for i in range(start_i, N, step)] # 1% test set
-        train_i = [i for i in range(N) if (i % step != start_i)] # rest is train set
-        # test_i = [i for i in range(d-1, N, d)]
-        # train_i = [i for i in range(N) if (i + d-1) % d]
+    #     N = len(mat_data)
+    #     start_i = 0 # 99
+    #     step = 100 # Makes 1/step test set
+    #     test_i = [i for i in range(start_i, N, step)] # 1% test set
+    #     train_i = [i for i in range(N) if (i % step != start_i)] # rest is train set
+    #     # test_i = [i for i in range(d-1, N, d)]
+    #     # train_i = [i for i in range(N) if (i + d-1) % d]
+    #     ib.x_query = mat_data[test_i]
+    #     ib.x_train = mat_data[train_i]
 
-    else: # Load CSV or txt
-        # Load Data File (TODO: make this more flexible for different datasets)
-        # df = pd.read_csv("../Data/glove.6B.200d.txt", sep=" ", quoting=3, header=None)
-        # d = 300
-        df = pd.read_csv(path, sep=" ", quoting=3, skiprows=1, header=None)
-        # Split into vocab column and data
-        # vocab = df.iloc[:, 0]
-        df = df.drop(0, axis=1)
+    # else: # Load CSV or txt
+    #     # Load Data File (TODO: make this more flexible for different datasets)
+    #     # df = pd.read_csv("../Data/glove.6B.200d.txt", sep=" ", quoting=3, header=None)
+    #     # d = 300
+    #     df = pd.read_csv(path, sep=" ", quoting=3, skiprows=1, header=None)
+    #     # Split into vocab column and data
+    #     # vocab = df.iloc[:, 0]
+    #     df = df.drop(0, axis=1)
 
-        d = df.shape[1]
+    #     d = df.shape[1]
 
-        # Fixed Split
-        N = len(df)
-        start_i = 0 # 99
-        step = 100 # Makes 1/step test set
-        test_i = [i for i in range(start_i, N, step)] # 1% test set
-        train_i = [i for i in range(N) if (i % step != start_i)] # rest is train set
-        # test_i = [i for i in range(d-1, N, d)]
-        # train_i = [i for i in range(N) if (i + d-1) % d]
+    #     # Fixed Split
+    #     N = len(df)
+    #     start_i = 0 # 99
+    #     step = 100 # Makes 1/step test set
+    #     test_i = [i for i in range(start_i, N, step)] # 1% test set
+    #     train_i = [i for i in range(N) if (i % step != start_i)] # rest is train set
+    #     # test_i = [i for i in range(d-1, N, d)]
+    #     # train_i = [i for i in range(N) if (i + d-1) % d]
 
-        ib.x_query = df.iloc[test_i]
-        ib.x_train = df.iloc[train_i]
-        del df
+    #     ib.x_query = df.iloc[test_i]
+    #     ib.x_train = df.iloc[train_i]
+    #     del df
     
-    # sharing these variables with index_builder.py
-    ib.d = d
-    # ib.k = k
+    # ib.x_query = np.ascontiguousarray(ib.x_query.to_numpy(dtype=np.float32))
+    # ib.x_train = np.ascontiguousarray(ib.x_train.to_numpy(dtype=np.float32))
 
-    ib.x_query = np.ascontiguousarray(ib.x_query.to_numpy(dtype=np.float32))
-    ib.x_train = np.ascontiguousarray(ib.x_train.to_numpy(dtype=np.float32))
+    # # sharing these variables with index_builder.py
+    # ib.d = d
+    # # ib.k = k
+
+    ib.x_query = np.load(os.path.join(indexes_dir, "x_query.npy"))
+    ib.x_train = np.load(os.path.join(indexes_dir, "x_train.npy"))
+    d = ib.x_train.shape[1]
 
     # Load ground truth answers from proper index
-    if args.indexes_dir == "unknown":
+    if indexes_dir == "unknown":
         index_name = "glove" if "glove" in filename else "fasttext" if "fasttext" in filename else "sift" if "sift" in filename else "unknown"
         if index_name == "unknown": raise ValueError("Index name could not be determined from filename. Please specify.")    
     else:
-        index_name = args.indexes_dir
+        index_name = indexes_dir
     truth_path = f"indexes/{index_name}/{ib.TRUTH_FILE_NAME}"
 
     if only is None:
@@ -104,7 +110,7 @@ def test_suite(filename="glove.6B.200d.txt", only=None, k=10, r=3):
     current_results = { # To be saved as JSON at the end; structured as results["multitest"][device][dataset_filename][k] = current_results
         "date": pd.Timestamp.now().isoformat(),
         "repeats": r,
-        "threads": str(ib.threads) if ib.threads is not None else "default",
+        "threads": "default", #str(ib.threads) if ib.threads is not None else "default",
         "dimensions": d,
         "num_vecs": len(ib.x_train) + len(ib.x_query),
         "train_size": len(ib.x_train),
@@ -323,7 +329,7 @@ if __name__ == "__main__":
                         help="Directory containing indexes and metadata")
     args = parser.parse_args()
 
-    test_suite(filename=args.file, only=args.only, k=args.k, r=args.r)
+    test_suite(filename=args.file, indexes_dir=args.indexes_dir, only=args.only, k=args.k, r=args.r)
 
 
 
