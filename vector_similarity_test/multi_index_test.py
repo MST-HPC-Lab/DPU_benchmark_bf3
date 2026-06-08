@@ -74,10 +74,6 @@ def test_suite(filename="glove.6B.200d.txt", indexes_dir="unknown", only=None, k
     # ib.d = d
     # # ib.k = k
 
-    ib.x_query = np.load(os.path.join(indexes_dir, "x_query.npy"))
-    ib.x_train = np.load(os.path.join(indexes_dir, "x_train.npy"))
-    d = ib.x_train.shape[1]
-
     # Load ground truth answers from proper index
     if indexes_dir == "unknown":
         index_name = "glove" if "glove" in filename else "fasttext" if "fasttext" in filename else "sift" if "sift" in filename else "unknown"
@@ -85,6 +81,11 @@ def test_suite(filename="glove.6B.200d.txt", indexes_dir="unknown", only=None, k
     else:
         index_name = indexes_dir
     truth_path = f"indexes/{index_name}/{ib.TRUTH_FILE_NAME}"
+    indexes_dir = f"indexes/{index_name}" if "indexes" not in indexes_dir else indexes_dir
+
+    ib.x_query = np.load(os.path.join(indexes_dir, "x_query.npy"))
+    ib.x_train = np.load(os.path.join(indexes_dir, "x_train.npy"))
+    d = ib.x_train.shape[1]
 
     if only is None:
         only = {"flat", "lsh", "pq", "ivfpq", "hnsw", "hnsw_pq", "hnsw_sq"} #"bf", 
