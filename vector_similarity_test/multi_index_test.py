@@ -86,6 +86,7 @@ def test_suite(filename="glove.6B.200d.txt", indexes_dir="unknown", only=None, k
     ib.x_query = np.load(os.path.join(indexes_dir, "x_query.npy"))
     ib.x_train = np.load(os.path.join(indexes_dir, "x_train.npy"))
     d = ib.x_train.shape[1]
+    ib.d = d
 
     if only is None:
         only = {"flat", "lsh", "pq", "ivfpq", "hnsw", "hnsw_pq", "hnsw_sq"} #"bf", 
