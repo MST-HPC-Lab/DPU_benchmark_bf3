@@ -93,9 +93,16 @@ def test_suite(filename="glove.6B.200d.txt", indexes_dir="unknown", only=None, k
     else:
         only = set(only)
 
-    assert d == 200 or d == 300, "This test suite is designed for d=200 or d=300. Please adjust pq_m_vals accordingly if using a different dimension. They must be factors of d."
+    dim_to_subspaces = {
+        128: [4, 8, 16, 32], 
+        200: [4, 5, 10, 20, 40], 
+        300: [4, 5, 10, 25, 30, 50], 
+        1000: [5, 10, 25, 40, 50],
+    }
+
+    assert d in dim_to_subspaces
     
-    pq_m_vals = [4, 5, 10, 20, 40] if d == 200 else [4, 5, 10, 25, 30, 50] if d == 300 else None # "subquantizers" or "m" in the PQ index, which is the number of subvectors the original vector is split into. It must be a factor of d.
+    pq_m_vals = dim_to_subspaces[d] # "subquantizers" or "m" in the PQ index, which is the number of subvectors the original vector is split into. It must be a factor of d.
     pq_n_bits = [4, 6, 8] # "nbits_per_index" or "nbits" in the PQ index, which is the number of bits used to encode each subvector.
 
     nlist = [int(4 * np.sqrt(len(ib.x_train))), int(8 * np.sqrt(len(ib.x_train))), int(16 * np.sqrt(len(ib.x_train)))] # "nlist" or "ncentroids" in the IVFPQ index, which is the number of Voronoi cells (or clusters) used to partition the training data. It must be less than the number of training vectors.
