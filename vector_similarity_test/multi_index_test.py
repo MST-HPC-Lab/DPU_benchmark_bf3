@@ -7,7 +7,7 @@ from timeit import repeat
 import os
 import json
 # from mat73 import loadmat
-import h5py
+# import h5py
 
 import index_builder as ib
 from device_utils import is_bluefield
