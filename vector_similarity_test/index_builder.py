@@ -128,7 +128,6 @@ def search(index, k, measure_accuracy=True):
     D, I = index.search(x_query, k)
     if measure_accuracy:
         global truth_I
-        print(truth_I)
         return batch_recall(I, truth_I[k], k)
     
 def load_truth(path):
