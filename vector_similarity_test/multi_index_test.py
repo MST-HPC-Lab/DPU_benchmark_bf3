@@ -80,7 +80,7 @@ def test_suite(filename="glove.6B.200d.txt", indexes_dir="unknown", only=None, k
         if index_name == "unknown": raise ValueError("Index name could not be determined from filename. Please specify.")    
     else:
         index_name = indexes_dir
-    truth_path = f"indexes/{index_name}/{ib.TRUTH_FILE_NAME}"
+    # truth_path = f"indexes/{index_name}/{ib.TRUTH_FILE_NAME}"
     indexes_dir = f"indexes/{index_name}" if "indexes" not in indexes_dir else indexes_dir
 
     ib.x_query = np.load(os.path.join(indexes_dir, "x_query.npy"))
@@ -114,7 +114,7 @@ def test_suite(filename="glove.6B.200d.txt", indexes_dir="unknown", only=None, k
     sq_vals = [faiss.ScalarQuantizer.QT_4bit, faiss.ScalarQuantizer.QT_8bit]
 
     print(f"(All times averaged over {r} repeats)")
-    ib.load_truth(truth_path)
+    # ib.load_truth(truth_path)
 
     current_results = { # To be saved as JSON at the end; structured as results["multitest"][device][dataset_filename][k] = current_results
         "date": pd.Timestamp.now().isoformat(),
@@ -288,15 +288,16 @@ def test_suite(filename="glove.6B.200d.txt", indexes_dir="unknown", only=None, k
         current_results["hnsw_sq_recalls"] = recalls.tolist()
         current_results["hnsw_sq_times"] = times.tolist()
 
+    device = "bf3" if is_bluefield() else "host"
+
     # Load existing results JSON file
-    results_path = os.path.join("results", "results.json")
+    results_path = os.path.join("results", f"results_{device}.json")
     if os.path.exists(results_path):
         with open(results_path, "r") as f:
             results = json.load(f) #, object_hook=lambda d: SimpleNamespace(**d))
     else:
+        print(f"WARNING: Could not find results file! We might be overwriting it if permissions did not allow reading.")
         results = {}
-
-    device = "bf3" if is_bluefield() else "host"
 
     # Find location in data structure
     if "multitest" not in results:

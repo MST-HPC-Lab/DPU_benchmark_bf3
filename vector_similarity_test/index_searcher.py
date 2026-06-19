@@ -324,9 +324,10 @@ if __name__ == "__main__":
     #     mem.log("queries_finished")
     # bf_time, lsh_recall, lsh_time, pq_recall, pq_time, ivfpq_recall, ivfpq_time, hnsw_recall, hnsw_time = zip(*results)
 
+    device = "bf3" if is_bluefield() else "host"
 
     # Load Results JSON file
-    results_path = os.path.join("results", "results.json")
+    results_path = os.path.join("results", f"results_{device}.json")
     if os.path.exists(results_path):
         with open(results_path, "r") as f:
             results = json.load(f) #, object_hook=lambda d: SimpleNamespace(**d))
@@ -334,7 +335,6 @@ if __name__ == "__main__":
         results = {} #SimpleNamespace()
 
     # Gather current results and insert into loaded JSON
-    device = "bf3" if is_bluefield() else "host"
     dataset = str(meta["source_file"])
     dimensions = str(meta["d"])
     num_vecs = str(meta["num_vecs"])
