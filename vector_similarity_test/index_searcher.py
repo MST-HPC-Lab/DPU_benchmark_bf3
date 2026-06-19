@@ -408,3 +408,12 @@ if __name__ == "__main__":
     # Save results to JSON
     with open(results_path, "w") as f:
         json.dump(results, f, indent=4)
+
+
+
+else: # Imported module, not script behavior
+    # import faiss
+    import numpy as np
+    # print("FAISS threads:", faiss.omp_get_max_threads()) 
+    # from index_builder import search
+    # import index_builder as ib

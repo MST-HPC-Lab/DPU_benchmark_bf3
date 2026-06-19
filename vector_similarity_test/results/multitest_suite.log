@@ -1,0 +1,23 @@
+nohup: ignoring input
+RUNNING sift MULTI-INDEX TESTS WITH k=10
+(All times averaged over 3 repeats)
+
+Flat (Brute Force)
+(All times averaged over 3 repeats)
+
+LSH
+(All times averaged over 3 repeats)
+
+PQ
+(All times averaged over 3 repeats)
+
+IVFPQ
+(All times averaged over 3 repeats)
+
+HNSW
+(All times averaged over 3 repeats)
+
+HNSW+PQ
+(All times averaged over 3 repeats)
+
+HNSW+SQ
