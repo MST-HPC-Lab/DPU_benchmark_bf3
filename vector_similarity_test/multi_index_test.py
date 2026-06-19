@@ -306,9 +306,9 @@ def test_suite(filename="glove.6B.200d.txt", indexes_dir="unknown", only=None, k
         results["multitest"][device] = {}
     if filename not in results["multitest"][device]:
         results["multitest"][device][filename] = {}
-    if k not in results["multitest"][device][filename]:
-        results["multitest"][device][filename][k] = {}
-    slot = results["multitest"][device][filename][k]
+    if str(k) not in results["multitest"][device][filename]:
+        results["multitest"][device][filename][str(k)] = {}
+    slot = results["multitest"][device][filename][str(k)]
     # Any runs modifying other values than these will be rewritten!
 
     for key, value in current_results.items():
