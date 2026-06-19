@@ -1,0 +1,88 @@
+nohup: ignoring input
+RUNNING glove MULTI-INDEX TESTS WITH k=10
+Traceback (most recent call last):
+  File "/home/ubuntu/DPU_benchmark_bf3/vector_similarity_test/multi_index_test.py", line 10, in <module>
+    import h5py
+ModuleNotFoundError: No module named 'h5py'
+Traceback (most recent call last):
+  File "/home/ubuntu/DPU_benchmark_bf3/vector_similarity_test/multi_index_test.py", line 10, in <module>
+    import h5py
+ModuleNotFoundError: No module named 'h5py'
+Traceback (most recent call last):
+  File "/home/ubuntu/DPU_benchmark_bf3/vector_similarity_test/multi_index_test.py", line 10, in <module>
+    import h5py
+ModuleNotFoundError: No module named 'h5py'
+Traceback (most recent call last):
+  File "/home/ubuntu/DPU_benchmark_bf3/vector_similarity_test/multi_index_test.py", line 10, in <module>
+    import h5py
+ModuleNotFoundError: No module named 'h5py'
+Traceback (most recent call last):
+  File "/home/ubuntu/DPU_benchmark_bf3/vector_similarity_test/multi_index_test.py", line 10, in <module>
+    import h5py
+ModuleNotFoundError: No module named 'h5py'
+Traceback (most recent call last):
+  File "/home/ubuntu/DPU_benchmark_bf3/vector_similarity_test/multi_index_test.py", line 10, in <module>
+    import h5py
+ModuleNotFoundError: No module named 'h5py'
+Traceback (most recent call last):
+  File "/home/ubuntu/DPU_benchmark_bf3/vector_similarity_test/multi_index_test.py", line 10, in <module>
+    import h5py
+ModuleNotFoundError: No module named 'h5py'
+RUNNING fasttext MULTI-INDEX TESTS WITH k=10
+Traceback (most recent call last):
+  File "/home/ubuntu/DPU_benchmark_bf3/vector_similarity_test/multi_index_test.py", line 10, in <module>
+    import h5py
+ModuleNotFoundError: No module named 'h5py'
+Traceback (most recent call last):
+  File "/home/ubuntu/DPU_benchmark_bf3/vector_similarity_test/multi_index_test.py", line 10, in <module>
+    import h5py
+ModuleNotFoundError: No module named 'h5py'
+Traceback (most recent call last):
+  File "/home/ubuntu/DPU_benchmark_bf3/vector_similarity_test/multi_index_test.py", line 10, in <module>
+    import h5py
+ModuleNotFoundError: No module named 'h5py'
+Traceback (most recent call last):
+  File "/home/ubuntu/DPU_benchmark_bf3/vector_similarity_test/multi_index_test.py", line 10, in <module>
+    import h5py
+ModuleNotFoundError: No module named 'h5py'
+Traceback (most recent call last):
+  File "/home/ubuntu/DPU_benchmark_bf3/vector_similarity_test/multi_index_test.py", line 10, in <module>
+    import h5py
+ModuleNotFoundError: No module named 'h5py'
+Traceback (most recent call last):
+  File "/home/ubuntu/DPU_benchmark_bf3/vector_similarity_test/multi_index_test.py", line 10, in <module>
+    import h5py
+ModuleNotFoundError: No module named 'h5py'
+Traceback (most recent call last):
+  File "/home/ubuntu/DPU_benchmark_bf3/vector_similarity_test/multi_index_test.py", line 10, in <module>
+    import h5py
+ModuleNotFoundError: No module named 'h5py'
+RUNNING sift MULTI-INDEX TESTS WITH k=10
+Traceback (most recent call last):
+  File "/home/ubuntu/DPU_benchmark_bf3/vector_similarity_test/multi_index_test.py", line 10, in <module>
+    import h5py
+ModuleNotFoundError: No module named 'h5py'
+Traceback (most recent call last):
+  File "/home/ubuntu/DPU_benchmark_bf3/vector_similarity_test/multi_index_test.py", line 10, in <module>
+    import h5py
+ModuleNotFoundError: No module named 'h5py'
+Traceback (most recent call last):
+  File "/home/ubuntu/DPU_benchmark_bf3/vector_similarity_test/multi_index_test.py", line 10, in <module>
+    import h5py
+ModuleNotFoundError: No module named 'h5py'
+Traceback (most recent call last):
+  File "/home/ubuntu/DPU_benchmark_bf3/vector_similarity_test/multi_index_test.py", line 10, in <module>
+    import h5py
+ModuleNotFoundError: No module named 'h5py'
+Traceback (most recent call last):
+  File "/home/ubuntu/DPU_benchmark_bf3/vector_similarity_test/multi_index_test.py", line 10, in <module>
+    import h5py
+ModuleNotFoundError: No module named 'h5py'
+Traceback (most recent call last):
+  File "/home/ubuntu/DPU_benchmark_bf3/vector_similarity_test/multi_index_test.py", line 10, in <module>
+    import h5py
+ModuleNotFoundError: No module named 'h5py'
+Traceback (most recent call last):
+  File "/home/ubuntu/DPU_benchmark_bf3/vector_similarity_test/multi_index_test.py", line 10, in <module>
+    import h5py
+ModuleNotFoundError: No module named 'h5py'
