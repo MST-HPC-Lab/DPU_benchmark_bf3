@@ -1,19 +1,11 @@
-This repo contains three directories:
+This repo contains several directories:
 
-Documents
----------
-You may find some useful tools, survey papers and previous work about Geospatial Operations and Data Processing Units.
+**vector_similarity_test:** Our benchmarking pipeline for comparing FAISS ANN algorithms on the BF3 DPU and its host.
 
+**Data:** Directory in which to install raw data files, also including some preprocessing code. Actual data files are not included in the repo due to size.
 
-MPI
----------
-This directory contains programs that performs geospatial operations using MPI library. The work done by the programs and the installation information are in the first lines of the code files.
+**mpi:** This directory contains programs that performs geospatial operations using MPI library. The work done by the programs and the installation information are in the first lines of the code files.
 
+**spatial_operator, gRPC server-client example, tutorial_grpc_test, derda_grpc:** These directories relate to attempted experiments using gRPC for DPU offloading of geospatial operations with various setups.
 
-gRPC
----------
-This project includes experiments involving geospatial operations with various setups. These experiments are explained below. 
-
-To install, please follow the steps specified in https://grpc.io/docs/languages/cpp/quickstart/
-
-Then, to run the experiments, you can replace the content of the existing files with these experiments and build again.
+**Documents, dma:** You may find some useful tools, survey papers and previous work about Geospatial Operations and Data Processing Units here.
