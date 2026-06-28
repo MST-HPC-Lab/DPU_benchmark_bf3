@@ -1,20 +1,28 @@
 #include <stdio.h>
-#include <unistd.h>
-#include <sys/utsname.h>
+#include <stdlib.h>
+#include <doca_log.h>
+#include <doca_error.h>
 
-int main(void) {
-    struct utsname info;
+/* Define application log name */
+DOCA_LOG_REGISTER(HELLO_WORLD);
 
-    printf("Hello from BlueField DPU Arm cores!\n");
+int main(int argc, char **argv) {
+    doca_error_t result;
 
-    if (uname(&info) == 0) {
-        printf("System:  %s\n", info.sysname);
-        printf("Node:    %s\n", info.nodename);
-        printf("Release: %s\n", info.release);
-        printf("Machine: %s\n", info.machine);
+    /* Register a logger to display DOCA messages */
+    result = doca_log_backend_create_standard();
+    if (result != DOCA_SUCCESS) {
+        printf("Failed to register standard log backend\n");
+        return EXIT_FAILURE;
     }
 
-    printf("PID: %d\n", getpid());
+    /* Set global log level */
+    doca_log_global_set_level(DOCA_LOG_LEVEL_INFO);
 
-    return 0;
+    DOCA_LOG_INFO("Hello, DOCA World!");
+
+    /* Standard cleanup */
+    // Free resources here...
+
+    return EXIT_SUCCESS;
 }
