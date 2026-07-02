@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <doca_error.h>
 #include <doca_log.h>
@@ -103,8 +104,15 @@ int main(void)
     fclose(fp);
     fp = NULL;
 
+
     DOCA_LOG_INFO("Exported mmap descriptor to %s, size = %zu bytes",
-                  EXPORT_FILE, export_desc_len);
+              EXPORT_FILE, export_desc_len);
+
+    DOCA_LOG_INFO("Keep this host program running.");
+    DOCA_LOG_INFO("Now copy mmap_export.bin to BlueField and run bf_import_mmap.");
+    DOCA_LOG_INFO("Press Enter here only after BlueField import is done.");
+
+    getchar();
 
 cleanup:
     if (fp != NULL)
