@@ -173,16 +173,31 @@ finish_plot("recall_vs_k.png")
 # NOTES: These vary hugely by parameters, dataset size, dataset semantics
 
 
-#------------- Alg Recall vs. K (Dataset-Size-Equalized) (BAR) --------#
-rs_E = get_kvaried_run("host", SIFT,     EQUALIZED_D, EQUALIZED_N, DEFAULT_THREADS)
-rf_E = get_kvaried_run("host", FASTTEXT, EQUALIZED_D, EQUALIZED_N, DEFAULT_THREADS)
-rg_E = get_kvaried_run("host", GLOVE,    EQUALIZED_D, EQUALIZED_N, DEFAULT_THREADS)
-
+#------------- Alg Recall, Semantic Comparison (BAR) --------#
 hatches = ["", "////", 'xxxx']
 x = np.arange(len(ALG_NAMES)-1)  # the label locations
 width = 0.25  # the width of the bars
 fig, ax = plt.subplots(figsize=(6, 4))
-plt.title(f"Recall Comparison on Equalized Datasets\n(Device-Independent; k={DEFAULT_K})")
+plt.title(f"Recall Semantic Comparison\n(Device-Independent; k={DEFAULT_K})")
+plt.grid(True, axis='y', alpha=0.6)
+bars1 = ax.bar(x - width, [rs[alg][-1] for alg in ALG_RECALLS[1:]], width*.8, label='SIFT', color=ALG_COLORS[1:], hatch=hatches[0], edgecolor='white')
+bars2 = ax.bar(x, [rf[alg][-1] for alg in ALG_RECALLS[1:]], width*.8, label='FastText', color=ALG_COLORS[1:], hatch=hatches[1], edgecolor='white')
+bars3 = ax.bar(x + width, [rg[alg][-1] for alg in ALG_RECALLS[1:]], width*.8, label='GloVe', color=ALG_COLORS[1:], hatch=hatches[2], edgecolor='white')
+ax.set_xticks(x)
+ax.set_xticklabels(ALG_NAMES[1:])
+ax.set_ylabel(f"{DEFAULT_K}-Recall@{DEFAULT_K}")
+ax.set_ylim(0, 1)
+plt.legend(loc='upper left')
+finish_plot("recall_semantic.png")
+
+
+#------------- Alg Recall, Semantic Comparison (Dataset-Size-Equalized) (BAR) --------#
+rs_E = get_kvaried_run("host", SIFT,     EQUALIZED_D, EQUALIZED_N, DEFAULT_THREADS)
+rf_E = get_kvaried_run("host", FASTTEXT, EQUALIZED_D, EQUALIZED_N, DEFAULT_THREADS)
+rg_E = get_kvaried_run("host", GLOVE,    EQUALIZED_D, EQUALIZED_N, DEFAULT_THREADS)
+
+fig, ax = plt.subplots(figsize=(6, 4))
+plt.title(f"Recall Semantic Comparison on Equalized Datasets\n(Device-Independent; k={DEFAULT_K})")
 plt.grid(True, axis='y', alpha=0.6)
 bars1 = ax.bar(x - width, [rs_E[alg][-1] for alg in ALG_RECALLS[1:]], width*.8, label='SIFT', color=ALG_COLORS[1:], hatch=hatches[0], edgecolor='white')
 bars2 = ax.bar(x, [rf_E[alg][-1] for alg in ALG_RECALLS[1:]], width*.8, label='FastText', color=ALG_COLORS[1:], hatch=hatches[1], edgecolor='white')
@@ -192,7 +207,7 @@ ax.set_xticklabels(ALG_NAMES[1:])
 ax.set_ylabel(f"{DEFAULT_K}-Recall@{DEFAULT_K}")
 ax.set_ylim(0, 1)
 plt.legend(loc='upper left')
-finish_plot("recall_vs_k_equalized.png")
+finish_plot("recall_semantic_equalized.png")
 
 
 #------------- Alg Recall vs. K (Data Scaling) --------#
@@ -287,14 +302,20 @@ plt.scatter([], [], color='black', alpha=0, label=' ')
 
 # Plot Chosen params
 for size, alpha, host_data, bf3_data in ((30, 1.0, rs, rs_b), (20, .5, rf, rf_b), (10, .2, rg, rg_b)):
-    for alg, times, color, m, name in zip(ALG_RECALLS[1:], ALG_TIMES[1:], ALG_COLORS[1:], ALG_MARKERS[1:], ALG_NAMES[1:]):
-        t = queries_per_second(host_data[times], host_data["query_size"], ms=False)
-        plt.scatter([host_data[alg][ki]], [t[ki]], alpha=alpha, color=color, s=size, marker=m, label=name if alpha==1.0 else "_")
-        # Bluefield point
-        tb = queries_per_second(bf3_data[times], bf3_data["query_size"], ms=False)
-        plt.scatter([bf3_data[alg][ki]], [tb[ki]], alpha=alpha, edgecolors=color, facecolors='none', s=size, marker=m, label="_")
-        # Connecting line
-        plt.plot([host_data[alg][ki], bf3_data[alg][ki]], [t[ki], tb[ki]], color=color, alpha=alpha)
+    for alg, times, color, m, name in zip(ALG_RECALLS, ALG_TIMES, ALG_COLORS, ALG_MARKERS, ALG_NAMES):
+        try:
+            t = queries_per_second(host_data[times], host_data["query_size"], ms=False)
+            plt.scatter([host_data[alg][ki]], [t[ki]], alpha=alpha, color=color, s=size, marker=m, label=name if alpha==1.0 else "_")
+        except KeyError: pass
+        try:
+            # Bluefield point
+            tb = queries_per_second(bf3_data[times], bf3_data["query_size"], ms=False)
+            plt.scatter([bf3_data[alg][ki]], [tb[ki]], alpha=alpha, edgecolors=color, facecolors='none', s=size, marker=m, label="_")
+        except KeyError: pass
+        try:
+            # Connecting line
+            plt.plot([host_data[alg][ki], bf3_data[alg][ki]], [t[ki], tb[ki]], color=color, alpha=alpha)
+        except KeyError: pass
 setup_plot(
     title=f"Query Time Device Comparison (k={DEFAULT_K})",
     xlabel=f"{DEFAULT_K}-Recall@{DEFAULT_K}",
@@ -324,14 +345,20 @@ plt.scatter([], [], color='black', alpha=0, label=' ')
 # plt.scatter([], [], color='black', alpha=0, label=' ')
 
 for host_data, bf3_data, size, alpha in zip(rs_scale, rs_b_scale, sizes, alphas):
-    for alg, times, color, m, name in zip(ALG_RECALLS[1:], ALG_TIMES[1:], ALG_COLORS[1:], ALG_MARKERS[1:], ALG_NAMES[1:]):
-        t = queries_per_second(host_data[times], host_data["query_size"], ms=False)
-        plt.scatter([host_data[alg][0]], [t[0]], alpha=alpha, color=color, s=size, marker=m, label=name if alpha==1.0 else "_")
-        # Bluefield point
-        tb = queries_per_second(bf3_data[times], bf3_data["query_size"], ms=False)
-        plt.scatter([bf3_data[alg][0]], [tb[0]], alpha=alpha, edgecolors=color, facecolors='none', s=size, marker=m, label="_")
-        # Connecting line
-        plt.plot([host_data[alg][0], bf3_data[alg][0]], [t[0], tb[0]], color=color, alpha=alpha)
+    for alg, times, color, m, name in zip(ALG_RECALLS, ALG_TIMES, ALG_COLORS, ALG_MARKERS, ALG_NAMES):
+        try:
+            t = queries_per_second(host_data[times], host_data["query_size"], ms=False)
+            plt.scatter([host_data[alg][0]], [t[0]], alpha=alpha, color=color, s=size, marker=m, label=name if alpha==1.0 else "_")
+        except KeyError: pass
+        try:
+            # Bluefield point
+            tb = queries_per_second(bf3_data[times], bf3_data["query_size"], ms=False)
+            plt.scatter([bf3_data[alg][0]], [tb[0]], alpha=alpha, edgecolors=color, facecolors='none', s=size, marker=m, label="_")
+        except KeyError: pass
+        try:
+            # Connecting line
+            plt.plot([host_data[alg][0], bf3_data[alg][0]], [t[0], tb[0]], color=color, alpha=alpha)
+        except KeyError: pass
 setup_plot(
     title=f"Query Time Device Comparison (k={DEFAULT_K})\n(SIFT Dataset Scaling 100k-10M: Bolder is Larger)",
     xlabel=f"{DEFAULT_K}-Recall@{DEFAULT_K}",
@@ -368,14 +395,20 @@ plt.scatter([], [], color='black', alpha=0, label=' ')
 # plt.scatter([], [], color='black', alpha=0, label=' ')
 
 for host_data, bf3_data, size, alpha in zip(rs_scale_16, rs_b_scale_16, sizes, alphas):
-    for alg, times, color, m, name in zip(ALG_RECALLS[1:], ALG_TIMES[1:], ALG_COLORS[1:], ALG_MARKERS[1:], ALG_NAMES[1:]):
-        t = queries_per_second(host_data[times], host_data["query_size"], ms=False)
-        plt.scatter([host_data[alg][0]], [t[0]], alpha=alpha, color=color, s=size, marker=m, label=name if alpha==1.0 else "_")
-        # Bluefield point
-        tb = queries_per_second(bf3_data[times], bf3_data["query_size"], ms=False)
-        plt.scatter([bf3_data[alg][0]], [tb[0]], alpha=alpha, edgecolors=color, facecolors='none', s=size, marker=m, label="_")
-        # Connecting line
-        plt.plot([host_data[alg][0], bf3_data[alg][0]], [t[0], tb[0]], color=color, alpha=alpha)
+    for alg, times, color, m, name in zip(ALG_RECALLS, ALG_TIMES, ALG_COLORS, ALG_MARKERS, ALG_NAMES):
+        try:
+            t = queries_per_second(host_data[times], host_data["query_size"], ms=False)
+            plt.scatter([host_data[alg][0]], [t[0]], alpha=alpha, color=color, s=size, marker=m, label=name if alpha==1.0 else "_")
+        except KeyError: pass
+        try:
+            # Bluefield point
+            tb = queries_per_second(bf3_data[times], bf3_data["query_size"], ms=False)
+            plt.scatter([bf3_data[alg][0]], [tb[0]], alpha=alpha, edgecolors=color, facecolors='none', s=size, marker=m, label="_")
+        except KeyError: pass
+        try:
+            # Connecting line
+            plt.plot([host_data[alg][0], bf3_data[alg][0]], [t[0], tb[0]], color=color, alpha=alpha)
+        except KeyError: pass
 setup_plot(
     title=f"Query Time Device Comparison, Equalized to 16 Threads\n(k={DEFAULT_K}, SIFT scaling)",
     xlabel=f"{DEFAULT_K}-Recall@{DEFAULT_K}",
