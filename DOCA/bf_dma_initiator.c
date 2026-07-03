@@ -13,7 +13,6 @@
 #include <doca_mmap.h>
 #include <doca_buf.h>
 #include <doca_buf_inventory.h>
-#include <doca_task.h>
 
 DOCA_LOG_REGISTER(BF_DMA_INITIATOR);
 
