@@ -199,10 +199,12 @@ int main(void)
     if (result != DOCA_SUCCESS)
         return EXIT_FAILURE;
 
+    union doca_data task_user_data = {0};
+
     result = doca_dma_task_memcpy_alloc_init(dma,
                                              remote_src_buf,
                                              local_dst_buf,
-                                             NULL,
+                                             task_user_data,
                                              &task);
     if (result != DOCA_SUCCESS) {
         DOCA_LOG_ERR("Failed to allocate DMA task: %s", doca_error_get_descr(result));
