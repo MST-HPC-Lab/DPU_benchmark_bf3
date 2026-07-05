@@ -78,17 +78,11 @@ int main(void)
     if (result != DOCA_SUCCESS)
         return EXIT_FAILURE;
 
-    fp = fopen(EXPORT_FILE, "rb");
-    if (fp == NULL) {
-        DOCA_LOG_ERR("Failed to open export file");
-        return EXIT_FAILURE;
-    }
-
     fread(&hdr, sizeof(hdr), 1, fp);
+    
 
     export_desc = malloc(hdr.export_desc_len);
     fread(export_desc, 1, hdr.export_desc_len, fp);
-    fclose(fp);
 
     DOCA_LOG_INFO("Remote host address: 0x%lx", hdr.remote_addr);
     DOCA_LOG_INFO("Remote length: %lu", hdr.remote_len);

@@ -94,10 +94,8 @@ int main(void)
     hdr.remote_len = BUFFER_SIZE;
     hdr.export_desc_len = export_desc_len;
 
-    fp = fopen(EXPORT_FILE, "wb");
-    fwrite(&hdr, sizeof(hdr), 1, fp);
-    fwrite(export_desc, 1, export_desc_len, fp);
-    fclose(fp);
+    send(client_fd, &hdr, sizeof(hdr), 0);
+    send(client_fd, export_desc, export_desc_len, 0);
 
     DOCA_LOG_INFO("Host buffer address: %p", buffer);
     DOCA_LOG_INFO("Export file written: %s", EXPORT_FILE);
