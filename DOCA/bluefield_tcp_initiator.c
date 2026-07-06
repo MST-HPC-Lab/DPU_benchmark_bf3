@@ -184,10 +184,9 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
 
     for (uint32_t i = 0; i < nb_devs; i++) {
-        uint8_t supported = 0;
 
-        result = doca_dma_cap_task_memcpy_is_supported(dev_list[i], &supported);
-        if (result == DOCA_SUCCESS && supported) {
+        result = doca_dma_cap_task_memcpy_is_supported(dev_list[i]);
+        if (result == DOCA_SUCCESS) {
             result = doca_dev_open(dev_list[i], &dev);
             if (result == DOCA_SUCCESS) {
                 DOCA_LOG_INFO("Opened DMA-capable device %u", i);
