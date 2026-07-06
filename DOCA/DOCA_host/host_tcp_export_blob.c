@@ -1,53 +1,53 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <string.h>
+#include <stdint.h>
 #include <unistd.h>
 #include <errno.h>
+
 #include <arpa/inet.h>
+#include <sys/types.h>
 #include <sys/socket.h>
+#include <netinet/in.h>
 
 #include <doca_error.h>
 #include <doca_log.h>
 #include <doca_dev.h>
 #include <doca_mmap.h>
+#include <doca_types.h>
 
-DOCA_LOG_REGISTER(HOST_TCP_EXPORT);
+DOCA_LOG_REGISTER(HOST_DMA_RESPONDER);
 
-#define DEFAULT_PORT 5555
-#define BUFFER_SIZE 4096
+#define BUFFER_SIZE 1024
+#define TCP_PORT 5555
+
+struct export_file_header {
+    uint64_t remote_addr;
+    uint64_t remote_len;
+    uint64_t export_desc_len;
+};
 
 static int send_all(int fd, const void *buf, size_t len)
 {
-    const char *p = buf;
+    const char *ptr = buf;
+
     while (len > 0) {
-        ssize_t n = send(fd, p, len, 0);
-        if (n <= 0)
+        ssize_t sent = send(fd, ptr, len, 0);
+        if (sent <= 0)
             return -1;
-        p += n;
-        len -= n;
+
+        ptr += sent;
+        len -= sent;
     }
+
     return 0;
 }
 
-static int recv_all(int fd, void *buf, size_t len)
-{
-    char *p = buf;
-    while (len > 0) {
-        ssize_t n = recv(fd, p, len, 0);
-        if (n <= 0)
-            return -1;
-        p += n;
-        len -= n;
-    }
-    return 0;
-}
-
-static int tcp_listen(int port)
+static int create_server_socket(void)
 {
     int server_fd;
-    struct sockaddr_in addr;
     int opt = 1;
+    struct sockaddr_in addr;
 
     server_fd = socket(AF_INET, SOCK_STREAM, 0);
     if (server_fd < 0) {
@@ -60,7 +60,7 @@ static int tcp_listen(int port)
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
     addr.sin_addr.s_addr = INADDR_ANY;
-    addr.sin_port = htons(port);
+    addr.sin_port = htons(TCP_PORT);
 
     if (bind(server_fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
         perror("bind");
@@ -77,118 +77,90 @@ static int tcp_listen(int port)
     return server_fd;
 }
 
-static doca_error_t open_doca_device(const char *pci_addr, struct doca_dev **dev)
+int main(void)
 {
-    struct doca_devinfo **devinfo_list;
-    uint32_t nb_devs;
     doca_error_t result;
-
-    result = doca_devinfo_create_list(&devinfo_list, &nb_devs);
-    if (result != DOCA_SUCCESS)
-        return result;
-
-    for (uint32_t i = 0; i < nb_devs; i++) {
-        char found_pci[DOCA_DEVINFO_PCI_ADDR_SIZE];
-
-        result = doca_devinfo_get_pci_addr_str(devinfo_list[i], found_pci);
-        if (result != DOCA_SUCCESS)
-            continue;
-
-        if (strcmp(found_pci, pci_addr) == 0) {
-            result = doca_dev_open(devinfo_list[i], dev);
-            doca_devinfo_destroy_list(devinfo_list);
-            return result;
-        }
-    }
-
-    doca_devinfo_destroy_list(devinfo_list);
-    return DOCA_ERROR_NOT_FOUND;
-}
-
-int main(int argc, char **argv)
-{
-    const char *pci_addr;
-    int port = DEFAULT_PORT;
-
+    struct doca_devinfo **dev_list;
     struct doca_dev *dev = NULL;
     struct doca_mmap *mmap = NULL;
+    uint32_t nb_devs;
 
-    char *host_buffer = NULL;
-    const void *export_blob = NULL;
-    size_t export_blob_len = 0;
+    char *buffer = NULL;
+    const void *export_desc = NULL;
+    size_t export_desc_len = 0;
 
     int server_fd = -1;
     int client_fd = -1;
-
-    doca_error_t result;
-
-    if (argc < 2) {
-        printf("Usage: %s <host_pci_addr> [port]\n", argv[0]);
-        printf("Example: %s 03:00.0 5555\n", argv[0]);
-        return EXIT_FAILURE;
-    }
-
-    pci_addr = argv[1];
-    if (argc >= 3)
-        port = atoi(argv[2]);
 
     result = doca_log_backend_create_standard();
     if (result != DOCA_SUCCESS)
         return EXIT_FAILURE;
 
-    result = open_doca_device(pci_addr, &dev);
-    if (result != DOCA_SUCCESS) {
-        printf("Failed to open DOCA device: %s\n", doca_error_get_descr(result));
+    buffer = malloc(BUFFER_SIZE);
+    if (buffer == NULL)
         return EXIT_FAILURE;
+
+    memset(buffer, 'H', BUFFER_SIZE);
+    buffer[BUFFER_SIZE - 1] = '\0';
+
+    result = doca_devinfo_create_list(&dev_list, &nb_devs);
+    if (result != DOCA_SUCCESS)
+        return EXIT_FAILURE;
+
+    for (uint32_t i = 0; i < nb_devs; i++) {
+        uint8_t supported = 0;
+
+        result = doca_mmap_cap_is_export_pci_supported(dev_list[i], &supported);
+        if (result == DOCA_SUCCESS && supported) {
+            result = doca_dev_open(dev_list[i], &dev);
+            if (result == DOCA_SUCCESS) {
+                DOCA_LOG_INFO("Opened PCI export-capable device %u", i);
+                break;
+            }
+        }
     }
 
-    host_buffer = aligned_alloc(4096, BUFFER_SIZE);
-    if (host_buffer == NULL) {
-        perror("aligned_alloc");
+    if (dev == NULL) {
+        DOCA_LOG_ERR("No PCI export-capable device found");
         return EXIT_FAILURE;
     }
-
-    snprintf(host_buffer, BUFFER_SIZE,
-             "Hello from HOST memory. This message was fetched by BlueField using DOCA DMA over exported mmap.");
-
-    printf("Host buffer VA: %p\n", host_buffer);
-    printf("Host buffer content: %s\n", host_buffer);
 
     result = doca_mmap_create(&mmap);
-    if (result != DOCA_SUCCESS) {
-        printf("doca_mmap_create failed: %s\n", doca_error_get_descr(result));
+    if (result != DOCA_SUCCESS)
         return EXIT_FAILURE;
-    }
+
+    result = doca_mmap_set_memrange(mmap, buffer, BUFFER_SIZE);
+    if (result != DOCA_SUCCESS)
+        return EXIT_FAILURE;
 
     result = doca_mmap_add_dev(mmap, dev);
-    if (result != DOCA_SUCCESS) {
-        printf("doca_mmap_add_dev failed: %s\n", doca_error_get_descr(result));
+    if (result != DOCA_SUCCESS)
         return EXIT_FAILURE;
-    }
 
-    result = doca_mmap_set_memrange(mmap, host_buffer, BUFFER_SIZE);
-    if (result != DOCA_SUCCESS) {
-        printf("doca_mmap_set_memrange failed: %s\n", doca_error_get_descr(result));
+    result = doca_mmap_set_permissions(mmap, DOCA_ACCESS_FLAG_PCI_READ_WRITE);
+    if (result != DOCA_SUCCESS)
         return EXIT_FAILURE;
-    }
 
     result = doca_mmap_start(mmap);
+    if (result != DOCA_SUCCESS)
+        return EXIT_FAILURE;
+
+    result = doca_mmap_export_pci(mmap, dev, &export_desc, &export_desc_len);
     if (result != DOCA_SUCCESS) {
-        printf("doca_mmap_start failed: %s\n", doca_error_get_descr(result));
+        DOCA_LOG_ERR("Failed to export mmap: %s", doca_error_get_descr(result));
         return EXIT_FAILURE;
     }
 
-    result = doca_mmap_export_dpu(mmap, dev, &export_blob, &export_blob_len);
-    if (result != DOCA_SUCCESS) {
-        printf("doca_mmap_export_dpu failed: %s\n", doca_error_get_descr(result));
-        return EXIT_FAILURE;
-    }
+    struct export_file_header hdr;
+    hdr.remote_addr = (uint64_t)(uintptr_t)buffer;
+    hdr.remote_len = BUFFER_SIZE;
+    hdr.export_desc_len = export_desc_len;
 
-    server_fd = tcp_listen(port);
+    server_fd = create_server_socket();
     if (server_fd < 0)
         return EXIT_FAILURE;
 
-    printf("Waiting for BlueField TCP connection on port %d...\n", port);
+    DOCA_LOG_INFO("Waiting for BlueField connection on TCP port %d", TCP_PORT);
 
     client_fd = accept(server_fd, NULL, NULL);
     if (client_fd < 0) {
@@ -196,31 +168,33 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
-    printf("BlueField connected. Sending export blob...\n");
+    DOCA_LOG_INFO("BlueField connected");
 
-    uint64_t remote_addr = (uint64_t)(uintptr_t)host_buffer;
-    uint64_t remote_len = BUFFER_SIZE;
-    uint64_t blob_len = export_blob_len;
+    if (send_all(client_fd, &hdr, sizeof(hdr)) < 0) {
+        perror("send header");
+        return EXIT_FAILURE;
+    }
 
-    send_all(client_fd, &remote_addr, sizeof(remote_addr));
-    send_all(client_fd, &remote_len, sizeof(remote_len));
-    send_all(client_fd, &blob_len, sizeof(blob_len));
-    send_all(client_fd, export_blob, export_blob_len);
+    if (send_all(client_fd, export_desc, export_desc_len) < 0) {
+        perror("send export descriptor");
+        return EXIT_FAILURE;
+    }
 
-    printf("Export blob sent successfully.\n");
-    printf("Keeping host memory alive. Waiting for BlueField completion...\n");
+    DOCA_LOG_INFO("Export descriptor sent over TCP");
+    DOCA_LOG_INFO("Host buffer address: %p", buffer);
+    DOCA_LOG_INFO("Host buffer length : %lu", hdr.remote_len);
+    DOCA_LOG_INFO("Keep this program running while BlueField performs DMA");
+    DOCA_LOG_INFO("Press Enter only after BlueField finishes");
 
-    char done;
-    recv_all(client_fd, &done, 1);
-
-    printf("BlueField signaled completion.\n");
+    getchar();
 
     close(client_fd);
     close(server_fd);
 
     doca_mmap_destroy(mmap);
     doca_dev_close(dev);
-    free(host_buffer);
+    doca_devinfo_destroy_list(dev_list);
+    free(buffer);
 
     return EXIT_SUCCESS;
 }
