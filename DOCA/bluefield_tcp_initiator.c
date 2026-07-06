@@ -261,6 +261,24 @@ int main(int argc, char **argv)
         return EXIT_FAILURE;
     }
 
+    result = doca_buf_set_data(src_buf,
+                           (void *)(uintptr_t)hdr.remote_addr,
+                           hdr.remote_len);
+    if (result != DOCA_SUCCESS) {
+        DOCA_LOG_ERR("Failed to set source buffer data: %s",
+                    doca_error_get_descr(result));
+        return EXIT_FAILURE;
+    }
+
+    result = doca_buf_set_data(dst_buf,
+                            local_buffer,
+                            hdr.remote_len);
+    if (result != DOCA_SUCCESS) {
+        DOCA_LOG_ERR("Failed to set destination buffer data: %s",
+                    doca_error_get_descr(result));
+        return EXIT_FAILURE;
+    }
+
     result = doca_dma_create(dev, &dma);
     if (result != DOCA_SUCCESS) {
         DOCA_LOG_ERR("Failed to create DMA context: %s",
