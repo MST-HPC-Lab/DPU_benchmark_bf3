@@ -3,13 +3,6 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <unistd.h>
-#include <errno.h>
-
-#include <arpa/inet.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 
 #include <doca_error.h>
 #include <doca_log.h>
@@ -17,18 +10,18 @@
 #include <doca_mmap.h>
 #include <doca_buf.h>
 #include <doca_buf_inventory.h>
-#include <doca_ctx.h>
 #include <doca_dma.h>
 #include <doca_pe.h>
 #include <doca_types.h>
+#include <doca_comm_channel.h>
 
-DOCA_LOG_REGISTER(BF_DMA_INITIATOR);
+DOCA_LOG_REGISTER(BF_CC_INITIATOR);
 
 #define LOCAL_BUFFER_SIZE 1024
-#define TCP_PORT 5555
 #define BUFFER_INVENTORY_SIZE 2
+#define SERVICE_NAME "dma_blob_service"
 
-struct export_file_header {
+struct export_blob_header {
     uint64_t remote_addr;
     uint64_t remote_len;
     uint64_t export_desc_len;
@@ -39,50 +32,30 @@ struct dma_state {
     doca_error_t result;
 };
 
-static int recv_all(int fd, void *buf, size_t len)
+static doca_error_t open_dma_device(struct doca_dev **dev)
 {
-    char *ptr = buf;
+    doca_error_t result;
+    struct doca_devinfo **dev_list;
+    uint32_t nb_devs;
 
-    while (len > 0) {
-        ssize_t received = recv(fd, ptr, len, 0);
-        if (received <= 0)
-            return -1;
+    result = doca_devinfo_create_list(&dev_list, &nb_devs);
+    if (result != DOCA_SUCCESS)
+        return result;
 
-        ptr += received;
-        len -= received;
+    for (uint32_t i = 0; i < nb_devs; i++) {
+        result = doca_dma_cap_task_memcpy_is_supported(dev_list[i]);
+        if (result == DOCA_SUCCESS) {
+            result = doca_dev_open(dev_list[i], dev);
+            if (result == DOCA_SUCCESS) {
+                DOCA_LOG_INFO("Opened DMA-capable device %u", i);
+                doca_devinfo_destroy_list(dev_list);
+                return DOCA_SUCCESS;
+            }
+        }
     }
 
-    return 0;
-}
-
-static int connect_to_host(const char *host_ip)
-{
-    int fd;
-    struct sockaddr_in addr;
-
-    fd = socket(AF_INET, SOCK_STREAM, 0);
-    if (fd < 0) {
-        perror("socket");
-        return -1;
-    }
-
-    memset(&addr, 0, sizeof(addr));
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(TCP_PORT);
-
-    if (inet_pton(AF_INET, host_ip, &addr.sin_addr) != 1) {
-        perror("inet_pton");
-        close(fd);
-        return -1;
-    }
-
-    if (connect(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
-        perror("connect");
-        close(fd);
-        return -1;
-    }
-
-    return fd;
+    doca_devinfo_destroy_list(dev_list);
+    return DOCA_ERROR_NOT_FOUND;
 }
 
 static void dma_completed_callback(struct doca_dma_task_memcpy *task,
@@ -109,13 +82,19 @@ static void dma_error_callback(struct doca_dma_task_memcpy *task,
     doca_task_free(doca_dma_task_memcpy_as_task(task));
 }
 
-int main(int argc, char **argv)
+int main(void)
 {
     doca_error_t result;
 
-    struct doca_devinfo **dev_list;
     struct doca_dev *dev = NULL;
-    uint32_t nb_devs;
+
+    struct doca_comm_channel_ep_t *ep = NULL;
+    struct doca_comm_channel_addr_t *peer_addr = NULL;
+
+    struct export_blob_header hdr;
+    void *export_desc = NULL;
+
+    char *local_buffer = NULL;
 
     struct doca_mmap *local_mmap = NULL;
     struct doca_mmap *remote_mmap = NULL;
@@ -131,41 +110,87 @@ int main(int argc, char **argv)
 
     struct dma_state state = {0};
 
-    char *local_buffer = NULL;
-    void *export_desc = NULL;
-
-    struct export_file_header hdr;
-
-    int sockfd = -1;
-
-    if (argc != 2) {
-        printf("Usage: %s <host_ip>\n", argv[0]);
-        printf("Example: %s 192.168.100.1\n", argv[0]);
-        return EXIT_FAILURE;
-    }
-
     result = doca_log_backend_create_standard();
     if (result != DOCA_SUCCESS)
         return EXIT_FAILURE;
 
-    sockfd = connect_to_host(argv[1]);
-    if (sockfd < 0)
+    result = open_dma_device(&dev);
+    if (result != DOCA_SUCCESS) {
+        DOCA_LOG_ERR("Failed to open DMA-capable device: %s",
+                     doca_error_get_descr(result));
+        return EXIT_FAILURE;
+    }
+
+    result = doca_comm_channel_ep_create(&ep);
+    if (result != DOCA_SUCCESS) {
+        DOCA_LOG_ERR("Failed to create comm channel endpoint: %s",
+                     doca_error_get_descr(result));
+        return EXIT_FAILURE;
+    }
+
+    result = doca_comm_channel_ep_set_device(ep, dev);
+    if (result != DOCA_SUCCESS)
         return EXIT_FAILURE;
 
-    DOCA_LOG_INFO("Connected to host");
-
-    if (recv_all(sockfd, &hdr, sizeof(hdr)) < 0) {
-        perror("recv header");
+    result = doca_comm_channel_ep_connect(ep, SERVICE_NAME, &peer_addr);
+    if (result != DOCA_SUCCESS) {
+        DOCA_LOG_ERR("Failed to connect to host service: %s",
+                     doca_error_get_descr(result));
         return EXIT_FAILURE;
+    }
+
+    DOCA_LOG_INFO("Connected to host using DOCA Comm Channel");
+
+    char hello[] = "hello";
+
+    result = doca_comm_channel_ep_sendto(ep,
+                                         hello,
+                                         sizeof(hello),
+                                         DOCA_CC_MSG_FLAG_NONE,
+                                         peer_addr);
+    if (result != DOCA_SUCCESS) {
+        DOCA_LOG_ERR("Failed to send hello: %s", doca_error_get_descr(result));
+        return EXIT_FAILURE;
+    }
+
+    size_t hdr_len = sizeof(hdr);
+
+    while (1) {
+        result = doca_comm_channel_ep_recvfrom(ep,
+                                               &hdr,
+                                               &hdr_len,
+                                               DOCA_CC_MSG_FLAG_NONE,
+                                               &peer_addr);
+        if (result == DOCA_SUCCESS)
+            break;
+
+        if (result != DOCA_ERROR_AGAIN) {
+            DOCA_LOG_ERR("Failed to receive header: %s",
+                         doca_error_get_descr(result));
+            return EXIT_FAILURE;
+        }
     }
 
     export_desc = malloc(hdr.export_desc_len);
     if (export_desc == NULL)
         return EXIT_FAILURE;
 
-    if (recv_all(sockfd, export_desc, hdr.export_desc_len) < 0) {
-        perror("recv export descriptor");
-        return EXIT_FAILURE;
+    size_t desc_len = hdr.export_desc_len;
+
+    while (1) {
+        result = doca_comm_channel_ep_recvfrom(ep,
+                                               export_desc,
+                                               &desc_len,
+                                               DOCA_CC_MSG_FLAG_NONE,
+                                               &peer_addr);
+        if (result == DOCA_SUCCESS)
+            break;
+
+        if (result != DOCA_ERROR_AGAIN) {
+            DOCA_LOG_ERR("Failed to receive export descriptor: %s",
+                         doca_error_get_descr(result));
+            return EXIT_FAILURE;
+        }
     }
 
     DOCA_LOG_INFO("Received export descriptor");
@@ -173,32 +198,16 @@ int main(int argc, char **argv)
     DOCA_LOG_INFO("Remote length : %lu", hdr.remote_len);
     DOCA_LOG_INFO("Export length : %lu", hdr.export_desc_len);
 
+    if (hdr.remote_len > LOCAL_BUFFER_SIZE) {
+        DOCA_LOG_ERR("Remote buffer is larger than local buffer");
+        return EXIT_FAILURE;
+    }
+
     local_buffer = malloc(LOCAL_BUFFER_SIZE);
     if (local_buffer == NULL)
         return EXIT_FAILURE;
 
     memset(local_buffer, 0, LOCAL_BUFFER_SIZE);
-
-    result = doca_devinfo_create_list(&dev_list, &nb_devs);
-    if (result != DOCA_SUCCESS)
-        return EXIT_FAILURE;
-
-    for (uint32_t i = 0; i < nb_devs; i++) {
-
-        result = doca_dma_cap_task_memcpy_is_supported(dev_list[i]);
-        if (result == DOCA_SUCCESS) {
-            result = doca_dev_open(dev_list[i], &dev);
-            if (result == DOCA_SUCCESS) {
-                DOCA_LOG_INFO("Opened DMA-capable device %u", i);
-                break;
-            }
-        }
-    }
-
-    if (dev == NULL) {
-        DOCA_LOG_ERR("No DMA-capable device found");
-        return EXIT_FAILURE;
-    }
 
     result = doca_mmap_create(&local_mmap);
     if (result != DOCA_SUCCESS)
@@ -253,7 +262,7 @@ int main(int argc, char **argv)
     result = doca_buf_inventory_buf_get_by_addr(buf_inv,
                                                 local_mmap,
                                                 local_buffer,
-                                                LOCAL_BUFFER_SIZE,
+                                                hdr.remote_len,
                                                 &dst_buf);
     if (result != DOCA_SUCCESS) {
         DOCA_LOG_ERR("Failed to create destination buffer: %s",
@@ -262,20 +271,20 @@ int main(int argc, char **argv)
     }
 
     result = doca_buf_set_data(src_buf,
-                           (void *)(uintptr_t)hdr.remote_addr,
-                           hdr.remote_len);
+                               (void *)(uintptr_t)hdr.remote_addr,
+                               hdr.remote_len);
     if (result != DOCA_SUCCESS) {
-        DOCA_LOG_ERR("Failed to set source buffer data: %s",
-                    doca_error_get_descr(result));
+        DOCA_LOG_ERR("Failed to set source data: %s",
+                     doca_error_get_descr(result));
         return EXIT_FAILURE;
     }
 
     result = doca_buf_set_data(dst_buf,
-                            local_buffer,
-                            hdr.remote_len);
+                               local_buffer,
+                               hdr.remote_len);
     if (result != DOCA_SUCCESS) {
-        DOCA_LOG_ERR("Failed to set destination buffer data: %s",
-                    doca_error_get_descr(result));
+        DOCA_LOG_ERR("Failed to set destination data: %s",
+                     doca_error_get_descr(result));
         return EXIT_FAILURE;
     }
 
@@ -347,8 +356,7 @@ int main(int argc, char **argv)
     }
 
     DOCA_LOG_INFO("DMA completed successfully");
-    DOCA_LOG_INFO("Local BlueField buffer content:");
-    printf("%s\n", local_buffer);
+    printf("BlueField local buffer content:\n%s\n", local_buffer);
 
     doca_ctx_stop(dma_ctx);
 
@@ -358,18 +366,19 @@ int main(int argc, char **argv)
     doca_buf_inventory_stop(buf_inv);
     doca_buf_inventory_destroy(buf_inv);
 
-    doca_mmap_destroy(remote_mmap);
-    doca_mmap_destroy(local_mmap);
-
     doca_dma_destroy(dma);
     doca_pe_destroy(pe);
 
+    doca_mmap_destroy(remote_mmap);
+    doca_mmap_destroy(local_mmap);
+
+    doca_comm_channel_ep_disconnect(ep, peer_addr);
+    doca_comm_channel_ep_destroy(ep);
+
     doca_dev_close(dev);
-    doca_devinfo_destroy_list(dev_list);
 
     free(export_desc);
     free(local_buffer);
-    close(sockfd);
 
     return EXIT_SUCCESS;
 }
