@@ -50,39 +50,11 @@ static doca_error_t open_export_pci_device(struct doca_dev **dev)
     return DOCA_ERROR_NOT_FOUND;
 }
 
-static doca_error_t open_device_representor(struct doca_dev *dev,
-                                            struct doca_dev_rep **dev_rep)
-{
-    doca_error_t result;
-    struct doca_devinfo_rep **rep_list;
-    uint32_t nb_reps;
-
-    result = doca_devinfo_rep_create_list(dev,
-                                          DOCA_DEVINFO_REP_FILTER_NET,
-                                          &rep_list,
-                                          &nb_reps);
-    if (result != DOCA_SUCCESS)
-        return result;
-
-    if (nb_reps == 0) {
-        doca_devinfo_rep_destroy_list(rep_list);
-        return DOCA_ERROR_NOT_FOUND;
-    }
-
-    result = doca_dev_rep_open(rep_list[0], dev_rep);
-    if (result == DOCA_SUCCESS)
-        DOCA_LOG_INFO("Opened device representor 0");
-
-    doca_devinfo_rep_destroy_list(rep_list);
-    return result;
-}
-
 int main(void)
 {
     doca_error_t result;
 
     struct doca_dev *dev = NULL;
-    struct doca_dev_rep *dev_rep = NULL;
     struct doca_mmap *mmap = NULL;
 
     struct doca_comm_channel_ep_t *ep = NULL;
@@ -112,13 +84,6 @@ int main(void)
         return EXIT_FAILURE;
     }
 
-    result = open_device_representor(dev, &dev_rep);
-    if (result != DOCA_SUCCESS) {
-        DOCA_LOG_ERR("Failed to open device representor: %s",
-                     doca_error_get_descr(result));
-        return EXIT_FAILURE;
-    }
-
     result = doca_mmap_create(&mmap);
     if (result != DOCA_SUCCESS)
         return EXIT_FAILURE;
@@ -141,7 +106,8 @@ int main(void)
 
     result = doca_mmap_export_pci(mmap, dev, &export_desc, &export_desc_len);
     if (result != DOCA_SUCCESS) {
-        DOCA_LOG_ERR("Failed to export mmap: %s", doca_error_get_descr(result));
+        DOCA_LOG_ERR("Failed to export mmap: %s",
+                     doca_error_get_descr(result));
         return EXIT_FAILURE;
     }
 
@@ -157,12 +123,11 @@ int main(void)
     }
 
     result = doca_comm_channel_ep_set_device(ep, dev);
-    if (result != DOCA_SUCCESS)
+    if (result != DOCA_SUCCESS) {
+        DOCA_LOG_ERR("Failed to set comm channel device: %s",
+                     doca_error_get_descr(result));
         return EXIT_FAILURE;
-
-    result = doca_comm_channel_ep_set_device_rep(ep, dev_rep);
-    if (result != DOCA_SUCCESS)
-        return EXIT_FAILURE;
+    }
 
     result = doca_comm_channel_ep_listen(ep, SERVICE_NAME);
     if (result != DOCA_SUCCESS) {
@@ -177,11 +142,14 @@ int main(void)
     size_t hello_len = sizeof(hello);
 
     while (1) {
+        hello_len = sizeof(hello);
+
         result = doca_comm_channel_ep_recvfrom(ep,
                                                hello,
                                                &hello_len,
                                                DOCA_CC_MSG_FLAG_NONE,
                                                &peer_addr);
+
         if (result == DOCA_SUCCESS)
             break;
 
@@ -190,6 +158,8 @@ int main(void)
                          doca_error_get_descr(result));
             return EXIT_FAILURE;
         }
+
+        usleep(1000);
     }
 
     DOCA_LOG_INFO("BlueField connected");
@@ -201,7 +171,8 @@ int main(void)
                                          DOCA_CC_MSG_FLAG_NONE,
                                          peer_addr);
     if (result != DOCA_SUCCESS) {
-        DOCA_LOG_ERR("Failed to send header: %s", doca_error_get_descr(result));
+        DOCA_LOG_ERR("Failed to send header: %s",
+                     doca_error_get_descr(result));
         return EXIT_FAILURE;
     }
 
@@ -230,7 +201,6 @@ int main(void)
     doca_comm_channel_ep_destroy(ep);
 
     doca_mmap_destroy(mmap);
-    doca_dev_rep_close(dev_rep);
     doca_dev_close(dev);
     free(buffer);
 
