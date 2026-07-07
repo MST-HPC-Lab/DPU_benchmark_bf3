@@ -5,13 +5,12 @@
 #include <unistd.h>
 
 #include <doca_error.h>
-#include <doca_log.h>
-#include <doca_dev.h>
+#incl:contentReference[oaicite:0]{index=0}e <doca_dev.h>
 #include <doca_mmap.h>
 #include <doca_types.h>
 #include <doca_comm_channel.h>
 
-DOCA_LOG_REGISTER(HOST_CC_RESPONDER);
+DOCA_LOG_REGISTER(HOST_CC_CLIENT);
 
 #define BUFFER_SIZE 1024
 #define SERVICE_NAME "dma_blob_service"
@@ -50,6 +49,14 @@ static doca_error_t open_export_pci_device(struct doca_dev **dev)
     return DOCA_ERROR_NOT_FOUND;
 }
 
+static void wait_success(doca_error_t result, const char *msg)
+{
+    if (result != DOCA_SUCCESS) {
+        DOCA_LOG_ERR("%s: %s", msg, doca_error_get_descr(result));
+        exit(EXIT_FAILURE);
+    }
+}
+
 int main(void)
 {
     doca_error_t result;
@@ -78,83 +85,45 @@ int main(void)
     buffer[BUFFER_SIZE - 1] = '\0';
 
     result = open_export_pci_device(&dev);
-    if (result != DOCA_SUCCESS) {
-        DOCA_LOG_ERR("Failed to open export-capable device: %s",
-                     doca_error_get_descr(result));
-        return EXIT_FAILURE;
-    }
+    wait_success(result, "Failed to open export-capable device");
 
     result = doca_mmap_create(&mmap);
-    if (result != DOCA_SUCCESS)
-        return EXIT_FAILURE;
+    wait_success(result, "doca_mmap_create failed");
 
     result = doca_mmap_set_memrange(mmap, buffer, BUFFER_SIZE);
-    if (result != DOCA_SUCCESS)
-        return EXIT_FAILURE;
+    wait_success(result, "doca_mmap_set_memrange failed");
 
     result = doca_mmap_add_dev(mmap, dev);
-    if (result != DOCA_SUCCESS)
-        return EXIT_FAILURE;
+    wait_success(result, "doca_mmap_add_dev failed");
 
     result = doca_mmap_set_permissions(mmap, DOCA_ACCESS_FLAG_PCI_READ_WRITE);
-    if (result != DOCA_SUCCESS)
-        return EXIT_FAILURE;
+    wait_success(result, "doca_mmap_set_permissions failed");
 
     result = doca_mmap_start(mmap);
-    if (result != DOCA_SUCCESS)
-        return EXIT_FAILURE;
+    wait_success(result, "doca_mmap_start failed");
 
     result = doca_mmap_export_pci(mmap, dev, &export_desc, &export_desc_len);
-    if (result != DOCA_SUCCESS) {
-        DOCA_LOG_ERR("Failed to export mmap: %s",
-                     doca_error_get_descr(result));
-        return EXIT_FAILURE;
-    }
+    wait_success(result, "doca_mmap_export_pci failed");
 
     hdr.remote_addr = (uint64_t)(uintptr_t)buffer;
     hdr.remote_len = BUFFER_SIZE;
     hdr.export_desc_len = export_desc_len;
 
     result = doca_comm_channel_ep_create(&ep);
-    if (result != DOCA_SUCCESS) {
-        DOCA_LOG_ERR("Failed to create comm channel endpoint: %s",
-                     doca_error_get_descr(result));
-        return EXIT_FAILURE;
-    }
+    wait_success(result, "doca_comm_channel_ep_create failed");
 
     result = doca_comm_channel_ep_set_device(ep, dev);
-    if (result != DOCA_SUCCESS) {
-        DOCA_LOG_ERR("Failed to set comm channel device: %s",
-                     doca_error_get_descr(result));
-        return EXIT_FAILURE;
-    }
+    wait_success(result, "doca_comm_channel_ep_set_device failed");
 
-    result = doca_comm_channel_ep_listen(ep, SERVICE_NAME);
-    if (result != DOCA_SUCCESS) {
-        DOCA_LOG_ERR("Failed to listen on service: %s",
-                     doca_error_get_descr(result));
-        return EXIT_FAILURE;
-    }
-
-    DOCA_LOG_INFO("Waiting for BlueField connection using DOCA Comm Channel");
-
-    char hello[64];
-    size_t hello_len = sizeof(hello);
+    DOCA_LOG_INFO("Connecting to BlueField service: %s", SERVICE_NAME);
 
     while (1) {
-        hello_len = sizeof(hello);
-
-        result = doca_comm_channel_ep_recvfrom(ep,
-                                               hello,
-                                               &hello_len,
-                                               DOCA_CC_MSG_FLAG_NONE,
-                                               &peer_addr);
-
+        result = doca_comm_channel_ep_connect(ep, SERVICE_NAME, &peer_addr);
         if (result == DOCA_SUCCESS)
             break;
 
         if (result != DOCA_ERROR_AGAIN) {
-            DOCA_LOG_ERR("Failed while waiting for peer: %s",
+            DOCA_LOG_ERR("Failed to connect to service: %s",
                          doca_error_get_descr(result));
             return EXIT_FAILURE;
         }
@@ -162,37 +131,26 @@ int main(void)
         usleep(1000);
     }
 
-    DOCA_LOG_INFO("BlueField connected");
-    DOCA_LOG_INFO("Sending export header");
+    DOCA_LOG_INFO("Connected to BlueField service");
 
     result = doca_comm_channel_ep_sendto(ep,
                                          &hdr,
                                          sizeof(hdr),
                                          DOCA_CC_MSG_FLAG_NONE,
                                          peer_addr);
-    if (result != DOCA_SUCCESS) {
-        DOCA_LOG_ERR("Failed to send header: %s",
-                     doca_error_get_descr(result));
-        return EXIT_FAILURE;
-    }
-
-    DOCA_LOG_INFO("Sending export descriptor");
+    wait_success(result, "Failed to send export header");
 
     result = doca_comm_channel_ep_sendto(ep,
                                          export_desc,
                                          export_desc_len,
                                          DOCA_CC_MSG_FLAG_NONE,
                                          peer_addr);
-    if (result != DOCA_SUCCESS) {
-        DOCA_LOG_ERR("Failed to send export descriptor: %s",
-                     doca_error_get_descr(result));
-        return EXIT_FAILURE;
-    }
+    wait_success(result, "Failed to send export descriptor");
 
-    DOCA_LOG_INFO("Export descriptor sent");
+    DOCA_LOG_INFO("Export descriptor sent to BlueField");
     DOCA_LOG_INFO("Host buffer address: %p", buffer);
     DOCA_LOG_INFO("Host buffer length : %lu", hdr.remote_len);
-    DOCA_LOG_INFO("Keep host running while BlueField performs DMA");
+    DOCA_LOG_INFO("Keep this program running while BlueField performs DMA");
     DOCA_LOG_INFO("Press Enter after BlueField finishes");
 
     getchar();
