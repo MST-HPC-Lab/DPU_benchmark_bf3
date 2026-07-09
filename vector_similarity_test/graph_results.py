@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 RESULTS_JSON = "results/results.json"
-DATASET = "glove6B.200d.txt"
+DATASET = "glove.6B.200d.txt"
 DIMENSIONS = 200
 NUM_VECS = 400000
 THREADS = "default"
@@ -19,41 +19,6 @@ def load_results(json_path):
     with open(json_path, "r", encoding="utf-8") as f:
         return json.load(f)
 
-def get_kvaried_run(
-        results,
-        device,
-        dataset=DATASET,
-        dimensions=DIMENSIONS,
-        num_vecs=NUM_VECS,
-        threads=THREADS,
-    ):
-    return results[str(device)][str(dataset)][str(dimensions)][str(num_vecs)][str(threads)]
-
-def get_multitest_run(results, device, dataset=DATASET, k=K_FOR_SCATTER):
-    return results["multitest"][str(device)][str(dataset)][str(k)]
-
-def as_array(value):
-    return np.asarray(value, dtype=float).ravel()
-
-results = load_results(RESULTS_JSON)
-
-host = get_kvaried_run(
-    results,
-    device = "host",
-    dataset = DATASET,
-    dimensions = DIMENSIONS,
-    num_vecs = NUM_VECS,
-    threads = THREADS,
-)
-
-
-
-
-k = as_array(host["k_values"])
-host_lsh_recall = as_array(host["lsh_recalls"])
-host_pq_recall = as_array(host["pq_reccalls"])
-host_ivfpq_recall = as_array(host["ivfpq_recalls"])
-host_hnsw_recall = as_array(host["hnsw_reccall"])
 
 
 
