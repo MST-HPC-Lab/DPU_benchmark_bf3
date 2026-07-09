@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# nohup ./search_suite.sh &
+
+
+
+
+echo "RUNNING sift SEARCHES WITH SCALING DATASET SIZE AND FIXED k=10"
+python3 index_searcher.py --only "ivfpq"   --k "10" --indexes_dir "sift_100k"
+python3 index_searcher.py --only "ivfpq"   --k "10" --indexes_dir "sift_200k"
+python3 index_searcher.py --only "ivfpq"   --k "10" --indexes_dir "sift_500k"
+python3 index_searcher.py --only "ivfpq"   --k "10" --indexes_dir "sift_1m"
+python3 index_searcher.py --only "ivfpq"   --k "10" --indexes_dir "sift_2m"
+python3 index_searcher.py --only "ivfpq"   --k "10" --indexes_dir "sift_5m"
+python3 index_searcher.py --only "ivfpq"   --k "10" --indexes_dir "sift_10m"
+
+echo "RUNNING sift SEARCHES WITH SCALING DATASET SIZE AND 16 THREADS WITH FIXED k=10"
+python3 index_searcher.py --only "ivfpq"   --threads "16" --k "10" --indexes_dir "sift_100k"
+python3 index_searcher.py --only "ivfpq"   --threads "16" --k "10" --indexes_dir "sift_200k"
+python3 index_searcher.py --only "ivfpq"   --threads "16" --k "10" --indexes_dir "sift_500k"
+python3 index_searcher.py --only "ivfpq"   --threads "16" --k "10" --indexes_dir "sift_1m"
+python3 index_searcher.py --only "ivfpq"   --threads "16" --k "10" --indexes_dir "sift_2m"
+python3 index_searcher.py --only "ivfpq"   --threads "16" --k "10" --indexes_dir "sift_5m"
+python3 index_searcher.py --only "ivfpq"   --threads "16" --k "10" --indexes_dir "sift_10m"
