@@ -196,7 +196,7 @@ if __name__ == "__main__":
         pass
     if (not hasattr(ib, "truth_I")) or ib.truth_I is None or (not len(ib.truth_I)):
         for k in ib.k_values:
-            print("COMPUTING GROUND TRUTH FOR K:", k)
+            print("COMPUTING GROUND TRUTH FOR K:", k, flush=True)
             ib.search_ground_truth(k, measure_accuracy=False, indexes_dir=indexes_dir, redo=False)
             ib.save_ground_truth(os.path.join(indexes_dir, ib.TRUTH_FILE_NAME))
         if "flat" not in only: ib.FL2 = None # free memory
@@ -324,9 +324,10 @@ if __name__ == "__main__":
     #     mem.log("queries_finished")
     # bf_time, lsh_recall, lsh_time, pq_recall, pq_time, ivfpq_recall, ivfpq_time, hnsw_recall, hnsw_time = zip(*results)
 
+    device = "bf3" if is_bluefield() else "host"
 
     # Load Results JSON file
-    results_path = os.path.join("results", "results.json")
+    results_path = os.path.join("results", f"results_{device}.json")
     if os.path.exists(results_path):
         with open(results_path, "r") as f:
             results = json.load(f) #, object_hook=lambda d: SimpleNamespace(**d))
@@ -334,7 +335,6 @@ if __name__ == "__main__":
         results = {} #SimpleNamespace()
 
     # Gather current results and insert into loaded JSON
-    device = "bf3" if is_bluefield() else "host"
     dataset = str(meta["source_file"])
     dimensions = str(meta["d"])
     num_vecs = str(meta["num_vecs"])
@@ -408,3 +408,12 @@ if __name__ == "__main__":
     # Save results to JSON
     with open(results_path, "w") as f:
         json.dump(results, f, indent=4)
+
+
+
+else: # Imported module, not script behavior
+    # import faiss
+    import numpy as np
+    # print("FAISS threads:", faiss.omp_get_max_threads()) 
+    # from index_builder import search
+    # import index_builder as ib

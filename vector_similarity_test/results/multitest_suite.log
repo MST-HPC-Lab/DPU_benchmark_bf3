@@ -1,0 +1,72 @@
+nohup: ignoring input
+RUNNING glove MULTI-INDEX TESTS WITH k=10
+(All times averaged over 3 repeats)
+
+Flat (Brute Force)
+WARNING: Overwriting existing results for date in slot. Old value: 2026-06-08T20:09:56.417678, new value: 2026-06-19T12:52:36.247099
+(All times averaged over 3 repeats)
+
+LSH
+WARNING: Overwriting existing results for date in slot. Old value: 2026-06-19T12:52:36.247099, new value: 2026-06-19T12:54:25.517745
+(All times averaged over 3 repeats)
+
+PQ
+WARNING: Overwriting existing results for date in slot. Old value: 2026-06-19T12:54:25.517745, new value: 2026-06-19T12:55:26.612907
+(All times averaged over 3 repeats)
+
+IVFPQ
+WARNING: Overwriting existing results for date in slot. Old value: 2026-06-19T12:55:26.612907, new value: 2026-06-19T13:29:02.402802
+(All times averaged over 3 repeats)
+
+HNSW
+WARNING: Overwriting existing results for date in slot. Old value: 2026-06-19T13:29:02.402802, new value: 2026-06-19T15:31:20.770375
+(All times averaged over 3 repeats)
+
+HNSW+PQ
+WARNING: Overwriting existing results for date in slot. Old value: 2026-06-19T15:31:20.770375, new value: 2026-06-19T15:33:46.647701
+RUNNING fasttext MULTI-INDEX TESTS WITH k=10
+(All times averaged over 3 repeats)
+
+Flat (Brute Force)
+WARNING: Overwriting existing results for date in slot. Old value: 2026-06-09T17:42:25.324977, new value: 2026-06-19T17:33:53.613389
+(All times averaged over 3 repeats)
+
+LSH
+WARNING: Overwriting existing results for date in slot. Old value: 2026-06-19T17:33:53.613389, new value: 2026-06-19T18:15:33.070300
+(All times averaged over 3 repeats)
+
+PQ
+WARNING: Overwriting existing results for date in slot. Old value: 2026-06-19T18:15:33.070300, new value: 2026-06-19T18:37:12.479358
+(All times averaged over 3 repeats)
+
+IVFPQ
+WARNING: Overwriting existing results for date in slot. Old value: 2026-06-19T18:37:12.479358, new value: 2026-06-19T20:40:00.989693
+(All times averaged over 3 repeats)
+
+HNSW
+WARNING: Overwriting existing results for date in slot. Old value: 2026-06-19T20:40:00.989693, new value: 2026-06-20T11:11:58.941394
+(All times averaged over 3 repeats)
+
+HNSW+PQ
+WARNING: Overwriting existing results for date in slot. Old value: 2026-06-20T11:11:58.941394, new value: 2026-06-20T11:29:49.280154
+RUNNING sift MULTI-INDEX TESTS WITH k=10
+(All times averaged over 3 repeats)
+
+Flat (Brute Force)
+WARNING: Overwriting existing results for date in slot. Old value: 2026-06-16T18:14:35.562806, new value: 2026-06-20T14:50:29.598288
+(All times averaged over 3 repeats)
+
+LSH
+WARNING: Overwriting existing results for date in slot. Old value: 2026-06-20T14:50:29.598288, new value: 2026-06-21T11:21:42.786557
+(All times averaged over 3 repeats)
+
+PQ
+WARNING: Overwriting existing results for date in slot. Old value: 2026-06-21T11:21:42.786557, new value: 2026-06-21T22:19:34.593245
+(All times averaged over 3 repeats)
+
+IVFPQ
+WARNING: Overwriting existing results for date in slot. Old value: 2026-06-21T22:19:34.593245, new value: 2026-06-22T16:26:25.521276
+(All times averaged over 3 repeats)
+
+HNSW
+WARNING: Overwriting existing results for date in slot. Old value: 2026-06-22T16:26:25.521276, new value: 2026-06-26T12:20:44.422942

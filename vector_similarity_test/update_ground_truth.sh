@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# ./update_ground_truth.sh
+# nohup ./update_ground_truth.sh &
 
 echo "UPDATING glove GROUND TRUTH"
 python3 index_searcher.py --only "none" --indexes_dir "glove"

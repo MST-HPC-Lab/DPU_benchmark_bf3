@@ -7,7 +7,7 @@ from timeit import repeat
 import os
 import json
 # from mat73 import loadmat
-import h5py
+# import h5py
 
 import index_builder as ib
 from device_utils import is_bluefield
@@ -22,72 +22,87 @@ def avg_time(fn, reps=3): # No cache warmup here, but later reps will be warm, s
 
 
 # TEST
-def test_suite(filename="glove.6B.200d.txt", only=None, k=10, r=3):
+def test_suite(filename="glove.6B.200d.txt", indexes_dir="unknown", only=None, k=10, r=3):
     if "../Data/" not in filename: path = f"../Data/{filename}"
     else: path = filename
 
-    if path[-4:] == ".mat": # Load matlab file
-        # mat_data = loadmat(path)['fea'].T
-        with h5py.File(path, 'r') as f:
-            mat_data = np.array(f['fea'])
+    # if path[-4:] == ".mat": # Load matlab file
+    #     # mat_data = loadmat(path)['fea'].T
+    #     with h5py.File(path, 'r') as f:
+    #         mat_data = np.array(f['fea'])
 
-        d = mat_data.shape[1]
+    #     d = mat_data.shape[1]
 
-        N = len(mat_data)
-        start_i = 0 # 99
-        step = 100 # Makes 1/step test set
-        test_i = [i for i in range(start_i, N, step)] # 1% test set
-        train_i = [i for i in range(N) if (i % step != start_i)] # rest is train set
-        # test_i = [i for i in range(d-1, N, d)]
-        # train_i = [i for i in range(N) if (i + d-1) % d]
+    #     N = len(mat_data)
+    #     start_i = 0 # 99
+    #     step = 100 # Makes 1/step test set
+    #     test_i = [i for i in range(start_i, N, step)] # 1% test set
+    #     train_i = [i for i in range(N) if (i % step != start_i)] # rest is train set
+    #     # test_i = [i for i in range(d-1, N, d)]
+    #     # train_i = [i for i in range(N) if (i + d-1) % d]
+    #     ib.x_query = mat_data[test_i]
+    #     ib.x_train = mat_data[train_i]
 
-    else: # Load CSV or txt
-        # Load Data File (TODO: make this more flexible for different datasets)
-        # df = pd.read_csv("../Data/glove.6B.200d.txt", sep=" ", quoting=3, header=None)
-        # d = 300
-        df = pd.read_csv(path, sep=" ", quoting=3, skiprows=1, header=None)
-        # Split into vocab column and data
-        # vocab = df.iloc[:, 0]
-        df = df.drop(0, axis=1)
+    # else: # Load CSV or txt
+    #     # Load Data File (TODO: make this more flexible for different datasets)
+    #     # df = pd.read_csv("../Data/glove.6B.200d.txt", sep=" ", quoting=3, header=None)
+    #     # d = 300
+    #     df = pd.read_csv(path, sep=" ", quoting=3, skiprows=1, header=None)
+    #     # Split into vocab column and data
+    #     # vocab = df.iloc[:, 0]
+    #     df = df.drop(0, axis=1)
 
-        d = df.shape[1]
+    #     d = df.shape[1]
 
-        # Fixed Split
-        N = len(df)
-        start_i = 0 # 99
-        step = 100 # Makes 1/step test set
-        test_i = [i for i in range(start_i, N, step)] # 1% test set
-        train_i = [i for i in range(N) if (i % step != start_i)] # rest is train set
-        # test_i = [i for i in range(d-1, N, d)]
-        # train_i = [i for i in range(N) if (i + d-1) % d]
+    #     # Fixed Split
+    #     N = len(df)
+    #     start_i = 0 # 99
+    #     step = 100 # Makes 1/step test set
+    #     test_i = [i for i in range(start_i, N, step)] # 1% test set
+    #     train_i = [i for i in range(N) if (i % step != start_i)] # rest is train set
+    #     # test_i = [i for i in range(d-1, N, d)]
+    #     # train_i = [i for i in range(N) if (i + d-1) % d]
 
-        ib.x_query = df.iloc[test_i]
-        ib.x_train = df.iloc[train_i]
-        del df
+    #     ib.x_query = df.iloc[test_i]
+    #     ib.x_train = df.iloc[train_i]
+    #     del df
     
-    # sharing these variables with index_builder.py
-    ib.d = d
-    # ib.k = k
+    # ib.x_query = np.ascontiguousarray(ib.x_query.to_numpy(dtype=np.float32))
+    # ib.x_train = np.ascontiguousarray(ib.x_train.to_numpy(dtype=np.float32))
 
-    ib.x_query = np.ascontiguousarray(ib.x_query.to_numpy(dtype=np.float32))
-    ib.x_train = np.ascontiguousarray(ib.x_train.to_numpy(dtype=np.float32))
+    # # sharing these variables with index_builder.py
+    # ib.d = d
+    # # ib.k = k
 
     # Load ground truth answers from proper index
-    if args.indexes_dir == "unknown":
+    if indexes_dir == "unknown":
         index_name = "glove" if "glove" in filename else "fasttext" if "fasttext" in filename else "sift" if "sift" in filename else "unknown"
         if index_name == "unknown": raise ValueError("Index name could not be determined from filename. Please specify.")    
     else:
-        index_name = args.indexes_dir
+        index_name = indexes_dir
     truth_path = f"indexes/{index_name}/{ib.TRUTH_FILE_NAME}"
+    indexes_dir = f"indexes/{index_name}" if "indexes" not in indexes_dir else indexes_dir
+
+    ib.x_query = np.load(os.path.join(indexes_dir, "x_query.npy"))
+    ib.x_train = np.load(os.path.join(indexes_dir, "x_train.npy"))
+    d = ib.x_train.shape[1]
+    ib.d = d
 
     if only is None:
         only = {"flat", "lsh", "pq", "ivfpq", "hnsw", "hnsw_pq", "hnsw_sq"} #"bf", 
     else:
         only = set(only)
 
-    assert d == 200 or d == 300, "This test suite is designed for d=200 or d=300. Please adjust pq_m_vals accordingly if using a different dimension. They must be factors of d."
+    dim_to_subspaces = {
+        128: [4, 8, 16, 32], 
+        200: [4, 5, 10, 20, 40], 
+        300: [4, 5, 10, 25, 30, 50], 
+        1000: [5, 10, 25, 40, 50],
+    }
+
+    assert d in dim_to_subspaces
     
-    pq_m_vals = [4, 5, 10, 20, 40] if d == 200 else [4, 5, 10, 25, 30, 50] if d == 300 else None # "subquantizers" or "m" in the PQ index, which is the number of subvectors the original vector is split into. It must be a factor of d.
+    pq_m_vals = dim_to_subspaces[d] # "subquantizers" or "m" in the PQ index, which is the number of subvectors the original vector is split into. It must be a factor of d.
     pq_n_bits = [4, 6, 8] # "nbits_per_index" or "nbits" in the PQ index, which is the number of bits used to encode each subvector.
 
     nlist = [int(4 * np.sqrt(len(ib.x_train))), int(8 * np.sqrt(len(ib.x_train))), int(16 * np.sqrt(len(ib.x_train)))] # "nlist" or "ncentroids" in the IVFPQ index, which is the number of Voronoi cells (or clusters) used to partition the training data. It must be less than the number of training vectors.
@@ -99,12 +114,12 @@ def test_suite(filename="glove.6B.200d.txt", only=None, k=10, r=3):
     sq_vals = [faiss.ScalarQuantizer.QT_4bit, faiss.ScalarQuantizer.QT_8bit]
 
     print(f"(All times averaged over {r} repeats)")
-    ib.load_truth(truth_path)
+    ib.load_truth(truth_path) # We can actually use the ground truth for another index, because it's for the whole dataset, brute force, unaffected by the parameter search!
 
     current_results = { # To be saved as JSON at the end; structured as results["multitest"][device][dataset_filename][k] = current_results
         "date": pd.Timestamp.now().isoformat(),
         "repeats": r,
-        "threads": str(ib.threads) if ib.threads is not None else "default",
+        "threads": "default", #str(ib.threads) if ib.threads is not None else "default",
         "dimensions": d,
         "num_vecs": len(ib.x_train) + len(ib.x_query),
         "train_size": len(ib.x_train),
@@ -273,15 +288,16 @@ def test_suite(filename="glove.6B.200d.txt", only=None, k=10, r=3):
         current_results["hnsw_sq_recalls"] = recalls.tolist()
         current_results["hnsw_sq_times"] = times.tolist()
 
+    device = "bf3" if is_bluefield() else "host"
+
     # Load existing results JSON file
-    results_path = os.path.join("results", "results.json")
+    results_path = os.path.join("results", f"results_{device}.json")
     if os.path.exists(results_path):
         with open(results_path, "r") as f:
             results = json.load(f) #, object_hook=lambda d: SimpleNamespace(**d))
     else:
+        print(f"WARNING: Could not find results file! We might be overwriting it if permissions did not allow reading.")
         results = {}
-
-    device = "bf3" if is_bluefield() else "host"
 
     # Find location in data structure
     if "multitest" not in results:
@@ -290,9 +306,9 @@ def test_suite(filename="glove.6B.200d.txt", only=None, k=10, r=3):
         results["multitest"][device] = {}
     if filename not in results["multitest"][device]:
         results["multitest"][device][filename] = {}
-    if k not in results["multitest"][device][filename]:
-        results["multitest"][device][filename][k] = {}
-    slot = results["multitest"][device][filename][k]
+    if str(k) not in results["multitest"][device][filename]:
+        results["multitest"][device][filename][str(k)] = {}
+    slot = results["multitest"][device][filename][str(k)]
     # Any runs modifying other values than these will be rewritten!
 
     for key, value in current_results.items():
@@ -323,7 +339,7 @@ if __name__ == "__main__":
                         help="Directory containing indexes and metadata")
     args = parser.parse_args()
 
-    test_suite(filename=args.file, only=args.only, k=args.k, r=args.r)
+    test_suite(filename=args.file, indexes_dir=args.indexes_dir, only=args.only, k=args.k, r=args.r)
 
 
 
