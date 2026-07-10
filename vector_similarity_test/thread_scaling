@@ -2,7 +2,7 @@
 
 # nohup ./search_suite.sh &
 
-echo "RUNNING fasttext SEARCHES WITH 42 THREADS"
+echo "RUNNING fasttext SEARCHES WITH 48 THREADS"
 python3 index_searcher.py --only "flat"    --threads "48" --k 10 --indexes_dir "fasttext"
 python3 index_searcher.py --only "lsh"     --threads "48" --k 10 --indexes_dir "fasttext"
 python3 index_searcher.py --only "pq"      --threads "48" --k 10 --indexes_dir "fasttext"
