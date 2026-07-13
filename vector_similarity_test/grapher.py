@@ -332,7 +332,8 @@ rs_b_scale = [get_kvaried_run("bf3", SIFT, SIFT_D, n, DEFAULT_THREADS) for n in 
 for r in rs_b_scale:
     assert r["k_values"][0] == DEFAULT_K, f"Expected k={DEFAULT_K} for all runs"
 sizes = np.linspace(4, 50, len(x))
-alphas = np.linspace(0.1, 1.0, len(x))
+alphas = np.linspace(1.0, 1.0, len(x)) # 0.1-1.0
+widths = np.linspace(0.5, 2, len(x))
 
 # plt.figure(figsize=(5, 3))
 
@@ -344,11 +345,11 @@ plt.scatter([], [], color='black', alpha=0, label=' ')
 #     plt.scatter([], [], color='black', marker='o', label=name, s=size, alpha=alpha)
 # plt.scatter([], [], color='black', alpha=0, label=' ')
 
-for host_data, bf3_data, size, alpha in zip(rs_scale, rs_b_scale, sizes, alphas):
+for host_data, bf3_data, size, alpha, w in zip(rs_scale, rs_b_scale, sizes, alphas, widths):
     for alg, times, color, m, name in zip(ALG_RECALLS, ALG_TIMES, ALG_COLORS, ALG_MARKERS, ALG_NAMES):
         try:
             t = queries_per_second(host_data[times], host_data["query_size"], ms=False)
-            plt.scatter([host_data[alg][0]], [t[0]], alpha=alpha, color=color, s=size, marker=m, label=name if alpha==1.0 else "_")
+            plt.scatter([host_data[alg][0]], [t[0]], alpha=alpha, color=color, s=size, marker=m, label=name if size==50 else "_")
         except KeyError: pass
         try:
             # Bluefield point
@@ -357,7 +358,7 @@ for host_data, bf3_data, size, alpha in zip(rs_scale, rs_b_scale, sizes, alphas)
         except KeyError: pass
         try:
             # Connecting line
-            plt.plot([host_data[alg][0], bf3_data[alg][0]], [t[0], tb[0]], color=color, alpha=alpha)
+            plt.plot([host_data[alg][0], bf3_data[alg][0]], [t[0], tb[0]], color=color, alpha=alpha, linewidth=w, label="_")
         except KeyError: pass
 setup_plot(
     title=f"Query Time Device Comparison (k={DEFAULT_K})\n(SIFT Dataset Scaling 100k-10M: Bolder is Larger)",
@@ -394,11 +395,11 @@ plt.scatter([], [], color='black', alpha=0, label=' ')
 #     plt.scatter([], [], color='black', marker='o', label=name, s=size, alpha=alpha)
 # plt.scatter([], [], color='black', alpha=0, label=' ')
 
-for host_data, bf3_data, size, alpha in zip(rs_scale_16, rs_b_scale_16, sizes, alphas):
+for host_data, bf3_data, size, alpha, w in zip(rs_scale_16, rs_b_scale_16, sizes, alphas, widths):
     for alg, times, color, m, name in zip(ALG_RECALLS, ALG_TIMES, ALG_COLORS, ALG_MARKERS, ALG_NAMES):
         try:
             t = queries_per_second(host_data[times], host_data["query_size"], ms=False)
-            plt.scatter([host_data[alg][0]], [t[0]], alpha=alpha, color=color, s=size, marker=m, label=name if alpha==1.0 else "_")
+            plt.scatter([host_data[alg][0]], [t[0]], alpha=alpha, color=color, s=size, marker=m, label=name if size==50 else "_")
         except KeyError: pass
         try:
             # Bluefield point
@@ -407,7 +408,7 @@ for host_data, bf3_data, size, alpha in zip(rs_scale_16, rs_b_scale_16, sizes, a
         except KeyError: pass
         try:
             # Connecting line
-            plt.plot([host_data[alg][0], bf3_data[alg][0]], [t[0], tb[0]], color=color, alpha=alpha)
+            plt.plot([host_data[alg][0], bf3_data[alg][0]], [t[0], tb[0]], color=color, alpha=alpha, linewidth = w)
         except KeyError: pass
 setup_plot(
     title=f"Query Time Device Comparison, Equalized to 16 Threads\n(k={DEFAULT_K}, SIFT scaling)",
