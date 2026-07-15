@@ -1,0 +1,87 @@
+nohup: ignoring input
+RUNNING sift SEARCHES WITH SCALING DATASET SIZE AND FIXED k=10
+FAISS threads: 16
+Indexes loaded. Running searches...
+Threads: None
+k: [10]
+IVFPQ Recall: [0.8098000000000001]
+IVFPQ Time: [2.0056834052316845]
+FAISS threads: 16
+Indexes loaded. Running searches...
+Threads: None
+k: [10]
+IVFPQ Recall: [0.7941]
+IVFPQ Time: [2.927693380508572]
+FAISS threads: 16
+Indexes loaded. Running searches...
+Threads: None
+k: [10]
+IVFPQ Recall: [0.7627400000000001]
+IVFPQ Time: [3.634823441505432]
+FAISS threads: 16
+Indexes loaded. Running searches...
+Threads: None
+k: [10]
+IVFPQ Recall: [0.74565]
+IVFPQ Time: [1.9448700619861483]
+FAISS threads: 16
+Indexes loaded. Running searches...
+Threads: None
+k: [10]
+IVFPQ Recall: [0.730735]
+IVFPQ Time: [3.234371627215296]
+FAISS threads: 16
+Indexes loaded. Running searches...
+Threads: None
+k: [10]
+IVFPQ Recall: [0.71205]
+IVFPQ Time: [4.618271533213556]
+FAISS threads: 16
+Indexes loaded. Running searches...
+Threads: None
+k: [10]
+IVFPQ Recall: [0.7024669999999998]
+IVFPQ Time: [12.294097556360066]
+RUNNING sift SEARCHES WITH SCALING DATASET SIZE AND 16 THREADS WITH FIXED k=10
+FAISS threads: 16
+Indexes loaded. Running searches...
+Threads: 16
+k: [10]
+IVFPQ Recall: [0.8098000000000001]
+IVFPQ Time: [1.990805184468627]
+FAISS threads: 16
+Indexes loaded. Running searches...
+Threads: 16
+k: [10]
+IVFPQ Recall: [0.7941]
+IVFPQ Time: [2.90762041779235]
+FAISS threads: 16
+Indexes loaded. Running searches...
+Threads: 16
+k: [10]
+IVFPQ Recall: [0.7627400000000001]
+IVFPQ Time: [3.757261878717691]
+FAISS threads: 16
+Indexes loaded. Running searches...
+Threads: 16
+k: [10]
+IVFPQ Recall: [0.74565]
+IVFPQ Time: [1.9501475432887674]
+FAISS threads: 16
+Indexes loaded. Running searches...
+Threads: 16
+k: [10]
+IVFPQ Recall: [0.730735]
+IVFPQ Time: [3.151891618501395]
+FAISS threads: 16
+Indexes loaded. Running searches...
+Threads: 16
+k: [10]
+IVFPQ Recall: [0.71205]
+IVFPQ Time: [4.645333844609558]
+FAISS threads: 16
+Indexes loaded. Running searches...
+Threads: 16
+k: [10]
+IVFPQ Recall: [0.7024669999999998]
+IVFPQ Time: [12.324107376951725]

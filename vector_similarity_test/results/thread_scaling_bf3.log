@@ -1,2 +1,339 @@
 nohup: ignoring input
-nohup: failed to run command './thread_scaling': Permission denied
+RUNNING fasttext SEARCHES WITH 48 THREADS
+FAISS threads: 48
+Indexes loaded. Running searches...
+Threads: 48
+k: [10]
+Flat Time: [83.57458296455442]
+FAISS threads: 48
+Indexes loaded. Running searches...
+Threads: 48
+k: [10]
+LSH Recall: [0.26749500000000004]
+LSH Time: [10.329586180858314]
+FAISS threads: 48
+Indexes loaded. Running searches...
+Threads: 48
+k: [10]
+PQ Recall: [0.40081500000000003]
+PQ Time: [55.08175496533513]
+FAISS threads: 48
+Indexes loaded. Running searches...
+Threads: 48
+k: [10]
+IVFPQ Recall: [0.453375]
+IVFPQ Time: [24.126190031133593]
+FAISS threads: 48
+Indexes loaded. Running searches...
+Threads: 48
+k: [10]
+HNSW Recall: [0.77325]
+HNSW Time: [1.5223838788457216]
+FAISS threads: 48
+Indexes loaded. Running searches...
+Threads: 48
+k: [10]
+HNSW+PQ Recall: [0.24521500000000004]
+HNSW+PQ Time: [0.9999386540614068]
+FAISS threads: 48
+Indexes loaded. Running searches...
+Threads: 48
+k: [10]
+HNSW+SQ Recall: [0.72805]
+HNSW+SQ Time: [2.428118256572634]
+RUNNING fasttext SEARCHES WITH 32 THREADS
+FAISS threads: 32
+Indexes loaded. Running searches...
+Threads: 32
+k: [10]
+Flat Time: [81.14692858206108]
+FAISS threads: 32
+Indexes loaded. Running searches...
+Threads: 32
+k: [10]
+LSH Recall: [0.26749500000000004]
+LSH Time: [10.086961935833097]
+FAISS threads: 32
+Indexes loaded. Running searches...
+Threads: 32
+k: [10]
+PQ Recall: [0.40081500000000003]
+PQ Time: [55.729533355124296]
+FAISS threads: 32
+Indexes loaded. Running searches...
+Threads: 32
+k: [10]
+IVFPQ Recall: [0.453375]
+IVFPQ Time: [6.582394351996482]
+FAISS threads: 32
+Indexes loaded. Running searches...
+Threads: 32
+k: [10]
+HNSW Recall: [0.77325]
+HNSW Time: [1.4961631616577507]
+FAISS threads: 32
+Indexes loaded. Running searches...
+Threads: 32
+k: [10]
+HNSW+PQ Recall: [0.24521500000000004]
+HNSW+PQ Time: [1.0032332914881408]
+FAISS threads: 32
+Indexes loaded. Running searches...
+Threads: 32
+k: [10]
+HNSW+SQ Recall: [0.72805]
+HNSW+SQ Time: [2.443352912738919]
+RUNNING fasttext SEARCHES WITH 16 THREADS
+FAISS threads: 16
+Indexes loaded. Running searches...
+Threads: 16
+k: [10]
+Flat Time: [100.06658359523863]
+FAISS threads: 16
+Indexes loaded. Running searches...
+Threads: 16
+k: [10]
+LSH Recall: [0.26749500000000004]
+LSH Time: [9.552896292228251]
+FAISS threads: 16
+Indexes loaded. Running searches...
+Threads: 16
+k: [10]
+PQ Recall: [0.40081500000000003]
+PQ Time: [54.97404059888795]
+FAISS threads: 16
+Indexes loaded. Running searches...
+Threads: 16
+k: [10]
+IVFPQ Recall: [0.453375]
+IVFPQ Time: [4.620760933961719]
+FAISS threads: 16
+Indexes loaded. Running searches...
+Threads: 16
+k: [10]
+HNSW Recall: [0.77325]
+HNSW Time: [1.3862698630429804]
+FAISS threads: 16
+Indexes loaded. Running searches...
+Threads: 16
+k: [10]
+HNSW+PQ Recall: [0.24521500000000004]
+HNSW+PQ Time: [0.8990461681969464]
+FAISS threads: 16
+Indexes loaded. Running searches...
+Threads: 16
+k: [10]
+HNSW+SQ Recall: [0.72805]
+HNSW+SQ Time: [2.328927297051996]
+RUNNING fasttext SEARCHES WITH 12 THREADS AND FIXED k=10
+FAISS threads: 12
+Indexes loaded. Running searches...
+Threads: 12
+k: [10]
+Flat Time: [94.94035935075954]
+FAISS threads: 12
+Indexes loaded. Running searches...
+Threads: 12
+k: [10]
+LSH Recall: [0.26749500000000004]
+LSH Time: [13.505881441570818]
+FAISS threads: 12
+Indexes loaded. Running searches...
+Threads: 12
+k: [10]
+PQ Recall: [0.40081500000000003]
+PQ Time: [71.09030526764691]
+FAISS threads: 12
+Indexes loaded. Running searches...
+Threads: 12
+k: [10]
+IVFPQ Recall: [0.453375]
+IVFPQ Time: [4.531345660611987]
+FAISS threads: 12
+Indexes loaded. Running searches...
+Threads: 12
+k: [10]
+HNSW Recall: [0.77325]
+HNSW Time: [1.5775162702426315]
+FAISS threads: 12
+Indexes loaded. Running searches...
+Threads: 12
+k: [10]
+HNSW+PQ Recall: [0.24521500000000004]
+HNSW+PQ Time: [1.2012989090755581]
+FAISS threads: 12
+Indexes loaded. Running searches...
+Threads: 12
+k: [10]
+HNSW+SQ Recall: [0.72805]
+HNSW+SQ Time: [3.0520679305307565]
+RUNNING fasttext SEARCHES WITH 8 THREADS AND FIXED k=10
+FAISS threads: 8
+Indexes loaded. Running searches...
+Threads: 8
+k: [10]
+Flat Time: [95.82865103874356]
+FAISS threads: 8
+Indexes loaded. Running searches...
+Threads: 8
+k: [10]
+LSH Recall: [0.26749500000000004]
+LSH Time: [23.775357578881085]
+FAISS threads: 8
+Indexes loaded. Running searches...
+Threads: 8
+k: [10]
+PQ Recall: [0.40081500000000003]
+PQ Time: [108.2687035379]
+FAISS threads: 8
+Indexes loaded. Running searches...
+Threads: 8
+k: [10]
+IVFPQ Recall: [0.453375]
+IVFPQ Time: [3.972674256656319]
+FAISS threads: 8
+Indexes loaded. Running searches...
+Threads: 8
+k: [10]
+HNSW Recall: [0.77325]
+HNSW Time: [2.0221516073681416]
+FAISS threads: 8
+Indexes loaded. Running searches...
+Threads: 8
+k: [10]
+HNSW+PQ Recall: [0.24521500000000004]
+HNSW+PQ Time: [1.7406435524113477]
+FAISS threads: 8
+Indexes loaded. Running searches...
+Threads: 8
+k: [10]
+HNSW+SQ Recall: [0.72805]
+HNSW+SQ Time: [4.556016098707914]
+RUNNING fasttext SEARCHES WITH 4 THREADS AND FIXED k=10
+FAISS threads: 4
+Indexes loaded. Running searches...
+Threads: 4
+k: [10]
+Flat Time: [88.18047750219702]
+FAISS threads: 4
+Indexes loaded. Running searches...
+Threads: 4
+k: [10]
+LSH Recall: [0.26749500000000004]
+LSH Time: [28.900866428948937]
+FAISS threads: 4
+Indexes loaded. Running searches...
+Threads: 4
+k: [10]
+PQ Recall: [0.40081500000000003]
+PQ Time: [212.56184653742238]
+FAISS threads: 4
+Indexes loaded. Running searches...
+Threads: 4
+k: [10]
+IVFPQ Recall: [0.453375]
+IVFPQ Time: [6.367479124199599]
+FAISS threads: 4
+Indexes loaded. Running searches...
+Threads: 4
+k: [10]
+HNSW Recall: [0.77325]
+HNSW Time: [3.886877215001732]
+FAISS threads: 4
+Indexes loaded. Running searches...
+Threads: 4
+k: [10]
+HNSW+PQ Recall: [0.24521500000000004]
+HNSW+PQ Time: [3.458436306472868]
+FAISS threads: 4
+Indexes loaded. Running searches...
+Threads: 4
+k: [10]
+HNSW+SQ Recall: [0.72805]
+HNSW+SQ Time: [9.132684841845185]
+RUNNING fasttext SEARCHES WITH 2 THREADS AND FIXED k=10
+FAISS threads: 2
+Indexes loaded. Running searches...
+Threads: 2
+k: [10]
+Flat Time: [99.0170812129043]
+FAISS threads: 2
+Indexes loaded. Running searches...
+Threads: 2
+k: [10]
+LSH Recall: [0.26749500000000004]
+LSH Time: [47.51494094952941]
+FAISS threads: 2
+Indexes loaded. Running searches...
+Threads: 2
+k: [10]
+PQ Recall: [0.40081500000000003]
+PQ Time: [424.338978643436]
+FAISS threads: 2
+Indexes loaded. Running searches...
+Threads: 2
+k: [10]
+IVFPQ Recall: [0.453375]
+IVFPQ Time: [11.326483631227166]
+FAISS threads: 2
+Indexes loaded. Running searches...
+Threads: 2
+k: [10]
+HNSW Recall: [0.77325]
+HNSW Time: [8.356396072544158]
+FAISS threads: 2
+Indexes loaded. Running searches...
+Threads: 2
+k: [10]
+HNSW+PQ Recall: [0.24521500000000004]
+HNSW+PQ Time: [7.249896285496652]
+FAISS threads: 2
+Indexes loaded. Running searches...
+Threads: 2
+k: [10]
+HNSW+SQ Recall: [0.72805]
+HNSW+SQ Time: [18.1262090315111]
+RUNNING fasttext SEARCHES WITH 1 THREADS AND FIXED k=10
+FAISS threads: 1
+Indexes loaded. Running searches...
+Threads: 1
+k: [10]
+Flat Time: [99.35486656380817]
+FAISS threads: 1
+Indexes loaded. Running searches...
+Threads: 1
+k: [10]
+LSH Recall: [0.26749500000000004]
+LSH Time: [99.12850500857458]
+FAISS threads: 1
+Indexes loaded. Running searches...
+Threads: 1
+k: [10]
+PQ Recall: [0.40081500000000003]
+PQ Time: [848.8758124363609]
+FAISS threads: 1
+Indexes loaded. Running searches...
+Threads: 1
+k: [10]
+IVFPQ Recall: [0.453375]
+IVFPQ Time: [19.308374818973242]
+FAISS threads: 1
+Indexes loaded. Running searches...
+Threads: 1
+k: [10]
+HNSW Recall: [0.77325]
+HNSW Time: [14.326346675585956]
+FAISS threads: 1
+Indexes loaded. Running searches...
+Threads: 1
+k: [10]
+HNSW+PQ Recall: [0.24521500000000004]
+HNSW+PQ Time: [15.521407408826054]
+FAISS threads: 1
+Indexes loaded. Running searches...
+Threads: 1
+k: [10]
+HNSW+SQ Recall: [0.72805]
+HNSW+SQ Time: [36.42424991605803]
+./thread_scaling: line 238: unexpected EOF while looking for matching `"'
+./thread_scaling: line 239: syntax error: unexpected end of file
