@@ -1,0 +1,338 @@
+nohup: ignoring input
+RUNNING fasttext SEARCHES WITH 48 THREADS
+FAISS threads: 48
+Indexes loaded. Running searches...
+Threads: 48
+k: [10]
+Flat Time: [30.032990262657403]
+FAISS threads: 48
+Indexes loaded. Running searches...
+Threads: 48
+k: [10]
+LSH Recall: [0.26749500000000004]
+LSH Time: [2.7469740776345133]
+FAISS threads: 48
+Indexes loaded. Running searches...
+Threads: 48
+k: [10]
+PQ Recall: [0.40081500000000003]
+PQ Time: [25.32131694164127]
+FAISS threads: 48
+Indexes loaded. Running searches...
+Threads: 48
+k: [10]
+IVFPQ Recall: [0.453375]
+IVFPQ Time: [0.5195265180431307]
+FAISS threads: 48
+Indexes loaded. Running searches...
+Threads: 48
+k: [10]
+HNSW Recall: [0.77325]
+HNSW Time: [1.0405328696593643]
+FAISS threads: 48
+Indexes loaded. Running searches...
+Threads: 48
+k: [10]
+HNSW+PQ Recall: [0.24521500000000004]
+HNSW+PQ Time: [0.25643020467832683]
+FAISS threads: 48
+Indexes loaded. Running searches...
+Threads: 48
+k: [10]
+HNSW+SQ Recall: [0.72805]
+HNSW+SQ Time: [0.8419209914281964]
+RUNNING fasttext SEARCHES WITH 32 THREADS
+FAISS threads: 32
+Indexes loaded. Running searches...
+Threads: 32
+k: [10]
+Flat Time: [27.300329978764058]
+FAISS threads: 32
+Indexes loaded. Running searches...
+Threads: 32
+k: [10]
+LSH Recall: [0.26749500000000004]
+LSH Time: [3.984219229128212]
+FAISS threads: 32
+Indexes loaded. Running searches...
+Threads: 32
+k: [10]
+PQ Recall: [0.40081500000000003]
+PQ Time: [23.81941890483722]
+FAISS threads: 32
+Indexes loaded. Running searches...
+Threads: 32
+k: [10]
+IVFPQ Recall: [0.453375]
+IVFPQ Time: [0.732611435931176]
+FAISS threads: 32
+Indexes loaded. Running searches...
+Threads: 32
+k: [10]
+HNSW Recall: [0.77325]
+HNSW Time: [1.168234337028116]
+FAISS threads: 32
+Indexes loaded. Running searches...
+Threads: 32
+k: [10]
+HNSW+PQ Recall: [0.24521500000000004]
+HNSW+PQ Time: [0.29303134931251407]
+FAISS threads: 32
+Indexes loaded. Running searches...
+Threads: 32
+k: [10]
+HNSW+SQ Recall: [0.72805]
+HNSW+SQ Time: [1.0564486281946301]
+RUNNING fasttext SEARCHES WITH 16 THREADS
+FAISS threads: 16
+Indexes loaded. Running searches...
+Threads: 16
+k: [10]
+Flat Time: [23.9148409540765]
+FAISS threads: 16
+Indexes loaded. Running searches...
+Threads: 16
+k: [10]
+LSH Recall: [0.26749500000000004]
+LSH Time: [3.9913681568577886]
+FAISS threads: 16
+Indexes loaded. Running searches...
+Threads: 16
+k: [10]
+PQ Recall: [0.40081500000000003]
+PQ Time: [28.628517218120397]
+FAISS threads: 16
+Indexes loaded. Running searches...
+Threads: 16
+k: [10]
+IVFPQ Recall: [0.453375]
+IVFPQ Time: [0.834893334005028]
+FAISS threads: 16
+Indexes loaded. Running searches...
+Threads: 16
+k: [10]
+HNSW Recall: [0.77325]
+HNSW Time: [1.3959427179768682]
+FAISS threads: 16
+Indexes loaded. Running searches...
+Threads: 16
+k: [10]
+HNSW+PQ Recall: [0.24521500000000004]
+HNSW+PQ Time: [0.32814791332930326]
+FAISS threads: 16
+Indexes loaded. Running searches...
+Threads: 16
+k: [10]
+HNSW+SQ Recall: [0.72805]
+HNSW+SQ Time: [1.5847914315760137]
+RUNNING fasttext SEARCHES WITH 12 THREADS AND FIXED k=10
+FAISS threads: 12
+Indexes loaded. Running searches...
+Threads: 12
+k: [10]
+Flat Time: [22.695074699446558]
+FAISS threads: 12
+Indexes loaded. Running searches...
+Threads: 12
+k: [10]
+LSH Recall: [0.26749500000000004]
+LSH Time: [4.831365182064474]
+FAISS threads: 12
+Indexes loaded. Running searches...
+Threads: 12
+k: [10]
+PQ Recall: [0.40081500000000003]
+PQ Time: [33.797518820967525]
+FAISS threads: 12
+Indexes loaded. Running searches...
+Threads: 12
+k: [10]
+IVFPQ Recall: [0.453375]
+IVFPQ Time: [0.9826980181969702]
+FAISS threads: 12
+Indexes loaded. Running searches...
+Threads: 12
+k: [10]
+HNSW Recall: [0.77325]
+HNSW Time: [1.3305169138126076]
+FAISS threads: 12
+Indexes loaded. Running searches...
+Threads: 12
+k: [10]
+HNSW+PQ Recall: [0.24521500000000004]
+HNSW+PQ Time: [0.3892883672378957]
+FAISS threads: 12
+Indexes loaded. Running searches...
+Threads: 12
+k: [10]
+HNSW+SQ Recall: [0.72805]
+HNSW+SQ Time: [1.9794421679340304]
+RUNNING fasttext SEARCHES WITH 8 THREADS AND FIXED k=10
+FAISS threads: 8
+Indexes loaded. Running searches...
+Threads: 8
+k: [10]
+Flat Time: [26.03302075508982]
+FAISS threads: 8
+Indexes loaded. Running searches...
+Threads: 8
+k: [10]
+LSH Recall: [0.26749500000000004]
+LSH Time: [6.288535940181464]
+FAISS threads: 8
+Indexes loaded. Running searches...
+Threads: 8
+k: [10]
+PQ Recall: [0.40081500000000003]
+PQ Time: [45.02014264231548]
+FAISS threads: 8
+Indexes loaded. Running searches...
+Threads: 8
+k: [10]
+IVFPQ Recall: [0.453375]
+IVFPQ Time: [1.3018034348264336]
+FAISS threads: 8
+Indexes loaded. Running searches...
+Threads: 8
+k: [10]
+HNSW Recall: [0.77325]
+HNSW Time: [1.5502291857264936]
+FAISS threads: 8
+Indexes loaded. Running searches...
+Threads: 8
+k: [10]
+HNSW+PQ Recall: [0.24521500000000004]
+HNSW+PQ Time: [0.5171430637128651]
+FAISS threads: 8
+Indexes loaded. Running searches...
+Threads: 8
+k: [10]
+HNSW+SQ Recall: [0.72805]
+HNSW+SQ Time: [2.726589466724545]
+RUNNING fasttext SEARCHES WITH 4 THREADS AND FIXED k=10
+FAISS threads: 4
+Indexes loaded. Running searches...
+Threads: 4
+k: [10]
+Flat Time: [40.91126701273024]
+FAISS threads: 4
+Indexes loaded. Running searches...
+Threads: 4
+k: [10]
+LSH Recall: [0.26749500000000004]
+LSH Time: [12.330477460939438]
+FAISS threads: 4
+Indexes loaded. Running searches...
+Threads: 4
+k: [10]
+PQ Recall: [0.40081500000000003]
+PQ Time: [89.43840508386492]
+FAISS threads: 4
+Indexes loaded. Running searches...
+Threads: 4
+k: [10]
+IVFPQ Recall: [0.453375]
+IVFPQ Time: [2.5393465170636773]
+FAISS threads: 4
+Indexes loaded. Running searches...
+Threads: 4
+k: [10]
+HNSW Recall: [0.77325]
+HNSW Time: [1.859152088314295]
+FAISS threads: 4
+Indexes loaded. Running searches...
+Threads: 4
+k: [10]
+HNSW+PQ Recall: [0.24521500000000004]
+HNSW+PQ Time: [0.9090029949322342]
+FAISS threads: 4
+Indexes loaded. Running searches...
+Threads: 4
+k: [10]
+HNSW+SQ Recall: [0.72805]
+HNSW+SQ Time: [5.115625846013427]
+RUNNING fasttext SEARCHES WITH 2 THREADS AND FIXED k=10
+FAISS threads: 2
+Indexes loaded. Running searches...
+Threads: 2
+k: [10]
+Flat Time: [65.11020461311564]
+FAISS threads: 2
+Indexes loaded. Running searches...
+Threads: 2
+k: [10]
+LSH Recall: [0.26749500000000004]
+LSH Time: [24.111786248814315]
+FAISS threads: 2
+Indexes loaded. Running searches...
+Threads: 2
+k: [10]
+PQ Recall: [0.40081500000000003]
+PQ Time: [177.34782032677904]
+FAISS threads: 2
+Indexes loaded. Running searches...
+Threads: 2
+k: [10]
+IVFPQ Recall: [0.453375]
+IVFPQ Time: [4.7524015956558285]
+FAISS threads: 2
+Indexes loaded. Running searches...
+Threads: 2
+k: [10]
+HNSW Recall: [0.77325]
+HNSW Time: [2.5439199675805866]
+FAISS threads: 2
+Indexes loaded. Running searches...
+Threads: 2
+k: [10]
+HNSW+PQ Recall: [0.24521500000000004]
+HNSW+PQ Time: [1.6819428932853042]
+FAISS threads: 2
+Indexes loaded. Running searches...
+Threads: 2
+k: [10]
+HNSW+SQ Recall: [0.72805]
+HNSW+SQ Time: [9.392822954338044]
+RUNNING fasttext SEARCHES WITH 1 THREADS AND FIXED k=10
+FAISS threads: 1
+Indexes loaded. Running searches...
+Threads: 1
+k: [10]
+Flat Time: [124.13650975478814]
+FAISS threads: 1
+Indexes loaded. Running searches...
+Threads: 1
+k: [10]
+LSH Recall: [0.26749500000000004]
+LSH Time: [45.58732197145]
+FAISS threads: 1
+Indexes loaded. Running searches...
+Threads: 1
+k: [10]
+PQ Recall: [0.40081500000000003]
+PQ Time: [353.077540613804]
+FAISS threads: 1
+Indexes loaded. Running searches...
+Threads: 1
+k: [10]
+IVFPQ Recall: [0.453375]
+IVFPQ Time: [8.6371768463403]
+FAISS threads: 1
+Indexes loaded. Running searches...
+Threads: 1
+k: [10]
+HNSW Recall: [0.77325]
+HNSW Time: [4.810914006642998]
+FAISS threads: 1
+Indexes loaded. Running searches...
+Threads: 1
+k: [10]
+HNSW+PQ Recall: [0.24521500000000004]
+HNSW+PQ Time: [3.3273795812390743]
+FAISS threads: 1
+Indexes loaded. Running searches...
+Threads: 1
+k: [10]
+HNSW+SQ Recall: [0.72805]
+HNSW+SQ Time: [19.612617085594685]
+./thread_scaling: line 238: unexpected EOF while looking for matching `"'
