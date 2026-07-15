@@ -525,6 +525,77 @@ plt.xticks(x, labels=x_labels)
 finish_plot("speed_data_scaling.png")
 
 
+#Thread Scaling for Fasttext 
+
+
+#------------- Query Time vs. Threads --------#
+th = [get_kvaried_run("host", FASTTEXT, FASTTEXT_D, FASTTEXT_N, t) for t in THREAD_VALS]
+th_b = [get_kvaried_run("bf3", FASTTEXT, FASTTEXT_D, FASTTEXT_N, t) for t in THREAD_VALS]
+threads_host = [int(v) for v in THREAD_VALS[:-1] + ["48"]]
+threads_bf3 = [int(v) for v in THREAD_VALS[:-1] + ["16"]]
+
+# Extract time for k=10 in each alg of each thread run, for host and bf3
+times = {alg:[] for alg in ALG_TIMES}
+times_b = {alg:[] for alg in ALG_TIMES}
+for r, rb in zip(th, th_b):
+    for alg in ALG_TIMES:
+        if len(r[alg]) == 1: times[alg].append(queries_per_second(r[alg][0], r["query_size"], ms=False))
+        else: times[alg].append(queries_per_second(r[alg][ki], r["query_size"], ms=False))
+        if len(rb[alg]) == 1: times_b[alg].append(queries_per_second(rb[alg][0], rb["query_size"], ms=False))
+        else: times_b[alg].append(queries_per_second(rb[alg][ki], rb["query_size"], ms=False))
+
+# Custom legend
+plt.plot([], [], color='black', linestyle='-', label='Host')
+plt.plot([], [], color='black', linestyle='--', label='BF3')
+plt.plot([], [], color='black', alpha=0, label=' ')
+
+# Main plot
+for alg, color, m, name in zip(ALG_TIMES, ALG_COLORS, ALG_MARKERS, ALG_NAMES):
+    plt.plot(threads_host, times[alg], label=name, color=color, marker=m, linestyle="-")
+    plt.plot(threads_bf3[:-1], times_b[alg][:-1], label="_", color=color, marker=m, linestyle='--')
+setup_plot(
+    title="Thread Scaling (Fasttext; k=10)",
+    xlabel="Threads",
+    ylabel="Queries / Sec.", 
+    xscale='log', xticks=threads_host, 
+    yscale='log',
+)
+finish_plot("fasttext_thread_scaling.png")
+    
+
+#------------- Throughput vs. Dataset Size --------#
+# use rs_scale and rs_b_scale
+times = {alg:[] for alg in ALG_TIMES}
+times_b = {alg:[] for alg in ALG_TIMES}
+for r, rb in zip(rs_scale, rs_b_scale):
+    for alg in ALG_TIMES:
+        if len(r[alg]) == 1: times[alg].append(queries_per_second(r[alg][0], r["query_size"], ms=False))
+        else: times[alg].append(queries_per_second(r[alg][ki], r["query_size"], ms=False))
+        if len(rb[alg]) == 1: times_b[alg].append(queries_per_second(rb[alg][0], rb["query_size"], ms=False))
+        else: times_b[alg].append(queries_per_second(rb[alg][ki], rb["query_size"], ms=False))
+
+plt.plot([], [], color='black', linestyle='-', label='Host')
+plt.plot([], [], color='black', linestyle='--', label='BF3')
+plt.plot([], [], color='black', alpha=0, label=' ')
+
+# Main plot
+for alg, color, m, name in zip(ALG_TIMES, ALG_COLORS, ALG_MARKERS, ALG_NAMES):
+    plt.plot(x, times[alg], label=name, color=color, marker=m, linestyle="-")
+    plt.plot(x, times_b[alg], label="_", color=color, marker=m, linestyle='--')
+setup_plot(
+    title="Throughput vs. Dataset Size (SIFT; k=10)",
+    xlabel="SIFT Subset Size",
+    ylabel="Queries / Sec.", 
+    xscale='log',
+    yscale='log',
+)
+plt.xticks(x, labels=x_labels)
+finish_plot("speed_data_scaling.png")
+
+
+#end of thread scaling Fasttext 
+
+
 #------------- Throughput vs. Dataset Size (16-Thread-Equalized) --------#
 # use rs_scale_16 and rs_b_scale_16
 times = {alg:[] for alg in ALG_TIMES}
