@@ -314,6 +314,43 @@ if __name__ == "__main__":
         x_query = mat_data[test_i]
         x_train = mat_data[train_i]
 
+
+    elif filename.endswith("i8bin"): 
+        with open(filename, "rb") as f:
+            file_N, File_D = np.fromfile(f, dtype=np.uint32, count=2)
+
+        bin_data = np.memmap(filename, dtype= np.int8, mode = "r", offset=8, shape=(int(file_N), int(File_D)))
+        if args.num_vecs is not None:
+            bin_data = bin_data[:args.num_vecs]
+
+        if args.dim is not None:
+            bin_data = bin_data[:, :args.dim]
+
+        d = bin_data.shape[1]
+
+        print(f'File: "{filename}"')
+        print("Dimensions:", d)
+
+        N = len(bin_data)
+        start_i = 0
+        step = 100
+
+        test_i = np.arange(start_i, N, step)
+
+        train_i = np.ones(N, dtype=bool)
+        train_i[test_i] = False
+
+        print("Train Size:", np.count_nonzero(train_i))
+        print("Test  Size:", len(test_i))
+
+        x_query = bin_data[test_i].astype(np.float32)
+        x_train = bin_data[train_i].astype(np.float32)
+
+        del bin_data 
+
+
+    
+
     else:
         df = pd.read_csv(filename, sep=" ", quoting=3, skiprows=1, header=None)
 
@@ -355,6 +392,7 @@ if __name__ == "__main__":
     dim_to_subspaces = {
         128: 32, 
         200: 40, 
+        100 : 25,
         300: 30, 
         1000: 40
     }
