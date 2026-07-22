@@ -7,3 +7,5 @@ if grep -q "BlueField" /sys/class/dmi/id/product_name; then
 else 
     echo "Building SpaceV Indexes"
     python3 index_builder.py --file "base.100M.i8bin" --out_folder "spacev"
+
+fi
