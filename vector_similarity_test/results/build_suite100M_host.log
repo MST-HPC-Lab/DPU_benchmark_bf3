@@ -1,0 +1,2 @@
+nohup: ignoring input
+./build_suite100M.sh: 9: Syntax error: end of file unexpected (expecting "fi")
