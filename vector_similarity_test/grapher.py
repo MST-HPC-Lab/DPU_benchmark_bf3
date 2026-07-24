@@ -14,6 +14,7 @@ RESULTS_BF3 = "results/results_bf3.json"
 GLOVE = "glove.6B.200d.txt"
 FASTTEXT = "fasttext_cc.en.300.vec"
 SIFT = "sift10m.mat"
+SPACEV = "base.100M.i8bin"
 DATASET_NAMES = ["SIFT", "FastText", "GloVe"]
 K_FOR_SCATTER = 10 
 DEFAULT_K = 10
@@ -31,6 +32,11 @@ EQUALIZED_D = 128
 GLOVE_N = 400000
 FASTTEXT_N = 2000000
 SIFT_N = 11164866
+
+
+
+ 
+
 EQUALIZED_N = 400000
 THREAD_VALS = ["1", "2", "4", "8", "12", "16", DEFAULT_THREADS]
 
@@ -47,6 +53,13 @@ results = host_results
 results["bf3"] = bf3_results["bf3"]
 if "multitest" in bf3_results:
     results["multitest"]["bf3"] = bf3_results["multitest"]["bf3"]
+
+
+
+SPACEV_N = results[device][dataset][str(dimensions)][str(num_vecs)]
+SPACEV_D = 100
+
+
 
 # Define helper functions
 def as_array(value):
@@ -141,6 +154,7 @@ def make_legend_lines(colors, alphas, styles, marks):
 rs   = get_kvaried_run("host", SIFT,     SIFT_D,      SIFT_N,      DEFAULT_THREADS)
 rf   = get_kvaried_run("host", FASTTEXT, FASTTEXT_D,  FASTTEXT_N,  DEFAULT_THREADS)
 rg   = get_kvaried_run("host", GLOVE,    GLOVE_D,     GLOVE_N,     DEFAULT_THREADS)
+rv = get_kvaried_run("host", SPACEV, SPACEV_D, SPACE_N, DEFAULT_THREADS)
 k  = rg["k_values"]
 
 # Setup Custom Legend
@@ -261,6 +275,7 @@ finish_plot("scatter_time_cost.png")
 rs_b  = get_kvaried_run("bf3", SIFT,     SIFT_D,      SIFT_N,      DEFAULT_THREADS)
 rf_b  = get_kvaried_run("bf3", FASTTEXT, FASTTEXT_D,  FASTTEXT_N,  DEFAULT_THREADS)
 rg_b  = get_kvaried_run("bf3", GLOVE,    GLOVE_D,     GLOVE_N,     DEFAULT_THREADS)
+rv_b = get_kvaried_run("bf3", SPACEV, SPACEV_D, SPACEV_N, DEFAULT_THREADS )
 r_h = (rs, rf, rg)
 r_b = (rs_b, rf_b, rg_b)
 
@@ -301,7 +316,7 @@ for name, alpha, size in zip(DATASET_NAMES, (1.0, 0.5, 0.2), (30, 20, 10)):
 plt.scatter([], [], color='black', alpha=0, label=' ')
 
 # Plot Chosen params
-for size, alpha, host_data, bf3_data in ((30, 1.0, rs, rs_b), (20, .5, rf, rf_b), (10, .2, rg, rg_b)):
+for size, linestyle, host_data, bf3_data in ((40, "-", rv, rv_b )(30, "--", rs, rs_b), (20, "-.", rf, rf_b), (10, ":", rg, rg_b)):
     for alg, times, color, m, name in zip(ALG_RECALLS, ALG_TIMES, ALG_COLORS, ALG_MARKERS, ALG_NAMES):
         try:
             t = queries_per_second(host_data[times], host_data["query_size"], ms=False)
@@ -314,7 +329,7 @@ for size, alpha, host_data, bf3_data in ((30, 1.0, rs, rs_b), (20, .5, rf, rf_b)
         except KeyError: pass
         try:
             # Connecting line
-            plt.plot([host_data[alg][ki], bf3_data[alg][ki]], [t[ki], tb[ki]], color=color, alpha=alpha)
+            plt.plot([host_data[alg][ki], bf3_data[alg][ki]], [t[ki], tb[ki]], color=color, linestyle = linestyle)
         except KeyError: pass
 setup_plot(
     title=f"Query Time Device Comparison (k={DEFAULT_K})",
