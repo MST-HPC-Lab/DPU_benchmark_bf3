@@ -212,10 +212,11 @@ def hnsw_sq_build(data, dim, ef_construction, M, q_type, ef_search):#ef_construc
 
 # Build Only (no timing)
 #Sophia edit: refactored to allow building only a subset of indexes, and to save outputs in a specified subdirectory of indexes
-def test_build(only=None, mem=None):
+def test_build(only=None, mem=None, k_list=None):
     #Build selected indexes
     #only: None or list of ["bf", "flat", "lsh", "pq", "ivfpq", "hnsw", "hsnw_pq", "hnsw_sq"]
     global d
+    if k_list is None or not len(k_list): k_list = k_values
 
     if only is None:
         only = ["flat", "lsh", "pq", "ivfpq", "hnsw", "hnsw_pq", "hnsw_sq"] # "bf", 
@@ -229,9 +230,10 @@ def test_build(only=None, mem=None):
     if "flat" in only:
         flat_build(x_train)
 
-    for k in k_values:
+    for k in k_list:
+        print(" Searching ground Truth")
         search_ground_truth(k, measure_accuracy=False)  # populates truth_I and truth_D for flat/ground truth
-
+        
     if "lsh" in only:
         lsh_build(x_train, lsh_nbits)
 
@@ -268,6 +270,7 @@ if __name__ == "__main__":
     parser.add_argument("--num_vecs", type=int, default=None)
     parser.add_argument("--dim", type=int, default=None)
     parser.add_argument("--file", type=str, default="glove.6B.200d.txt")
+    parser.add_argument("--k", type=int, nargs="*")
 
     # SOPHIA EDIT: Add out_folder argument
     parser.add_argument("--out_folder", type=str, required=True,
@@ -413,7 +416,7 @@ if __name__ == "__main__":
 
     print("Building...\r", end='')
 
-    test_build(only=args.only)
+    test_build(only=args.only, k_list=args.k)
 
     if not args.no_save:
 
