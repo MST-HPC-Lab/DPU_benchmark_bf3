@@ -276,6 +276,7 @@ if __name__ == "__main__":
     parser.add_argument("--mem_out", type=str, default=None)
     parser.add_argument("--no_save", action="store_true")
     parser.add_argument("--only", nargs="+", default=None, help = "Build only selected indexes: flat lsh pq ivfpq hnsw hnsw_pq hnsw_sq")
+    parser.add_argument("--test_stride", type=int, default=100, help="Test set size will be 1/stride of the dataset, and train will be the remainder.")
     args = parser.parse_args()
 
     filename = f"../Data/{args.file}"
@@ -300,7 +301,7 @@ if __name__ == "__main__":
 
         N = len(mat_data)
         start_i = 0 # 99
-        step = 100 # Makes 1/step test set
+        step = args.test_stride # Makes 1/step test set
         test_i = [i for i in range(start_i, N, step)] # 1% test set
         train_i = [i for i in range(N) if (i % step != start_i)] # rest is train set
         # test_i = [i for i in range(d - 1, N, d)]
@@ -333,7 +334,8 @@ if __name__ == "__main__":
 
         N = len(bin_data)
         start_i = 0
-        step = 100
+        step = args.test_stride
+        # print("Warning: Using 0.1% test size instead of 1% for file type (i8bin)")
 
         test_i = np.arange(start_i, N, step)
 
@@ -371,7 +373,8 @@ if __name__ == "__main__":
 
         N = len(df)
         start_i = 0 # 99
-        step = 100 # Makes 1/step test set
+        step = args.test_stride # Makes 1/step test set
+        
         test_i = [i for i in range(start_i, N, step)] # 1% test set
         train_i = [i for i in range(N) if (i % step != start_i)] # rest is train set
         # test_i = [i for i in range(d - 1, N, d)]
