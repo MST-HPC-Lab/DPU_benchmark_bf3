@@ -230,9 +230,9 @@ def test_build(only=None, mem=None, k_list=None):
     if "flat" in only:
         flat_build(x_train)
 
-    for k in k_list:
-        print(" Searching ground Truth")
-        search_ground_truth(k, measure_accuracy=False)  # populates truth_I and truth_D for flat/ground truth
+        for k in k_list:
+            print(" Searching ground Truth")
+            search_ground_truth(k, measure_accuracy=False)  # populates truth_I and truth_D for flat/ground truth
         
     if "lsh" in only:
         lsh_build(x_train, lsh_nbits)
@@ -429,7 +429,8 @@ if __name__ == "__main__":
 
         # Save the ground truth for recall calculations.
         # if "flat" in build: # was "bf"
-        save_ground_truth(os.path.join(base_dir, TRUTH_FILE_NAME))
+        if "flat" in build:
+            save_ground_truth(os.path.join(base_dir, TRUTH_FILE_NAME))
         # if "bf" in build:
         #     assert truth_I is not None and truth_D is not None
         #     with open(os.path.join(base_dir, "truth_I,D.json"), "w") as f:
@@ -462,24 +463,28 @@ if __name__ == "__main__":
         # faiss.write_index(IVFPQ, os.path.join(base_dir, "ivfpq.index"))
         # faiss.write_index(HNSW,  os.path.join(base_dir, "hnsw.index"))
 
-        np.save(os.path.join(base_dir, "x_query.npy"), x_query)
-        np.save(os.path.join(base_dir, "x_train.npy"), x_train)
+        if "flat" in build:
 
-        with open(os.path.join(base_dir, "meta.json"), "w") as f:
-            json.dump({
-                "source_file": args.file,
-                "d": int(d),
-                "num_vecs": int(N),
+            np.save(os.path.join(base_dir, "x_query.npy"), x_query)
+            np.save(os.path.join(base_dir, "x_train.npy"), x_train)
 
-                "lsh_nbits": int(lsh_nbits),
-                "pq_nbits": int(pq_nbits),
-                "pq_subquantizers": int(pq_subquantizers),
-                "ivfpq_codesize": int(ivfpq_codesize),
-                "ivfpq_ncentroids": int(ivfpq_ncentroids),
-                "HNSW_M": int(HNSW_M),
-                "HNSW_efconstruction": int(HNSW_efconstruction),
-                "HNSW_efsearch": int(HNSW_efsearch),
-                "HNSW_SQ_qtype": int(HNSW_SQ_qtype),
-            }, f, indent=4)
+            
+
+            with open(os.path.join(base_dir, "meta.json"), "w") as f:
+                json.dump({
+                    "source_file": args.file,
+                    "d": int(d),
+                    "num_vecs": int(N),
+
+                    "lsh_nbits": int(lsh_nbits),
+                    "pq_nbits": int(pq_nbits),
+                    "pq_subquantizers": int(pq_subquantizers),
+                    "ivfpq_codesize": int(ivfpq_codesize),
+                    "ivfpq_ncentroids": int(ivfpq_ncentroids),
+                    "HNSW_M": int(HNSW_M),
+                    "HNSW_efconstruction": int(HNSW_efconstruction),
+                    "HNSW_efsearch": int(HNSW_efsearch),
+                    "HNSW_SQ_qtype": int(HNSW_SQ_qtype),
+                }, f, indent=4)
 
     print("Build complete.")
