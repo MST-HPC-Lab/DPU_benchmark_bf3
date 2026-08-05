@@ -56,9 +56,11 @@ if "multitest" in bf3_results:
 
 
 
-SPACEV_N = results[device][dataset][str(dimensions)][str(num_vecs)]
 SPACEV_D = 100
-
+try:
+    SPACEV_N = results["host"][SPACEV][SPACEV_D].keys()[0]
+except:
+    SPACEV_N = None
 
 
 # Define helper functions
@@ -154,7 +156,10 @@ def make_legend_lines(colors, alphas, styles, marks):
 rs   = get_kvaried_run("host", SIFT,     SIFT_D,      SIFT_N,      DEFAULT_THREADS)
 rf   = get_kvaried_run("host", FASTTEXT, FASTTEXT_D,  FASTTEXT_N,  DEFAULT_THREADS)
 rg   = get_kvaried_run("host", GLOVE,    GLOVE_D,     GLOVE_N,     DEFAULT_THREADS)
-rv = get_kvaried_run("host", SPACEV, SPACEV_D, SPACE_N, DEFAULT_THREADS)
+try:
+    rv = get_kvaried_run("host", SPACEV, SPACEV_D, SPACEV_N, DEFAULT_THREADS)
+except KeyError:
+    rv = None
 k  = rg["k_values"]
 
 # Setup Custom Legend
@@ -275,7 +280,10 @@ finish_plot("scatter_time_cost.png")
 rs_b  = get_kvaried_run("bf3", SIFT,     SIFT_D,      SIFT_N,      DEFAULT_THREADS)
 rf_b  = get_kvaried_run("bf3", FASTTEXT, FASTTEXT_D,  FASTTEXT_N,  DEFAULT_THREADS)
 rg_b  = get_kvaried_run("bf3", GLOVE,    GLOVE_D,     GLOVE_N,     DEFAULT_THREADS)
-rv_b = get_kvaried_run("bf3", SPACEV, SPACEV_D, SPACEV_N, DEFAULT_THREADS )
+try:
+    rv_b = get_kvaried_run("bf3", SPACEV, SPACEV_D, SPACEV_N, DEFAULT_THREADS )
+except KeyError:
+    rv_b = None
 r_h = (rs, rf, rg)
 r_b = (rs_b, rf_b, rg_b)
 
@@ -316,7 +324,8 @@ for name, alpha, size in zip(DATASET_NAMES, (1.0, 0.5, 0.2), (30, 20, 10)):
 plt.scatter([], [], color='black', alpha=0, label=' ')
 
 # Plot Chosen params
-for size, linestyle, host_data, bf3_data in ((40, "-", rv, rv_b )(30, "--", rs, rs_b), (20, "-.", rf, rf_b), (10, ":", rg, rg_b)):
+params = ((40, "-", rv, rv_b ), (30, "--", rs, rs_b), (20, "-.", rf, rf_b), (10, ":", rg, rg_b)) if rv_b is not None else ((30, "--", rs, rs_b), (20, "-.", rf, rf_b), (10, ":", rg, rg_b))
+for size, linestyle, host_data, bf3_data in params:
     for alg, times, color, m, name in zip(ALG_RECALLS, ALG_TIMES, ALG_COLORS, ALG_MARKERS, ALG_NAMES):
         try:
             t = queries_per_second(host_data[times], host_data["query_size"], ms=False)
@@ -350,15 +359,15 @@ sizes = np.linspace(4, 50, len(x))
 alphas = np.linspace(1.0, 1.0, len(x)) # 0.1-1.0
 widths = np.linspace(0.5, 2, len(x))
 
-# plt.figure(figsize=(5, 3))
+plt.figure(figsize=(5, 4.8))
 
-# Custom Legend
-plt.scatter([], [], color='black', marker='o', label="Host")
-plt.scatter([], [], edgecolors='black', facecolors='none', marker='o', label='BF3')
-plt.scatter([], [], color='black', alpha=0, label=' ')
-# for name, alpha, size in zip(x_labels, alphas, sizes):
-#     plt.scatter([], [], color='black', marker='o', label=name, s=size, alpha=alpha)
+# # Custom Legend
+# plt.scatter([], [], color='black', marker='o', label="Host")
+# plt.scatter([], [], edgecolors='black', facecolors='none', marker='o', label='BF3')
 # plt.scatter([], [], color='black', alpha=0, label=' ')
+# # for name, alpha, size in zip(x_labels, alphas, sizes):
+# #     plt.scatter([], [], color='black', marker='o', label=name, s=size, alpha=alpha)
+# # plt.scatter([], [], color='black', alpha=0, label=' ')
 
 for host_data, bf3_data, size, alpha, w in zip(rs_scale, rs_b_scale, sizes, alphas, widths):
     for alg, times, color, m, name in zip(ALG_RECALLS, ALG_TIMES, ALG_COLORS, ALG_MARKERS, ALG_NAMES):
@@ -380,7 +389,7 @@ setup_plot(
     xlabel=f"{DEFAULT_K}-Recall@{DEFAULT_K}",
     ylabel="Queries / Sec.",
     yscale='log',
-    # legend=False,
+    legend=False,
     xlim=True,
 )
 # plt.legend(bbox_to_anchor=(1.35, 1))
@@ -400,15 +409,16 @@ for r in rs_scale_16:
 for r in rs_b_scale_16:
     assert r["k_values"][0] == DEFAULT_K, f"Expected k={DEFAULT_K} for all runs"
 
-# plt.figure(figsize=(5, 3))
+plt.figure(figsize=(7, 4.8))
 
 # Custom Legend
 plt.scatter([], [], color='black', marker='o', label="Host")
 plt.scatter([], [], edgecolors='black', facecolors='none', marker='o', label='BF3')
 plt.scatter([], [], color='black', alpha=0, label=' ')
-# for name, alpha, size in zip(x_labels, alphas, sizes):
-#     plt.scatter([], [], color='black', marker='o', label=name, s=size, alpha=alpha)
-# plt.scatter([], [], color='black', alpha=0, label=' ')
+# Legend for sizes
+for name, size in zip(x_labels, sizes):
+    plt.scatter([], [], color='black', marker='o', label=name, s=size)
+plt.scatter([], [], color='black', label=' ', alpha=0)
 
 for host_data, bf3_data, size, alpha, w in zip(rs_scale_16, rs_b_scale_16, sizes, alphas, widths):
     for alg, times, color, m, name in zip(ALG_RECALLS, ALG_TIMES, ALG_COLORS, ALG_MARKERS, ALG_NAMES):
@@ -433,7 +443,7 @@ setup_plot(
     # legend=False,
     xlim=True,
 )
-# plt.legend(bbox_to_anchor=(1.35, 1))
+plt.legend(bbox_to_anchor=(1.35, 1))
 finish_plot(f"time_comparison_scaling_eq16threads.png")
 
 # NOTES:
