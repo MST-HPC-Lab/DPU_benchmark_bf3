@@ -138,7 +138,27 @@ def load_truth(path):
         # truth_I = {int(k): np.array(v) for k, v in data["truth_I"].items()}
         # # truth_D = {int(k): np.array(v) for k, v in data["truth_D"].items()}
 
+SPACEV_BATCH_SIZE = 250_000
 
+
+def add_in_batches(index, data):
+    for start in range(0, len(data), SPACEV_BATCH_SIZE):
+        end = min(start + SPACEV_BATCH_SIZE, len(data))
+
+        batch = np.array(
+            data[start:end],
+            dtype=np.float32,
+            order="C",
+            copy=True
+        )
+
+        index.add(batch)
+        del batch
+
+        print(
+            f"Added {end:,} / {len(data):,} vectors",
+            flush=True
+        )
 
 # Index Builders
 def flat_build(data):
@@ -147,11 +167,22 @@ def flat_build(data):
     FL2 = faiss.IndexFlatL2(d)
     FL2.add(data)
 
+# def lsh_build(data, n_bits):
+#     global LSH
+#     global d
+#     LSH = faiss.IndexLSH(d, n_bits)
+#     LSH.add(data)
+#new lsh for less memory 
 def lsh_build(data, n_bits):
     global LSH
     global d
+
     LSH = faiss.IndexLSH(d, n_bits)
-    LSH.add(data)
+
+    if isinstance(data, np.memmap):
+        add_in_batches(LSH, data)
+    else:
+        LSH.add(data)
 
 def pq_build(data, subquantizers, n_bits):
     global PQ
@@ -169,16 +200,30 @@ def ivfpq_build(data, ncentroids, code_size, n_bits):
     IVFPQ.add(data)
     IVFPQ.nprobe = 32
 
-def hnsw_build(data, dim, ef_construction, M, ef_search):#ef_construction=200, M=16, ef_search=100):
+# def hnsw_build(data, dim, ef_construction, M, ef_search):#ef_construction=200, M=16, ef_search=100):
+#     global HNSW
+
+#     # OLD HNSWLIB VERSION
+#     # HNSW = hnswlib.Index(space='l2', dim=dim)
+
+#     # SOPHIA EDIT: FAISS HNSW BUILD
+#     HNSW = faiss.IndexHNSWFlat(dim, M)
+#     HNSW.hnsw.efConstruction = ef_construction
+#     HNSW.add(data)
+#     HNSW.hnsw.efSearch = max(int(ef_search), 1)
+#new hnsw for memory 
+
+def hnsw_build(data, dim, ef_construction, M, ef_search):
     global HNSW
 
-    # OLD HNSWLIB VERSION
-    # HNSW = hnswlib.Index(space='l2', dim=dim)
-
-    # SOPHIA EDIT: FAISS HNSW BUILD
     HNSW = faiss.IndexHNSWFlat(dim, M)
     HNSW.hnsw.efConstruction = ef_construction
-    HNSW.add(data)
+
+    if isinstance(data, np.memmap):
+        add_in_batches(HNSW, data)
+    else:
+        HNSW.add(data)
+
     HNSW.hnsw.efSearch = max(int(ef_search), 1)
 
 # def hnsw_search(k, measure_accuracy=True):
@@ -191,22 +236,88 @@ def hnsw_build(data, dim, ef_construction, M, ef_search):#ef_construction=200, M
 #     D, I = HNSW.search(x_query, k)
 #     if measure_accuracy:
 #         return batch_recall(I, truth_I[k], k)
-#     return I, D
+#     return I, D 
 
-def hnsw_pq_build(data, dim, ef_construction, M, pq_m, ef_search):#ef_construction=200, M=16, pq_m=40, ef_search=100):
+# def hnsw_pq_build(data, dim, ef_construction, M, pq_m, ef_search):#ef_construction=200, M=16, pq_m=40, ef_search=100):
+#     global HNSWPQ
+#     HNSWPQ = faiss.IndexHNSWPQ(dim, pq_m, M)
+#     HNSWPQ.hnsw.efConstruction = ef_construction
+#     HNSWPQ.train(data)
+#     HNSWPQ.add(data)
+#     HNSWPQ.hnsw.efSearch = max(int(ef_search), 1)
+#     new hnsw_pq for memory 
+
+def hnsw_pq_build(data, dim, ef_construction, M, pq_m, ef_search):
     global HNSWPQ
+
     HNSWPQ = faiss.IndexHNSWPQ(dim, pq_m, M)
     HNSWPQ.hnsw.efConstruction = ef_construction
-    HNSWPQ.train(data)
-    HNSWPQ.add(data)
+
+    if isinstance(data, np.memmap):
+        sample_size = min(1_000_000, len(data))
+
+        training_sample = np.array(
+            data[:sample_size],
+            dtype=np.float32,
+            order="C",
+            copy=True
+        )
+
+        print(
+            f"Training HNSW-PQ with {sample_size:,} vectors...",
+            flush=True
+        )
+
+        HNSWPQ.train(training_sample)
+        del training_sample
+
+        add_in_batches(HNSWPQ, data)
+
+    else:
+        HNSWPQ.train(data)
+        HNSWPQ.add(data)
+
     HNSWPQ.hnsw.efSearch = max(int(ef_search), 1)
 
-def hnsw_sq_build(data, dim, ef_construction, M, q_type, ef_search):#ef_construction=200, M=16, q_type=faiss.ScalarQuantizer.QT_8bit, ef_search=100):
+# def hnsw_sq_build(data, dim, ef_construction, M, q_type, ef_search):#ef_construction=200, M=16, q_type=faiss.ScalarQuantizer.QT_8bit, ef_search=100):
+#     global HNSWSQ
+#     HNSWSQ = faiss.IndexHNSWSQ(dim, q_type, M)
+#     HNSWSQ.hnsw.efConstruction = ef_construction
+#     HNSWSQ.train(data)
+#     HNSWSQ.add(data)
+#     HNSWSQ.hnsw.efSearch = max(int(ef_search), 1)
+#     new hnsw_sq for memory 
+
+def hnsw_sq_build(data, dim, ef_construction, M, q_type, ef_search):
     global HNSWSQ
+
     HNSWSQ = faiss.IndexHNSWSQ(dim, q_type, M)
     HNSWSQ.hnsw.efConstruction = ef_construction
-    HNSWSQ.train(data)
-    HNSWSQ.add(data)
+
+    if isinstance(data, np.memmap):
+        sample_size = min(1_000_000, len(data))
+
+        training_sample = np.array(
+            data[:sample_size],
+            dtype=np.float32,
+            order="C",
+            copy=True
+        )
+
+        print(
+            f"Training HNSW-SQ with {sample_size:,} vectors...",
+            flush=True
+        )
+
+        HNSWSQ.train(training_sample)
+        del training_sample
+
+        add_in_batches(HNSWSQ, data)
+
+    else:
+        HNSWSQ.train(data)
+        HNSWSQ.add(data)
+
     HNSWSQ.hnsw.efSearch = max(int(ef_search), 1)
 
 
@@ -284,8 +395,56 @@ if __name__ == "__main__":
 
     filename = f"../Data/{args.file}"
     global d
-    
-    if filename[-4:] == ".mat": 
+    batch_algorithms = {
+    "lsh",
+    "hnsw",
+    "hnsw_pq",
+    "hnsw_sq"
+}
+
+    batch_spacev = (
+        filename.endswith(".i8bin")
+        and args.only is not None
+        and len(args.only) == 1
+        and args.only[0] in batch_algorithms
+    )
+
+    if batch_spacev:
+        base_dir = os.path.join(
+            "indexes",
+            args.out_folder
+        )
+
+        train_path = os.path.join(
+            base_dir,
+            "x_train.npy"
+        )
+
+        query_path = os.path.join(
+            base_dir,
+            "x_query.npy"
+        )
+
+        x_train = np.load(
+            train_path,
+            mmap_mode="r"
+        )
+
+        x_query = np.load(
+            query_path,
+            mmap_mode="r"
+        )
+
+        d = x_train.shape[1]
+        N = len(x_train) + len(x_query)
+
+        print(f'Using saved SPACEV data from "{base_dir}"')
+        print("Dimensions:", d)
+        print("Train Size:", len(x_train))
+        print("Test  Size:", len(x_query))
+
+
+    elif filename[-4:] == ".mat": 
         # mat_data = loadmat(filename)['fea'].T
         with h5py.File(filename, 'r') as f:
             mat_data = np.array(f['fea'])
@@ -392,8 +551,18 @@ if __name__ == "__main__":
         x_train = df.iloc[train_i].to_numpy(dtype=np.float32)
         del df
 
-    x_query = np.ascontiguousarray(x_query) # SOPHIA EDIT: convert to contiguous float32 numpy
-    x_train = np.ascontiguousarray(x_train)
+    # x_query = np.ascontiguousarray(x_query) # SOPHIA EDIT: convert to contiguous float32 numpy
+    # x_train = np.ascontiguousarray(x_train) added new change to handle more memory with bigger dataset
+    x_query = np.ascontiguousarray(
+    x_query,
+    dtype=np.float32
+    )
+
+    if not isinstance(x_train, np.memmap):
+        x_train = np.ascontiguousarray(
+            x_train,
+            dtype=np.float32
+        )
 
     dim_to_subspaces = {
         128: 32, 
