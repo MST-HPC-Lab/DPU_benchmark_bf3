@@ -4,7 +4,7 @@
 
 # echo "RUNNING spacev SEARCHES (flat)"
 # python3 index_searcher.py --only "flat" --k 10   --indexes_dir "spacev" 
-# echo "RUNNING spacev SEARCHES (lsh)"
+echo "RUNNING spacev SEARCHES (lsh)"
 python3 index_searcher.py --only "lsh" --k 10    --indexes_dir "spacev"
 echo "RUNNING spacev SEARCHES (pq)"
 python3 index_searcher.py --only "pq" --k 10     --indexes_dir "spacev"
