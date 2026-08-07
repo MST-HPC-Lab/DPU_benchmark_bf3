@@ -6309,6 +6309,41 @@
                     }
                 }
             }
+        },
+        "base.100M.i8bin": {
+            "100": {
+                "100000000": {
+                    "default": {
+                        "date": "2026-08-07T16:32:54.040075",
+                        "repeats": 5,
+                        "train_size": 99990000,
+                        "query_size": 10000,
+                        "k_values": [
+                            10
+                        ],
+                        "hnsw_pq_recalls": [
+                            0.59206
+                        ],
+                        "hnsw_pq_times": [
+                            1.8700114926323295
+                        ],
+                        "2026-08-07T15:53:47.931276": {
+                            "repeats": 5,
+                            "train_size": 99990000,
+                            "query_size": 10000,
+                            "k_values": [
+                                10
+                            ],
+                            "hnsw_pq_recalls": [
+                                0.59206
+                            ],
+                            "hnsw_pq_times": [
+                                1.9162711125798524
+                            ]
+                        }
+                    }
+                }
+            }
         }
     },
     "multitest": {

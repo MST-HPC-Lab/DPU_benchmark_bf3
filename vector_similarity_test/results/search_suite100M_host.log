@@ -1,0 +1,8 @@
+nohup: ignoring input
+RUNNING spacev SEARCHES (hnsw_pq)
+FAISS threads: 48
+Indexes loaded. Running searches...
+Threads: None
+k: [10]
+HNSW+PQ Recall: [0.59206]
+HNSW+PQ Time: [1.9162711125798524]
